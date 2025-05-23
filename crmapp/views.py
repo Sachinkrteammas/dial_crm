@@ -1,10 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
+
+from .models import UserList
 
 User = get_user_model()
 
@@ -59,3 +64,57 @@ def dashboard(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+@login_required
+def user_list(request):
+    if request.method == 'POST':
+        # Get data from form
+        full_name = request.POST.get('userFullname')
+        email = request.POST.get('userEmail')
+        password = request.POST.get('password')
+        contact = request.POST.get('userContact')
+        company = request.POST.get('companyName')
+        role = request.POST.get('userRole')
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, "Invalid email address.")
+            return redirect('user_list')
+
+        if not all([full_name, email, password]):
+            messages.error(request, "Full name, email, and password are required.")
+            return redirect('user_list')
+
+        if User.objects.filter(username=email).exists():
+            messages.error(request, "User with this email already exists.")
+            return redirect('user_list')
+
+        user = User.objects.create_user(username=email, email=email, password=password)
+        user.first_name = full_name
+        user.save()
+
+
+        user_list_entry = UserList(
+            full_name=full_name,
+            email_id=email,
+            password=password,
+            contact_no=contact,
+            company=company,
+            user_role=role,
+            created_by=request.user,
+        )
+        user_list_entry.save()
+
+        messages.success(request, "User created successfully.")
+        return redirect('user_list')
+
+    return render(request, 'crmapp/user_list.html')
+
+
+def user_list_api(request):
+    users = UserList.objects.all().order_by('id').values(
+        'id', 'full_name', 'user_role', 'email_id', 'company', 'contact_no'
+    )
+    return JsonResponse({'data': list(users)})

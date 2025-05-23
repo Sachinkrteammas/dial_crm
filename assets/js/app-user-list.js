@@ -13,177 +13,99 @@ document.addEventListener('DOMContentLoaded', function (e) {
   headingColor = config.colors.headingColor;
 
   // Variable declaration for table
-  const dt_user_table = document.querySelector('.datatables-users'),
-    userView = 'app-user-view-account.html',
-    statusObj = {
-      1: { title: 'Pending', class: 'bg-label-warning' },
-      2: { title: 'Active', class: 'bg-label-success' },
-      3: { title: 'Inactive', class: 'bg-label-secondary' }
-    };
-  var select2 = $('.select2');
+   const dt_user_table = document.getElementById('userTable');
+//    userView = 'app-user-view-account.html',
+//    statusObj = {
+//      1: { title: 'Pending', class: 'bg-label-warning' },
+//      2: { title: 'Active', class: 'bg-label-success' },
+//      3: { title: 'Inactive', class: 'bg-label-secondary' }
+//    };
+//  var select2 = $('.select2');
 
-  if (select2.length) {
-    var $this = select2;
-    $this.wrap('<div class="position-relative"></div>').select2({
-      placeholder: 'Select Country',
-      dropdownParent: $this.parent()
-    });
-  }
+//  if (select2.length) {
+//    var $this = select2;
+//    $this.wrap('<div class="position-relative"></div>').select2({
+//      placeholder: 'Select Country',
+//      dropdownParent: $this.parent()
+//    });
+//  }
 
   // Users datatable
+
+
   if (dt_user_table) {
-    const dt_user = new DataTable(dt_user_table, {
-      ajax: assetsPath + 'json/user-list.json', // JSON file to add data
+    new DataTable(dt_user_table, {
+      ajax: '/api/users/',
+
       columns: [
-        // columns according to JSON
-        { data: 'id' },
-        { data: 'id', orderable: false, render: DataTable.render.select() },
-        { data: 'full_name' },
-        { data: 'role' },
-        { data: 'current_plan' },
-        { data: 'billing' },
-        { data: 'status' },
-        { data: 'action' }
-      ],
+    {
+    data: null,
+    title: "S.No",
+    render: function (data, type, row, meta) {
+      return meta.row + 1; // This gives you 1, 2, 3...
+    }
+  },
+    { data: 'full_name' },
+    { data: 'user_role' },
+    { data: 'email_id' },
+    { data: 'company' },
+    { data: 'contact_no' },
+
+  ],
+  order: [[0, 'asc']],
       columnDefs: [
-        {
-          // For Responsive
-          className: 'control',
-          searchable: false,
-          orderable: false,
-          responsivePriority: 2,
-          targets: 0,
-          render: function (data, type, full, meta) {
-            return '';
-          }
-        },
-        {
-          // For Checkboxes
-          targets: 1,
-          orderable: false,
-          searchable: false,
-          responsivePriority: 4,
-          checkboxes: true,
-          render: function () {
-            return '<input type="checkbox" class="dt-checkboxes form-check-input">';
-          },
-          checkboxes: {
-            selectAllRender: '<input type="checkbox" class="form-check-input">'
-          }
-        },
-        {
-          targets: 2,
-          responsivePriority: 3,
-          render: function (data, type, full, meta) {
-            var name = full['full_name'];
-            var email = full['email'];
-            var image = full['avatar'];
-            var output;
 
-            if (image) {
-              // For Avatar image
-              output = '<img src="' + assetsPath + 'img/avatars/' + image + '" alt="Avatar" class="rounded-circle">';
-            } else {
-              // For Avatar badge
-              var stateNum = Math.floor(Math.random() * 6);
-              var states = ['success', 'danger', 'warning', 'info', 'dark', 'primary', 'secondary'];
-              var state = states[stateNum];
-              var initials = (name.match(/\b\w/g) || []).map(char => char.toUpperCase());
-              initials = ((initials.shift() || '') + (initials.pop() || '')).toUpperCase();
-              output = '<span class="avatar-initial rounded-circle bg-label-' + state + '">' + initials + '</span>';
-            }
+      {
+        targets: 1,
+        render: function (data, type, full) {
+          const name = full['full_name'] || '';
+          const email = full['email_id'] || '';
+          const avatar = full['avatar'] || '';
+          let avatarHtml;
 
-            // Creates full output for row
-            var row_output =
-              '<div class="d-flex justify-content-start align-items-center user-name">' +
-              '<div class="avatar-wrapper">' +
-              '<div class="avatar avatar-sm me-4">' +
-              output +
-              '</div>' +
-              '</div>' +
-              '<div class="d-flex flex-column">' +
-              '<a href="' +
-              userView +
-              '" class="text-heading text-truncate"><span class="fw-medium">' +
-              name +
-              '</span></a>' +
-              '<small>' +
-              email +
-              '</small>' +
-              '</div>' +
-              '</div>';
-            return row_output;
+          if (avatar) {
+            avatarHtml = `<img src="${avatar}" alt="Avatar" class="rounded-circle" height="32">`;
+          } else {
+            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            avatarHtml = `<span class="avatar-initial rounded-circle bg-label-primary">${initials}</span>`;
           }
-        },
-        {
-          targets: 3,
-          render: function (data, type, full, meta) {
-            var role = full['role'];
-            var roleBadgeObj = {
-              Subscriber: '<i class="icon-base ti tabler-crown icon-md text-primary me-2"></i>',
-              Author: '<i class="icon-base ti tabler-edit icon-md text-warning me-2"></i>',
-              Maintainer: '<i class="icon-base ti tabler-user icon-md text-success me-2"></i>',
-              Editor: '<i class="icon-base ti tabler-chart-pie icon-md text-info me-2"></i>',
-              Admin: '<i class="icon-base ti tabler-device-desktop icon-md text-danger me-2"></i>'
-            };
-            return (
-              "<span class='text-truncate d-flex align-items-center text-heading'>" +
-              (roleBadgeObj[role] || '') + // Ensures badge exists for the role
-              role +
-              '</span>'
-            );
-          }
-        },
-        {
-          // Plans
-          targets: 4,
-          render: function (data, type, full, meta) {
-            const plan = full['current_plan'];
 
-            return '<span class="text-heading">' + plan + '</span>';
-          }
-        },
-        {
-          // User Status
-          targets: 6,
-          render: function (data, type, full, meta) {
-            const status = full['status'];
+          return `
+            <div class="d-flex align-items-center">
+              <div class="avatar me-2">${avatarHtml}</div>
+              <div class="d-flex flex-column">
+                <span class="fw-medium">${name}</span>
 
-            return (
-              '<span class="badge ' +
-              statusObj[status].class +
-              '" text-capitalized>' +
-              statusObj[status].title +
-              '</span>'
-            );
-          }
-        },
-        {
-          targets: -1,
-          title: 'Actions',
-          searchable: false,
-          orderable: false,
-          render: (data, type, full, meta) => {
-            return `
-              <div class="d-flex align-items-center">
-                <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon delete-record">
-                  <i class="icon-base ti tabler-trash icon-22px"></i>
-                </a>
-                <a href="${userView}" class="btn btn-text-secondary rounded-pill waves-effect btn-icon">
-                  <i class="icon-base ti tabler-eye icon-22px"></i>
-                </a>
-                <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                  <i class="icon-base ti tabler-dots-vertical icon-22px"></i>
-                </a>
-                <div class="dropdown-menu dropdown-menu-end m-0">
-                  <a href="javascript:;" class="dropdown-item">Edit</a>
-                  <a href="javascript:;" class="dropdown-item">Suspend</a>
-                </div>
               </div>
-            `;
-          }
+            </div>`;
         }
-      ],
+      },
+      {
+        targets: 2,
+        render: function (data, type, full) {
+          const role = full['user_role'] || 'N/A';
+          return `<span class="text-heading">${role}</span>`;
+        }
+      },
+      {
+        targets: 3,
+        render: function (data, type, full) {
+          return `<span class="text-heading">${full['email_id'] || ''}</span>`;
+        }
+      },
+      {
+        targets: 4,
+        render: function (data, type, full) {
+          return `<span class="text-heading">${full['company'] || ''}</span>`;
+        }
+      },
+      {
+        targets: 5,
+        render: function (data, type, full) {
+          return `<span class="text-heading">${full['contact_no'] || ''}</span>`;
+        }
+      }
+    ],
       select: {
         style: 'multi',
         selector: 'td:nth-child(2)'
@@ -419,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
                   ]
                 },
                 {
-                  text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-plus icon-xs"></i> <span class="d-none d-sm-inline-block">Add New Record</span></span>',
+                  text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-plus icon-xs"></i> <span class="d-none d-sm-inline-block">Add New User</span></span>',
                   className: 'add-new btn btn-primary',
                   attr: {
                     'data-bs-toggle': 'offcanvas',
@@ -513,10 +435,12 @@ document.addEventListener('DOMContentLoaded', function (e) {
         };
 
         // Role filter
-        createFilter(3, '.user_role', 'UserRole', 'Select Role');
+        createFilter(3, '.user_role', 'UserRole', 'Select Email');
 
         // Plan filter
-        createFilter(4, '.user_plan', 'UserPlan', 'Select Plan');
+        createFilter(4, '.user_plan', 'UserPlan', 'Select Company');
+
+
 
         // Status filter
         const statusFilter = document.createElement('select');
@@ -562,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
             if (event.target.parentElement.classList.contains('delete-record')) {
               deleteRecord();
               const closeButton = modal.querySelector('.btn-close');
-              if (closeButton) closeButton.click(); // Simulates a click on the close button
+              if (closeButton) closeButton.click();
             }
           });
         }
