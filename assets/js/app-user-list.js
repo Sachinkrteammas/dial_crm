@@ -13,7 +13,10 @@ document.addEventListener('DOMContentLoaded', function (e) {
   headingColor = config.colors.headingColor;
 
   // Variable declaration for table
-   const dt_user_table = document.getElementById('userTable');
+//   const dt_user_table = document.getElementById('userTable');
+   const $dt_user_table = $('#userTable');
+
+
 //    userView = 'app-user-view-account.html',
 //    statusObj = {
 //      1: { title: 'Pending', class: 'bg-label-warning' },
@@ -33,8 +36,11 @@ document.addEventListener('DOMContentLoaded', function (e) {
   // Users datatable
 
 
-  if (dt_user_table) {
-    new DataTable(dt_user_table, {
+
+
+
+  if ($dt_user_table.length) {
+    window.userTable = $dt_user_table.DataTable({
       ajax: '/api/users/',
 
       columns: [
@@ -42,14 +48,17 @@ document.addEventListener('DOMContentLoaded', function (e) {
     data: null,
     title: "S.No",
     render: function (data, type, row, meta) {
-      return meta.row + 1; // This gives you 1, 2, 3...
+      return meta.row + 1;
     }
   },
+
+//    { data: 'id',visible: false },
     { data: 'full_name' },
     { data: 'user_role' },
     { data: 'email_id' },
     { data: 'company' },
     { data: 'contact_no' },
+    { data: null }
 
   ],
   order: [[0, 'asc']],
@@ -104,7 +113,22 @@ document.addEventListener('DOMContentLoaded', function (e) {
         render: function (data, type, full) {
           return `<span class="text-heading">${full['contact_no'] || ''}</span>`;
         }
+      },
+      {
+
+      targets: -1, // actions
+        title: 'Actions',
+        orderable: false,
+        searchable: false,
+        render: function (data, type, full) {
+          const id = full.id;
+          return `
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-primary"  onclick="editUser(${full.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteUser(${full.id})">Delete</button>
+            </div>`;
       }
+    }
     ],
       select: {
         style: 'multi',
@@ -435,10 +459,12 @@ document.addEventListener('DOMContentLoaded', function (e) {
         };
 
         // Role filter
-        createFilter(3, '.user_role', 'UserRole', 'Select Email');
+        createFilter(3, '.user_role', 'UserRole', 'Select Role');
 
         // Plan filter
-        createFilter(4, '.user_plan', 'UserPlan', 'Select Company');
+        createFilter(4, '.user_plan', 'UserPlan', 'Select Email');
+
+
 
 
 
@@ -608,3 +634,71 @@ document.addEventListener('DOMContentLoaded', function (e) {
     }
   });
 });
+
+
+
+
+
+  function editUser(id) {
+  const table = window.userTable;
+  if (!table) return;
+
+  const rowData = table.rows().data().toArray().find(row => String(row.id) === String(id));
+  if (!rowData) {
+    console.error('User not found');
+    return;
+  }
+
+  document.getElementById('add-user-fullname').value = rowData.full_name || '';
+  document.getElementById('add-user-email').value = rowData.email_id || '';
+  document.getElementById('add-user-contact').value = rowData.contact_no || '';
+  document.getElementById('add-user-company').value = rowData.company || '';
+  document.getElementById('user-role').value = rowData.user_role || '';
+
+   document.getElementById('edit-user-id').value = rowData.id;
+
+
+
+  new bootstrap.Offcanvas('#offcanvasAddUser').show();
+}
+
+function deleteUser(id) {
+  if (!confirm("Are you sure you want to delete this user?")) return;
+
+  fetch(`/user/delete/${id}/`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCookie("csrftoken"),
+    },
+  })
+    .then((response) => {
+      if (response.ok) {
+        alert("User deleted successfully.");
+        location.reload();
+      } else {
+        return response.text().then((text) => {
+          throw new Error(text);
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("Error deleting user:", error);
+      alert("Failed to delete user.");
+    });
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
