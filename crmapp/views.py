@@ -109,13 +109,18 @@ def user_list(request):
 
         messages.success(request, "User created successfully.")
         return redirect('user_list')
+    users = UserList.objects.all().order_by('id')
+    user_count = users.count()
 
-    return render(request, 'crmapp/user_list.html')
+    active_users = users.filter(is_deactivated=False)
+    active_count = active_users.count()
+
+    return render(request, 'crmapp/user_list.html',{'count': user_count,'active_count': active_count})
 
 
 def user_list_api(request):
     users = UserList.objects.all().order_by('id').values(
-        'id', 'full_name', 'user_role', 'email_id', 'company', 'contact_no'
+        'id', 'full_name', 'user_role', 'email_id', 'company', 'contact_no', 'is_deactivated'
     )
     return JsonResponse({'data': list(users)})
 
@@ -124,14 +129,19 @@ def user_list_api(request):
 @login_required
 def save_user(request):
     if request.method == 'POST':
-        user_id = request.POST.get('edit_user_id')  # Hidden field in form
-
+        user_id = request.POST.get('edit_user_id')
         full_name = request.POST.get('userFullname')
         email = request.POST.get('userEmail')
         password = request.POST.get('password')
         contact = request.POST.get('userContact')
         company = request.POST.get('companyName')
         role = request.POST.get('userRole')
+        action = request.POST.get('userAction')
+
+        # Validate
+        if not full_name or not email:
+            messages.error(request, "Full name and email are required.")
+            return redirect('user_list')
 
         try:
             validate_email(email)
@@ -139,19 +149,19 @@ def save_user(request):
             messages.error(request, "Invalid email address.")
             return redirect('user_list')
 
-        if not full_name or not email:
-            messages.error(request, "Full name and email are required.")
-            return redirect('user_list')
 
-        if user_id:
-            user_list_entry = get_object_or_404(UserList, id=user_id)
-            user = getattr(user_list_entry, 'user', None)
+        if user_id and user_id != "0":
+            user_list_entry = UserList.objects.filter(id=int(user_id)).first()
+            if not user_list_entry:
+                messages.error(request, "User not found.")
+                return redirect('user_list')
+
+            user = user_list_entry.user
 
             if user:
                 if email != user.username and User.objects.filter(username=email).exists():
                     messages.error(request, "User with this email already exists.")
                     return redirect('user_list')
-
                 user.username = email
                 user.email = email
                 user.first_name = full_name
@@ -167,15 +177,19 @@ def save_user(request):
                 user.save()
                 user_list_entry.user = user
 
-            # Update UserList fields
+            # Update UserList
             user_list_entry.full_name = full_name
             user_list_entry.email_id = email
             user_list_entry.contact_no = contact
             user_list_entry.company = company
             user_list_entry.user_role = role
+            user_list_entry.updated_by = request.user
+            user_list_entry.is_deactivated = (action == "deactivate")
             user_list_entry.save()
 
             messages.success(request, "User updated successfully.")
+            return redirect('user_list')
+
 
         else:
             if not password:
@@ -190,7 +204,7 @@ def save_user(request):
             user.first_name = full_name
             user.save()
 
-            user_list_entry = UserList.objects.create(
+            UserList.objects.create(
                 user=user,
                 full_name=full_name,
                 email_id=email,
@@ -199,11 +213,12 @@ def save_user(request):
                 company=company,
                 user_role=role,
                 created_by=request.user,
+                updated_by=request.user,
+                is_deactivated=False  # default for new users
             )
 
             messages.success(request, "User created successfully.")
-
-        return redirect('user_list')
+            return redirect('user_list')
 
     return redirect('user_list')
 

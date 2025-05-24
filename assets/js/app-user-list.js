@@ -657,7 +657,15 @@ document.addEventListener('DOMContentLoaded', function (e) {
 
    document.getElementById('edit-user-id').value = rowData.id;
 
+   document.getElementById('user-action').value = rowData.is_deactivated ? 'deactivate' : 'active';
 
+
+ const actionBlock = document.getElementById('action-block');
+  if (rowData.id && rowData.id !== 0) {
+    actionBlock.style.display = 'block'; // show
+  } else {
+    actionBlock.style.display = 'none'; // hide
+  }
 
   new bootstrap.Offcanvas('#offcanvasAddUser').show();
 }

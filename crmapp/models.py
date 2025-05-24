@@ -24,6 +24,7 @@ class UserList(models.Model):
     contact_no = models.CharField(max_length=25)
     company = models.CharField(max_length=100)
     user_role = models.CharField(max_length=100)
+    is_deactivated = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='userlist_created_by')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='userlist_updated_by')
