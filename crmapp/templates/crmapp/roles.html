@@ -1859,7 +1859,7 @@
                             data-bs-toggle="modal"
                             data-bs-target="#addRoleModal"
                             class="role-edit-modal"
-                            ><span>Edit Role</span></a
+                            ><span>Edit permissions</span></a
                           >
                         </div>
                         <a href="javascript:void(0);"><i class="icon-base ti tabler-copy icon-md text-heading"></i></a>
@@ -1916,7 +1916,7 @@
                             data-bs-toggle="modal"
                             data-bs-target="#addRoleModal"
                             class="role-edit-modal"
-                            ><span>Edit Role</span></a
+                            ><span>Edit permissions</span></a
                           >
                         </div>
                         <a href="javascript:void(0);"><i class="icon-base ti tabler-copy icon-md text-heading"></i></a>
@@ -1973,7 +1973,7 @@
                             data-bs-toggle="modal"
                             data-bs-target="#addRoleModal"
                             class="role-edit-modal"
-                            ><span>Edit Role</span></a
+                            ><span>Edit permissions</span></a
                           >
                         </div>
                         <a href="javascript:void(0);"><i class="icon-base ti tabler-copy icon-md text-heading"></i></a>
@@ -2030,7 +2030,7 @@
                             data-bs-toggle="modal"
                             data-bs-target="#addRoleModal"
                             class="role-edit-modal"
-                            ><span>Edit Role</span></a
+                            ><span>Edit permissions</span></a
                           >
                         </div>
                         <a href="javascript:void(0);"><i class="icon-base ti tabler-copy icon-md text-heading"></i></a>
@@ -2087,7 +2087,7 @@
                             data-bs-toggle="modal"
                             data-bs-target="#addRoleModal"
                             class="role-edit-modal"
-                            ><span>Edit Role</span></a
+                            ><span>Edit permissions</span></a
                           >
                         </div>
                         <a href="javascript:void(0);"><i class="icon-base ti tabler-copy icon-md text-heading"></i></a>
@@ -2113,10 +2113,10 @@
                             data-bs-target="#addRoleModal"
                             data-bs-toggle="modal"
                             class="btn btn-sm btn-primary mb-4 text-nowrap add-new-role">
-                            Add New Role
+                            User Permissions
                           </button>
                           <p class="mb-0">
-                            Add new role, <br />
+                            Add Permissions, <br />
                             if it doesn't exist.
                           </p>
                         </div>
@@ -2159,23 +2159,24 @@
                     <div class="modal-body">
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       <div class="text-center mb-6">
-                        <h4 class="role-title">Add New Role</h4>
-                        <p class="text-body-secondary">Set role permissions</p>
+                        <h4 class="role-title">User permissions</h4>
+                        <p class="text-body-secondary">Set user permissions</p>
                       </div>
                       <!-- Add role form -->
-                      <form id="addRoleForm" class="row g-3" onsubmit="return false">
+                      <form id="addRoleForm" class="row g-3">
+                          {% csrf_token %}
                         <div class="col-12 form-control-validation mb-3">
-                          <label class="form-label" for="modalRoleName">Role Name</label>
+                          <label class="form-label" for="modalRoleName">User Email</label>
                           <input
                             type="text"
                             id="modalRoleName"
                             name="modalRoleName"
                             class="form-control"
-                            placeholder="Enter a role name"
+                            placeholder="Enter a user email"
                             tabindex="-1" />
                         </div>
                         <div class="col-12">
-                          <h5 class="mb-6">Role Permissions</h5>
+                          <h5 class="mb-6">User Permissions</h5>
                           <!-- Permission table -->
                           <div class="table-responsive">
                             <table class="table table-flush-spacing">
@@ -2199,7 +2200,7 @@
                                   </td>
                                 </tr>
                                 <tr>
-                                  <td class="text-nowrap fw-medium text-heading">User Management</td>
+                                  <td class="text-nowrap fw-medium text-heading">Users</td>
                                   <td>
                                     <div class="d-flex justify-content-end">
                                       <div class="form-check mb-0 me-4 me-lg-12">
@@ -2218,7 +2219,7 @@
                                   </td>
                                 </tr>
                                 <tr>
-                                  <td class="text-nowrap fw-medium text-heading">Content Management</td>
+                                  <td class="text-nowrap fw-medium text-heading">CRM</td>
                                   <td>
                                     <div class="d-flex justify-content-end">
                                       <div class="form-check mb-0 me-4 me-lg-12">
@@ -2236,146 +2237,15 @@
                                     </div>
                                   </td>
                                 </tr>
-                                <tr>
-                                  <td class="text-nowrap fw-medium text-heading">Disputes Management</td>
-                                  <td>
-                                    <div class="d-flex justify-content-end">
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="dispManagementRead" />
-                                        <label class="form-check-label" for="dispManagementRead"> Read </label>
-                                      </div>
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="dispManagementWrite" />
-                                        <label class="form-check-label" for="dispManagementWrite"> Write </label>
-                                      </div>
-                                      <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="dispManagementCreate" />
-                                        <label class="form-check-label" for="dispManagementCreate"> Create </label>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td class="text-nowrap fw-medium text-heading">Database Management</td>
-                                  <td>
-                                    <div class="d-flex justify-content-end">
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="dbManagementRead" />
-                                        <label class="form-check-label" for="dbManagementRead"> Read </label>
-                                      </div>
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="dbManagementWrite" />
-                                        <label class="form-check-label" for="dbManagementWrite"> Write </label>
-                                      </div>
-                                      <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="dbManagementCreate" />
-                                        <label class="form-check-label" for="dbManagementCreate"> Create </label>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td class="text-nowrap fw-medium text-heading">Financial Management</td>
-                                  <td>
-                                    <div class="d-flex justify-content-end">
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="finManagementRead" />
-                                        <label class="form-check-label" for="finManagementRead"> Read </label>
-                                      </div>
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="finManagementWrite" />
-                                        <label class="form-check-label" for="finManagementWrite"> Write </label>
-                                      </div>
-                                      <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="finManagementCreate" />
-                                        <label class="form-check-label" for="finManagementCreate"> Create </label>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td class="text-nowrap fw-medium text-heading">Reporting</td>
-                                  <td>
-                                    <div class="d-flex justify-content-end">
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="reportingRead" />
-                                        <label class="form-check-label" for="reportingRead"> Read </label>
-                                      </div>
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="reportingWrite" />
-                                        <label class="form-check-label" for="reportingWrite"> Write </label>
-                                      </div>
-                                      <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="reportingCreate" />
-                                        <label class="form-check-label" for="reportingCreate"> Create </label>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td class="text-nowrap fw-medium text-heading">API Control</td>
-                                  <td>
-                                    <div class="d-flex justify-content-end">
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="apiRead" />
-                                        <label class="form-check-label" for="apiRead"> Read </label>
-                                      </div>
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="apiWrite" />
-                                        <label class="form-check-label" for="apiWrite"> Write </label>
-                                      </div>
-                                      <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="apiCreate" />
-                                        <label class="form-check-label" for="apiCreate"> Create </label>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td class="text-nowrap fw-medium text-heading">Repository Management</td>
-                                  <td>
-                                    <div class="d-flex justify-content-end">
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="repoRead" />
-                                        <label class="form-check-label" for="repoRead"> Read </label>
-                                      </div>
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="repoWrite" />
-                                        <label class="form-check-label" for="repoWrite"> Write </label>
-                                      </div>
-                                      <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="repoCreate" />
-                                        <label class="form-check-label" for="repoCreate"> Create </label>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td class="text-nowrap fw-medium text-heading">Payroll</td>
-                                  <td>
-                                    <div class="d-flex justify-content-end">
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="payrollRead" />
-                                        <label class="form-check-label" for="payrollRead"> Read </label>
-                                      </div>
-                                      <div class="form-check mb-0 me-4 me-lg-12">
-                                        <input class="form-check-input" type="checkbox" id="payrollWrite" />
-                                        <label class="form-check-label" for="payrollWrite"> Write </label>
-                                      </div>
-                                      <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="payrollCreate" />
-                                        <label class="form-check-label" for="payrollCreate"> Create </label>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
+
                               </tbody>
                             </table>
                           </div>
                           <!-- Permission table -->
                         </div>
                         <div class="col-12 text-center">
-                          <button type="submit" class="btn btn-primary me-sm-4 me-1">Submit</button>
+                          <button type="button" class="btn btn-primary me-sm-4 me-1" onclick="submitRoleForm()">Submit</button>
+
                           <button
                             type="reset"
                             class="btn btn-label-secondary"

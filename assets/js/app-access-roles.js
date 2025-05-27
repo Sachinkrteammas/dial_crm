@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   ]
                 },
                 {
-                  text: '<i class="icon-base ti tabler-plus me-0 me-sm-1 icon-16px"></i><span class="d-none d-sm-inline-block">Add New User</span>',
+                  text: '<i class="icon-base ti tabler-plus me-0 me-sm-1 icon-16px"></i><span class="d-none d-sm-inline-block">User Permissions</span>',
                   className: 'add-new btn btn-primary rounded-2 waves-effect waves-light',
                   attr: {
                     'data-bs-toggle': 'modal',
@@ -476,13 +476,162 @@ document.addEventListener('DOMContentLoaded', function () {
     roleTitle = document.querySelector('.role-title');
 
   roleAdd.onclick = function () {
-    roleTitle.innerHTML = 'Add New Role'; // reset text
+    roleTitle.innerHTML = 'Add permissions'; // reset text
   };
   if (roleEditList) {
     roleEditList.forEach(function (roleEditEl) {
       roleEditEl.onclick = function () {
-        roleTitle.innerHTML = 'Edit Role'; // reset text
+        roleTitle.innerHTML = 'Edit permissions'; // reset text
       };
     });
   }
 });
+
+
+
+
+
+
+
+//                                         user permissions
+
+//function getCheckboxValue(id) {
+//  return document.getElementById(id)?.checked || false;
+//}
+//
+//function submitRoleForm() {
+//  const data = {
+//    username: document.getElementById("modalRoleName").value,
+//    permissions: {
+//      user: {
+//        read: getCheckboxValue("userManagementRead"),
+//        write: getCheckboxValue("userManagementWrite"),
+//        create: getCheckboxValue("userManagementCreate")
+//      },
+//      crm: {
+//        read: getCheckboxValue("contentManagementRead"),
+//        write: getCheckboxValue("contentManagementWrite"),
+//        create: getCheckboxValue("contentManagementCreate")
+//      },
+//      all_access: getCheckboxValue("selectAll")
+//    }
+//  };
+//
+//  fetch("/api/add-role/", {
+//    method: "POST",
+//    headers: {
+//      "Content-Type": "application/json",
+//      "X-CSRFToken": getCookie("csrftoken") // for CSRF protection
+//    },
+//    body: JSON.stringify(data)
+//  })
+//  .then(response => {
+//    if (response.ok) {
+//      alert("Role added successfully");
+//      document.getElementById("addRoleForm").reset();
+//      const modal = bootstrap.Modal.getInstance(document.getElementById("addRoleModal"));
+//      modal.hide();
+//    } else {
+//      alert("Failed to add role");
+//    }
+//  });
+//
+//  return false; // prevent default form submission
+//}
+//
+//// CSRF helper
+//function getCookie(name) {
+//  let cookieValue = null;
+//  if (document.cookie && document.cookie !== "") {
+//    const cookies = document.cookie.split(";");
+//    for (let i = 0; i < cookies.length; i++) {
+//      const cookie = cookies[i].trim();
+//      if (cookie.startsWith(name + "=")) {
+//        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+//        break;
+//      }
+//    }
+//  }
+//  return cookieValue;
+//}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("addRoleForm");
+
+  // Triggered if you use the Submit button inside <form>
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    submitRoleForm();
+  });
+
+  // Optional: If you use a button with type="button" and an onclick attribute, this is not needed.
+});
+
+function getCheckboxValue(id) {
+  const el = document.getElementById(id);
+  return el ? el.checked : false;
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function submitRoleForm() {
+alert("hello")
+  const data = {
+    username: document.getElementById("modalRoleName").value,
+    permissions: {
+      user: {
+        read: getCheckboxValue("userManagementRead"),
+        write: getCheckboxValue("userManagementWrite"),
+        create: getCheckboxValue("userManagementCreate"),
+      },
+      crm: {
+        read: getCheckboxValue("contentManagementRead"),
+        write: getCheckboxValue("contentManagementWrite"),
+        create: getCheckboxValue("contentManagementCreate"),
+      },
+      all_access: getCheckboxValue("selectAll"),
+    },
+  };
+
+  fetch("/api/add-role/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken"),
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status === "success") {
+        alert("Role added successfully!");
+        document.getElementById("addRoleForm").reset();
+
+        const modalElement = document.getElementById("addRoleModal");
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) modalInstance.hide();
+      } else {
+        alert("Error: " + (result.error || "Unknown error"));
+      }
+    })
+    .catch((error) => {
+      console.error("Request failed:", error);
+      alert("Something went wrong!");
+    });
+
+  return false;
+}
+

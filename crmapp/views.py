@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -9,7 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import UserList
+from .models import UserList, UserRole
 
 User = get_user_model()
 
@@ -260,3 +262,38 @@ def user_roles(request):
         'admin_count': admin_count,
         'user_count': user_count,
     })
+
+
+
+@csrf_exempt
+def add_role_api(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            username = data.get("username")
+
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return JsonResponse({"error": "User does not exist"}, status=404)
+
+            # Create UserRole with valid User foreign key
+            UserRole.objects.create(
+                user=user,
+                all_access=data["permissions"].get("all_access", False),
+                user_read=data["permissions"]["user"].get("read", False),
+                user_write=data["permissions"]["user"].get("write", False),
+                user_create=data["permissions"]["user"].get("create", False),
+                crm_read=data["permissions"]["crm"].get("read", False),
+                crm_write=data["permissions"]["crm"].get("write", False),
+                crm_create=data["permissions"]["crm"].get("create", False),
+                created_by=user,  # Assuming same user creates the role
+                updated_by=user,
+            )
+
+            return JsonResponse({"status": "success"}, status=201)
+
+        except (KeyError, json.JSONDecodeError):
+            return JsonResponse({"error": "Invalid data format"}, status=400)
+
+    return JsonResponse({"error": "Invalid method"}, status=405)

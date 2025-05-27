@@ -35,3 +35,26 @@ class UserList(models.Model):
 
     class Meta:
         db_table = 'user_list'
+
+
+class UserRole(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='roles')
+    username = models.CharField(max_length=100)
+    all_access = models.BooleanField(default=False)
+    user_read = models.BooleanField(default=False)
+    user_write = models.BooleanField(default=False)
+    user_create = models.BooleanField(default=False)
+    crm_read = models.BooleanField(default=False)
+    crm_write = models.BooleanField(default=False)
+    crm_create = models.BooleanField(default=False)
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_roles')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_roles')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.user.username  # or str(self.user)
+
+    class Meta:
+        db_table = 'user_role'
