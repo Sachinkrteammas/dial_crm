@@ -5,159 +5,84 @@
 'use strict';
 
 // Datatable (js)
-document.addEventListener('DOMContentLoaded', function (e) {
-  const dtUserTable = document.querySelector('.datatables-users'),
-    statusObj = {
-      1: { title: 'Pending', class: 'bg-label-warning' },
-      2: { title: 'Active', class: 'bg-label-success' },
-      3: { title: 'Inactive', class: 'bg-label-secondary' }
-    };
-  let dt_User,
-    userView = 'app-user-view-account.html';
+document.addEventListener('DOMContentLoaded', function () {
+  const dtUserTable = document.querySelector('.datatables-users');
 
-  // Users List datatable
   if (dtUserTable) {
-    const userRole = document.createElement('div');
-    userRole.classList.add('user_role');
-    const userPlan = document.createElement('div');
-    userPlan.classList.add('user_plan');
-    dt_User = new DataTable(dtUserTable, {
-      ajax: assetsPath + 'json/user-list.json', // JSON file to add data
+    const userTable = new DataTable(dtUserTable, {
+      ajax: '/api/users/',
       columns: [
-        // columns according to JSON
-        { data: 'id' },
-        { data: 'id', orderable: false, render: DataTable.render.select() },
+        {
+          data: null,
+          title: 'S.No',
+          render: (data, type, row, meta) => meta.row + 1
+        },
         { data: 'full_name' },
-        { data: 'role' },
-        { data: 'current_plan' },
-        { data: 'billing' },
-        { data: 'status' },
-        { data: 'id' }
+        { data: 'user_role' },
+        { data: 'email_id' },
+        { data: 'company' },
+        { data: 'contact_no' },
+        // For actions
       ],
+      order: [[0, 'asc']],
       columnDefs: [
         {
-          // For Responsive
-          className: 'control',
-          orderable: false,
-          searchable: false,
-          responsivePriority: 5,
-          targets: 0,
-          render: function (data, type, full, meta) {
-            return '';
-          }
-        },
-        {
-          // For Checkboxes
           targets: 1,
-          orderable: false,
-          searchable: false,
-          responsivePriority: 3,
-          checkboxes: true,
-          render: function () {
-            return '<input type="checkbox" class="dt-checkboxes form-check-input">';
-          },
-          checkboxes: {
-            selectAllRender: '<input type="checkbox" class="form-check-input">'
+          render: function (data, type, full) {
+            const name = full['full_name'] || '';
+            const email = full['email_id'] || '';
+            const avatar = full['avatar'] || '';
+            let avatarHtml;
+
+            if (avatar) {
+              avatarHtml = `<img src="${avatar}" alt="Avatar" class="rounded-circle" height="32">`;
+            } else {
+              const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+              avatarHtml = `<span class="avatar-initial rounded-circle bg-label-primary">${initials}</span>`;
+            }
+
+            return `
+              <div class="d-flex align-items-center">
+                <div class="avatar me-2">${avatarHtml}</div>
+                <div class="d-flex flex-column">
+                  <span class="fw-medium">${name}</span>
+
+                </div>
+              </div>`;
           }
         },
         {
           targets: 2,
-          responsivePriority: 1,
-          render: function (data, type, full, meta) {
-            const name = full['full_name'];
-            const email = full['email'];
-            const image = full['avatar'];
-            let output;
-
-            if (image) {
-              // For Avatar image
-              output = `<img src="${assetsPath}img/avatars/${image}" alt="Avatar" class="rounded-circle">`;
-            } else {
-              // For Avatar badge
-              const stateNum = Math.floor(Math.random() * 6) + 1;
-              const states = ['success', 'danger', 'warning', 'info', 'dark', 'primary', 'secondary'];
-              const state = states[stateNum];
-              const initials = (name.match(/\b\w/g) || []).slice(0, 2).join('').toUpperCase();
-              output = `<span class="avatar-initial rounded-circle bg-label-${state}">${initials}</span>`;
-            }
-
-            // Creates full output for row
-            const rowOutput = `
-              <div class="d-flex justify-content-left align-items-center role-name">
-                <div class="avatar-wrapper">
-                  <div class="avatar avatar-sm me-3">
-                    ${output}
-                  </div>
-                </div>
-                <div class="d-flex flex-column">
-                  <a href="${userView}" class="text-heading text-truncate"><span class="fw-medium">${name}</span></a>
-                  <small>@${email}</small>
-                </div>
-              </div>
-            `;
-
-            return rowOutput;
+          render: function (data, type, full) {
+            const role = full['user_role'] || 'N/A';
+            const icons = {
+              Admin: 'tabler-crown text-primary',
+              Editor: 'tabler-edit text-warning',
+              Maintainer: 'tabler-chart-pie text-info',
+              Author: 'tabler-device-desktop text-danger',
+              Subscriber: 'tabler-user text-success'
+            };
+            const iconClass = icons[role] || 'tabler-user';
+            return `
+              <span class="d-flex align-items-center">
+                <i class="icon-base ti ${iconClass} me-2 icon-md"></i>
+                <span>${role}</span>
+              </span>`;
           }
         },
         {
           targets: 3,
-          render: function (data, type, full, meta) {
-            const role = full['role'];
-            const roleBadgeObj = {
-              Subscriber: '<span class="me-2"><i class="icon-base ti tabler-user icon-22px text-success"></i></span>',
-              Author:
-                '<span class="me-2"><i class="icon-base ti tabler-device-desktop icon-22px text-danger"></i></span>',
-              Maintainer: '<span class="me-2"><i class="icon-base ti tabler-chart-pie icon-22px text-info"></i></span>',
-              Editor: '<span class="me-2"><i class="icon-base ti tabler-edit icon-22px text-warning"></i></span>',
-              Admin: '<span class="me-2"><i class="icon-base ti tabler-crown icon-22px text-primary"></i></span>'
-            };
-
-            return `<span class='text-truncate d-flex align-items-center'>${roleBadgeObj[role] || ''}${role}</span>`;
-          }
+          render: (data, type, full) => `<span class="text-heading">${full['email_id'] || ''}</span>`
         },
         {
-          // Plans
           targets: 4,
-          render: function (data, type, full, meta) {
-            let plan = full['current_plan'];
-
-            return '<span class="fw-medium">' + plan + '</span>';
-          }
+          render: (data, type, full) => `<span class="text-heading">${full['company'] || ''}</span>`
         },
         {
-          // User Status
-          targets: 6,
-          render: function (data, type, full, meta) {
-            let status = full['status'];
-
-            return (
-              '<span class="badge ' +
-              statusObj[status].class +
-              '" text-capitalized>' +
-              statusObj[status].title +
-              '</span>'
-            );
-          }
+          targets: 5,
+          render: (data, type, full) => `<span class="text-heading">${full['contact_no'] || ''}</span>`
         },
-        {
-          targets: -1,
-          title: 'Actions',
-          searchable: false,
-          orderable: false,
-          render: function (data, type, full, meta) {
-            return `
-              <div class="d-flex align-items-center">
-                <a href="javascript:;" class="btn btn-icon btn-text-secondary rounded-pill waves-effect delete-record"><i class="icon-base ti tabler-trash icon-md"></i></a>
-                <a href="${userView}" class="btn btn-icon btn-text-secondary rounded-pill waves-effect"><i class="icon-base ti tabler-eye icon-md"></i></a>
-                <a href="javascript:;" class="btn btn-icon btn-text-secondary rounded-pill waves-effect dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="icon-base ti tabler-dots-vertical icon-md"></i></a>
-                <div class="dropdown-menu dropdown-menu-end m-0">
-                  <a href="javascript:;" class="dropdown-item">Edit</a>
-                  <a href="javascript:;" class="dropdown-item">Suspend</a>
-                </div>
-              </div>
-            `;
-          }
-        }
+
       ],
       select: {
         style: 'multi',

@@ -243,3 +243,20 @@ def delete_user(request, user_id):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+def user_roles(request):
+    team_leader_count = UserList.objects.filter(user_role='team-leader').count()
+    adviser_count = UserList.objects.filter(user_role='adviser').count()
+    sales_count = UserList.objects.filter(user_role='Sales').count()
+    admin_count = UserList.objects.filter(user_role='admin').count()
+    user_count = UserList.objects.count()
+
+    return render(request, 'crmapp/roles.html', {
+        'team_leader_count': team_leader_count,
+        'adviser_count': adviser_count,
+        'sales_count': sales_count,
+        'admin_count': admin_count,
+        'user_count': user_count,
+    })
