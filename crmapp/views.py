@@ -297,3 +297,7 @@ def add_role_api(request):
             return JsonResponse({"error": "Invalid data format"}, status=400)
 
     return JsonResponse({"error": "Invalid method"}, status=405)
+
+@login_required
+def crm_creation(request):
+    return render(request, 'crmapp/crm_creation.html')
