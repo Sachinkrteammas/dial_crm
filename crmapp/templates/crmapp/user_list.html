@@ -72,6 +72,11 @@
       <div class="layout-container">
         <!-- Menu -->
 
+
+
+
+
+
         <aside id="layout-menu" class="layout-menu menu-vertical menu">
           <div class="app-brand demo">
             <a href="index.html" class="app-brand-link">
@@ -252,12 +257,19 @@
                 <div data-i18n="Email">Email</div>
               </a>
             </li>
+<!--            <li class="menu-item">-->
+<!--              <a href="app-chat.html" class="menu-link">-->
+<!--                <i class="menu-icon icon-base ti tabler-messages"></i>-->
+<!--                <div data-i18n="Chat">Chat</div>-->
+<!--              </a>-->
+<!--            </li>-->
             <li class="menu-item">
-              <a href="app-chat.html" class="menu-link">
+              <a href="{% url 'crm_creation' %}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-messages"></i>
-                <div data-i18n="Chat">Chat</div>
+                <div data-i18n="CRM Creation">CRM Creation</div>
               </a>
             </li>
+
             <li class="menu-item">
               <a href="app-calendar.html" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-calendar"></i>
@@ -1977,7 +1989,7 @@
                           type="text"
                           id="add-user-contact"
                           class="form-control phone-mask"
-                          placeholder="+91 XXXXXX2589"
+                          placeholder="XXXXXX2589"
                           aria-label="john.doe@example.com"
                           name="userContact" />
                       </div>
@@ -1998,7 +2010,8 @@
                           <option value="adviser">Adviser</option>
                           <option value="team-leader">Team Leader</option>
                           <option value="admin">Admin</option>
-                            <option value="Sales">Sales</option>
+                          <option value="Sales">Sales</option>
+                          <option value="Sales">Manager</option>
                         </select>
                       </div>
                       <div>

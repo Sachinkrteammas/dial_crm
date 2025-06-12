@@ -13,4 +13,7 @@ urlpatterns = [
     path('user_roles/', views.user_roles , name="user_roles"),
     path("api/add-role/", views.add_role_api, name="add_role_api"),
     path("crm_creation/", views.crm_creation, name="crm_creation"),
+    path('user/crm_save/', views.crm_save, name='crm_save'),
+
+
 ]

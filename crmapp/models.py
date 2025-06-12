@@ -58,3 +58,35 @@ class UserRole(models.Model):
 
     class Meta:
         db_table = 'user_role'
+
+
+
+class FieldMaster(models.Model):
+    FieldName = models.CharField(max_length=200, null=True, blank=True)
+    FieldType = models.CharField(max_length=200, null=True, blank=True)
+    FieldValidation = models.CharField(max_length=100, null=True, blank=True)
+    RequiredCheck = models.CharField(max_length=100, null=True, blank=True)
+    Priority = models.IntegerField(null=True, blank=True)
+    fieldNumber = models.IntegerField(null=True, blank=True)
+    ClientId = models.IntegerField(null=True, blank=True)
+    CreateDate = models.DateTimeField(null=True, blank=True)
+    FieldStatus = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return self.FieldName if self.FieldName else f"FieldMaster {self.id}"
+
+    class Meta:
+        db_table = 'field_master'
+
+
+class FieldMasterValue(models.Model):
+    FieldId = models.ForeignKey(FieldMaster, on_delete=models.CASCADE, null=True, blank=True)
+    FieldValueName = models.CharField(max_length=300, null=True, blank=True)
+    ClientId = models.CharField(max_length=20, null=True, blank=True)
+    FieldStatus = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return self.FieldValueName if self.FieldValueName else f"FieldValue {self.id}"
+
+    class Meta:
+        db_table = 'field_master_value'

@@ -1847,13 +1847,16 @@
           <!-- / Navbar -->
 
           <!-- Content Wrapper -->
+
 <div class="container py-5">
   <h4 class="mb-4">Manage Required Fields</h4>
 
   <div class="card shadow-sm rounded-4 p-4 custom-card">
     <h5 class="card-title mb-4">Manage Required Fields</h5>
 
-    <form id="fieldForm" class="browser-default-validation">
+<!--    <form id="fieldForm" class="browser-default-validation">-->
+    <form id="fieldForm" method="POST" >
+{% csrf_token %}
       <!-- Field Name -->
       <div class="mb-4">
         <label class="form-label" for="field-name">Field Name</label>
@@ -1949,8 +1952,9 @@
       <!-- Dynamic rows will be inserted here -->
     </tbody>
   </table>
+
   <div class="text-center">
-    <button class="btn btn-primary px-4">Submit</button>
+    <button id="submit_id" class="btn btn-primary px-4">Submit</button>
   </div>
 </div>
 
@@ -2016,7 +2020,7 @@
   const valueContainer = document.getElementById('dropdownValueContainer');
   const dropdownInput = document.getElementById('dropdown-values');
 
-  // Toggle dropdown value input based on field-type selection
+  // Show/hide dropdown value input based on selected field type
   document.querySelectorAll('input[name="field-type"]').forEach((radio) => {
     radio.addEventListener('change', () => {
       if (dropdownRadio.checked) {
@@ -2051,25 +2055,37 @@
     const controls = document.createElement('div');
     controls.className = 'field-controls';
 
-     let input;
-if (fieldType === 'Drop Down') {
-  input = document.createElement('select');
-  input.className = 'form-control w-50';
+    let input;
 
-  const values = dropdownInput.value.split(',').map(v => v.trim()).filter(v => v);
-  values.unshift('Select ' + name); // Add default option
+    if (fieldType === 'Drop Down') {
+      input = document.createElement('select');
+      input.className = 'form-control w-50';
+      input.name = name; // user's selected value
 
-  values.forEach(val => {
-    const option = document.createElement('option');
-    option.textContent = val;
-    option.value = val;
-    input.appendChild(option);
-  });
-} else {
-  input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'form-control w-50';
-}
+      const values = dropdownInput.value.split(',').map(v => v.trim()).filter(v => v);
+      const placeholder = 'Select ' + name;
+      input.appendChild(new Option(placeholder, '', true, true));
+
+      values.forEach(val => {
+        const option = document.createElement('option');
+        option.textContent = val;
+        option.value = val;
+        input.appendChild(option);
+      });
+
+      // Hidden input to store list of options for saving
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = `${name}_options`;  // Different name to avoid conflict
+      hiddenInput.value = values.join(',');
+
+      controls.appendChild(hiddenInput);
+    } else {
+      input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'form-control w-50';
+      input.name = name;
+    }
 
     const editBtn = document.createElement('button');
     editBtn.innerHTML = '✏️';
@@ -2084,13 +2100,8 @@ if (fieldType === 'Drop Down') {
     deleteBtn.onclick = () => {
       fieldDiv.remove();
       row.remove();
-
-      if (!container.children.length) {
-        customCard.style.display = 'none';
-      }
-      if (!priorityTableBody.children.length) {
-        prioritySection.style.display = 'none';
-      }
+      if (!container.children.length) customCard.style.display = 'none';
+      if (!priorityTableBody.children.length) prioritySection.style.display = 'none';
     };
 
     controls.appendChild(input);
@@ -2101,14 +2112,16 @@ if (fieldType === 'Drop Down') {
     fieldDiv.appendChild(controls);
     container.appendChild(fieldDiv);
 
-    // Add corresponding row to priority table
+    // Add priority row
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${name}</td>
-      <td>${fieldType}</td>
-      <td>${fieldValidation}</td>
-      <td>${isRequired}</td>
-      <td><input type="number" class="form-control" value="${priorityTableBody.children.length + 1}" /></td>
+      <td data-label="name">${name}</td>
+      <td data-label="fieldType">${fieldType}</td>
+      <td data-label="fieldValidation">${fieldValidation}</td>
+      <td data-label="isRequired">${isRequired}</td>
+      <td data-label="priority">
+        <input type="number" class="form-control priority-input" value="${priorityTableBody.children.length + 1}" />
+      </td>
     `;
     priorityTableBody.appendChild(row);
 
@@ -2119,27 +2132,107 @@ if (fieldType === 'Drop Down') {
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-  const dropdownRadio = document.getElementById("field-type-dropdown");
-  const boxRadio = document.getElementById("field-type-box");
-  const areaRadio = document.getElementById("field-type-area");
-  const dropdownContainer = document.getElementById("dropdownValueContainer");
+    const dropdownRadio = document.getElementById("field-type-dropdown");
+    const boxRadio = document.getElementById("field-type-box");
+    const areaRadio = document.getElementById("field-type-area");
+    const dropdownContainer = document.getElementById("dropdownValueContainer");
 
-  function toggleDropdownInput() {
-    if (dropdownRadio.checked) {
-      dropdownContainer.style.display = "block";
-    } else {
-      dropdownContainer.style.display = "none";
+    function toggleDropdownInput() {
+      if (dropdownRadio.checked) {
+        dropdownContainer.style.display = "block";
+      } else {
+        dropdownContainer.style.display = "none";
+      }
     }
-  }
 
-  toggleDropdownInput(); // Run once on load
+    toggleDropdownInput(); // Run once on load
 
-  [dropdownRadio, boxRadio, areaRadio].forEach(radio => {
-    radio.addEventListener("change", toggleDropdownInput);
+    [dropdownRadio, boxRadio, areaRadio].forEach(radio => {
+      radio.addEventListener("change", toggleDropdownInput);
+    });
   });
-});
-
 </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('fieldForm');
+    const submitBtn = document.getElementById('submit_id');
+    const priorityTableBody = document.getElementById('priorityTableBody');
+    const viewFieldsContainer = document.getElementById('viewFieldsContainer');
+    const customCard = document.getElementById('customCard');
+    const prioritySection = document.getElementById('prioritySection');
+
+    submitBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+      const dynamicData = {};
+      const hiddenOptions = {};
+      const dynamicInputs = viewFieldsContainer.querySelectorAll('input, select');
+
+      dynamicInputs.forEach(input => {
+        if (input.name) {
+          if (input.name.endsWith('_options')) {
+            hiddenOptions[input.name] = input.value;
+          } else {
+            dynamicData[input.name] = input.value.trim();
+          }
+        }
+      });
+
+      Object.assign(dynamicData, hiddenOptions);
+
+      const rows = priorityTableBody.querySelectorAll('tr');
+      const tableData = [];
+
+      rows.forEach(row => {
+        const rowData = {
+          name: row.querySelector('[data-label="name"]')?.textContent?.trim() || '',
+          fieldType: row.querySelector('[data-label="fieldType"]')?.textContent?.trim() || '',
+          fieldValidation: row.querySelector('[data-label="fieldValidation"]')?.textContent?.trim() || '',
+          isRequired: row.querySelector('[data-label="isRequired"]')?.textContent?.trim() || '',
+          priority: row.querySelector('input.priority-input')?.value || ''
+        };
+        tableData.push(rowData);
+      });
+
+      const payload = {
+        formData: dynamicData,
+        fields: tableData
+      };
+
+      console.log('Sending Payload:', payload);
+
+      fetch('/user/crm_save/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(data => {
+        alert('Successfully saved');
+
+        form.reset();
+        container.innerHTML = '';
+        priorityTableBody.innerHTML = '';
+        customCard.style.display = 'none';
+        prioritySection.style.display = 'none';
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    });
+  });
+</script>
+
+
 
   </body>
 </html>

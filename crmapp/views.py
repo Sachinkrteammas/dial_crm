@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import UserList, UserRole
+from .models import UserList, UserRole,FieldMaster, FieldMasterValue
 
 User = get_user_model()
 
@@ -301,3 +301,66 @@ def add_role_api(request):
 @login_required
 def crm_creation(request):
     return render(request, 'crmapp/crm_creation.html')
+
+
+
+from django.utils import timezone
+@login_required
+def crm_save(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            form_data = data.get('formData', {})
+            fields = data.get('fields', [])
+
+            client_id = 1
+
+            for field in fields:
+                field_name = field.get('name')
+                field_type = field.get('fieldType')
+                validation = field.get('fieldValidation')
+                is_required = field.get('isRequired')
+                priority = field.get('priority')
+
+                # Save into FieldMaster
+                field_master = FieldMaster.objects.create(
+                    FieldName=field_name,
+                    FieldType=field_type,
+                    FieldValidation=validation,
+                    RequiredCheck=is_required,
+                    Priority=int(priority) if priority else None,
+                    fieldNumber=None,
+                    ClientId=client_id,
+                    CreateDate=timezone.now(),
+                    FieldStatus='Active'
+                )
+
+                if field_type == 'Drop Down':
+                    options_key = field_name + '_options'
+                    raw_values = form_data.get(options_key, "")
+                    dropdown_values = [val.strip() for val in raw_values.split(',') if val.strip()]
+
+                    for val in dropdown_values:
+                        if not val.lower().startswith('select'):  # Skip placeholder
+                            FieldMasterValue.objects.create(
+                                FieldId=field_master,
+                                FieldValueName=val,
+                                ClientId=str(client_id),
+                                FieldStatus='Active'
+                            )
+                else:
+                    # Save plain input (Text Box / Text Area)
+                    value = form_data.get(field_name)
+                    if value:
+                        FieldMasterValue.objects.create(
+                            FieldId=field_master,
+                            FieldValueName=value,
+                            ClientId=str(client_id),
+                            FieldStatus='Active'
+                        )
+
+            return JsonResponse({'status': 'success'})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
