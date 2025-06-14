@@ -1,15 +1,18 @@
 import json
+from audioop import reverse
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.http import JsonResponse
+from django.forms import model_to_dict
+from django.http import JsonResponse, HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from .models import UserList, UserRole,FieldMaster, FieldMasterValue
 
@@ -300,7 +303,15 @@ def add_role_api(request):
 
 @login_required
 def crm_creation(request):
-    return render(request, 'crmapp/crm_creation.html')
+    fields = FieldMaster.objects.prefetch_related('field_values').order_by('Priority')
+
+    if request.method == "POST":
+        form_data = {field.FieldName: request.POST.get(field.FieldName) for field in fields}
+        print("Submitted Data:", form_data)
+        # You can save form_data into another model or process it further
+
+    return render(request, 'crmapp/crm_creation.html', {'fields': fields})
+
 
 
 
@@ -364,3 +375,82 @@ def crm_save(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+
+@require_POST
+def delete_field(request, pk):
+    try:
+        field = FieldMaster.objects.get(pk=pk)
+        field_name = field.FieldName
+        field.delete()
+
+    except FieldMaster.DoesNotExist:
+        messages.error(request, 'Field not found.')
+    except Exception as e:
+        messages.error(request, f'Failed to delete field: {str(e)}')
+
+    return redirect('crm_creation')
+
+
+
+def get_field_data(request, pk):
+    try:
+        field = FieldMaster.objects.get(id=pk)
+    except FieldMaster.DoesNotExist:
+        raise Http404("Field not found")
+
+    dropdown_values = []
+    if field.FieldType == "Drop Down":
+        dropdown_values = list(
+            field.field_values.filter(FieldStatus="Active").values_list("FieldValueName", flat=True)
+        )
+
+    data = {
+        "id": field.id,
+        "FieldName": field.FieldName,
+        "FieldType": field.FieldType,
+        "FieldValidation": field.FieldValidation,
+        "RequiredCheck": field.RequiredCheck == "Yes",
+        "DropdownValues": ", ".join(dropdown_values),
+    }
+
+    return JsonResponse(data)
+
+@csrf_exempt
+def edit_field(request, pk):
+    try:
+        field = FieldMaster.objects.get(pk=pk)
+    except FieldMaster.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Field not found'}, status=404)
+
+    if request.method == 'GET':
+        data = model_to_dict(field)
+
+        if field.FieldType == 'Drop Down':
+            dropdown_values = FieldMasterValue.objects.filter(FieldId=field).values_list('FieldValueName', flat=True)
+            data['DropdownValues'] = ', '.join(dropdown_values)
+
+        return JsonResponse(data)
+
+    elif request.method == 'POST':
+        field.FieldName = request.POST.get('FieldName')
+        field.FieldType = request.POST.get('FieldType')
+        field.FieldValidation = request.POST.get('FieldValidation')
+        field.RequiredCheck = 'Yes' if request.POST.get('RequiredCheck') == 'Yes' else 'No'
+        field.save()
+
+        if field.FieldType == 'Drop Down':
+            dropdown_values = request.POST.get('DropdownValues', '')
+            values_list = [val.strip() for val in dropdown_values.split(',') if val.strip()]
+
+            # Clear old values
+            FieldMasterValue.objects.filter(FieldId=field).delete()
+
+            # Save new values
+            for val in values_list:
+                FieldMasterValue.objects.create(FieldId=field, FieldValueName=val, ClientId=field.ClientId,
+                                                FieldStatus='Active')
+
+        return JsonResponse({'success': True})
+
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)

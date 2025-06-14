@@ -1960,6 +1960,161 @@
 
 </div>
 
+
+
+<!--          DYANMIC FIELD-->
+         <h5 style="margin-left:25px;">Dynamic CRM Field</h5>
+
+<form method="POST">
+  {% csrf_token %}
+  <div style="display: flex; flex-wrap: wrap; margin-left: 20px; gap: 8px;">
+    {% for field in fields %}
+      <div class="mb-3 border p-3 rounded" style="width: 32%;">
+        <label class="form-label fw-bold">{{ field.FieldName }}</label>
+
+        {# Text Box #}
+        {% if field.FieldType == "Text Box" %}
+          {% if field.FieldValidation == "Datepicker" %}
+            <input type="date" name="{{ field.FieldName }}" class="form-control w-100"
+                   {% if field.RequiredCheck == "Yes" %} required {% endif %} />
+          {% else %}
+            <input type="text" name="{{ field.FieldName }}" class="form-control w-100"
+                   {% if field.RequiredCheck == "Yes" %} required {% endif %} />
+          {% endif %}
+
+        {# Text Area #}
+        {% elif field.FieldType == "Text Area" %}
+          <textarea name="{{ field.FieldName }}" class="form-control w-100" rows="3"
+                    {% if field.RequiredCheck == "Yes" %} required {% endif %}></textarea>
+
+        {# Drop Down #}
+        {% elif field.FieldType == "Drop Down" %}
+          <select name="{{ field.FieldName }}" class="form-select w-100"
+                  {% if field.RequiredCheck == "Yes" %} required {% endif %}>
+            <option value="">Select {{ field.FieldName }}</option>
+            {% for option in field.field_values.all %}
+              {% if option.FieldStatus == "Active" %}
+                <option value="{{ option.FieldValueName }}">{{ option.FieldValueName }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        {% endif %}
+
+        <!-- Edit/Delete Buttons -->
+        <div class="mt-3 d-flex justify-content-end gap-2">
+  <a href="#" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal" onclick="populateEditForm({{ field.id }})">✏️ Edit</a>
+ <form method="post" action="{% url 'delete_field' field.id %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this field?');">🗑️ Delete</button>
+  </form>
+</div>
+
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Submit Button -->
+  <div class="mt-4 text-center">
+    <button type="submit" class="btn btn-primary px-4">Submit</button>
+  </div>
+</form>
+
+
+
+
+
+          <!--          DYANMIC FIELD End -->
+
+<!-- Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content rounded-4" style="margin-left: 46px; margin-top: 75px;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Edit Field</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body px-4">
+        <form id="editForm" method="POST">
+          {% csrf_token %}
+          <input type="hidden" id="editFieldId" name="id"  value=""/>
+
+          <!-- Field Name -->
+          <div class="mb-4">
+            <label class="form-label" for="editFieldName">Field Name</label>
+            <input type="text" class="form-control" id="editFieldName" name="FieldName" placeholder="Enter field name" style="width: 72%;" required />
+          </div>
+
+          <!-- Field Type -->
+          <div class="mb-4 d-flex flex-wrap align-items-start gap-4">
+            <label class="form-label me-3 mt-2">Field Type</label>
+            <div class="form-check">
+              <input type="radio" id="edit-type-box" name="FieldType" value="Text Box" class="form-check-input" required />
+              <label class="form-check-label" for="edit-type-box">Text Box</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" id="edit-type-area" name="FieldType" value="Text Area" class="form-check-input" required />
+              <label class="form-check-label" for="edit-type-area">Text Area</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" id="edit-type-dropdown" name="FieldType" value="Drop Down" class="form-check-input" required />
+              <label class="form-check-label" for="edit-type-dropdown">Drop Down</label>
+            </div>
+          </div>
+
+          <!-- Dropdown Values (conditionally visible) -->
+          <div id="editDropdownValueContainer" class="mb-4" style="display: none;">
+            <label class="form-label" for="editDropdownValues">Dropdown Values (comma separated)</label>
+            <input type="text" class="form-control" id="editDropdownValues" name="DropdownValues" placeholder="e.g. Option1, Option2" style="width: 72%;" />
+          </div>
+
+          <!-- Field Validation -->
+          <div class="mb-4 d-flex flex-wrap align-items-start gap-4">
+            <label class="form-label me-3 mt-2">Field Validation</label>
+            <div class="form-check">
+              <input type="radio" id="edit-validation-numeric" name="FieldValidation" value="Numeric" class="form-check-input" required />
+              <label class="form-check-label" for="edit-validation-numeric">Numeric</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" id="edit-validation-character" name="FieldValidation" value="Character" class="form-check-input" required />
+              <label class="form-check-label" for="edit-validation-character">Character</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" id="edit-validation-alphanumeric" name="FieldValidation" value="Alphanumeric" class="form-check-input" required />
+              <label class="form-check-label" for="edit-validation-alphanumeric">Alphanumeric</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" id="edit-validation-datepicker" name="FieldValidation" value="Datepicker" class="form-check-input" required />
+              <label class="form-check-label" for="edit-validation-datepicker">Datepicker</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" id="edit-validation-phone" name="FieldValidation" value="Phone" class="form-check-input" required />
+              <label class="form-check-label" for="edit-validation-phone">Phone</label>
+            </div>
+          </div>
+
+          <!-- Mandatory Checkbox -->
+          <div class="mb-4">
+            <input type="hidden" name="RequiredCheck" value="off" />
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="editRequiredCheck" name="RequiredCheck" value="on" />
+              <label class="form-check-label" for="editRequiredCheck">Make This Mandatory</label>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="text-center">
+            <button type="submit" id="model_submit" class="btn btn-primary px-4">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
           <!-- Content wrapper -->
         </div>
         <!-- / Layout page -->
@@ -2220,6 +2375,7 @@
         alert('Successfully saved');
 
         form.reset();
+        location.reload();
         container.innerHTML = '';
         priorityTableBody.innerHTML = '';
         customCard.style.display = 'none';
@@ -2231,6 +2387,109 @@
     });
   });
 </script>
+
+
+    <script>
+  function populateEditForm(fieldId) {
+    // Debug alert
+    console.log('Fetching data for field ID:', fieldId);
+    // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('editModal'));
+        modal.show();
+
+    fetch(`/fields/${fieldId}/edit/`)
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(data => {
+        // Populate text fields
+        document.getElementById('editFieldId').value = data.id || '';
+        document.getElementById('editFieldName').value = data.FieldName || '';
+
+        // Set FieldType radio
+        const typeRadio = document.querySelector(`input[name="FieldType"][value="${data.FieldType}"]`);
+        if (typeRadio) typeRadio.checked = true;
+
+        // Show/hide dropdown value field
+        const dropdownContainer = document.getElementById("editDropdownValueContainer");
+        if (data.FieldType === "Drop Down") {
+          dropdownContainer.style.display = "block";
+          document.getElementById("editDropdownValues").value = data.DropdownValues || '';
+        } else {
+          dropdownContainer.style.display = "none";
+          document.getElementById("editDropdownValues").value = '';
+        }
+
+        // Set FieldValidation radio
+        const validationRadio = document.querySelector(`input[name="FieldValidation"][value="${data.FieldValidation}"]`);
+        if (validationRadio) validationRadio.checked = true;
+
+        // Required checkbox
+        document.getElementById('editRequiredCheck').checked = data.RequiredCheck === true || data.RequiredCheck === "Yes";
+
+
+      })
+      .catch(error => {
+        console.error('Error fetching field data:', error);
+        alert('Failed to load data. Please try again.');
+      });
+  }
+
+  // Form submission handler
+  document.getElementById('editForm').addEventListener('submit', function(event) {
+  event.preventDefault();
+
+  const formData = new FormData(this);
+
+  const checkbox = document.getElementById('editRequiredCheck');
+  formData.set('RequiredCheck', checkbox.checked ? 'Yes' : 'No');
+
+  const fieldId = formData.get('id');
+
+  fetch(`/fields/${fieldId}/edit1/`, {
+    method: 'POST',
+    body: formData,
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Failed to save');
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      const modalElement = document.getElementById('editModal');
+      const modalInstance = bootstrap.Modal.getInstance(modalElement);
+      modalInstance.hide();
+      location.reload();
+    } else {
+      alert('Error updating field.');
+    }
+  })
+  .catch(error => {
+    console.error('Error updating field:', error);
+    alert('Something went wrong while saving.');
+  });
+});
+
+
+  // Toggle dropdown value input on FieldType radio change
+  document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("editDropdownValueContainer");
+
+    const radios = document.querySelectorAll('input[name="FieldType"]');
+    radios.forEach(radio => {
+      radio.addEventListener("change", () => {
+        if (radio.value === "Drop Down" && radio.checked) {
+          container.style.display = "block";
+        } else {
+          container.style.display = "none";
+        }
+      });
+    });
+  });
+</script>
+
+
 
 
 

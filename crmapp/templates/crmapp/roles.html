@@ -250,12 +250,20 @@
                 <div data-i18n="Email">Email</div>
               </a>
             </li>
+<!--            <li class="menu-item">-->
+<!--              <a href="app-chat.html" class="menu-link">-->
+<!--                <i class="menu-icon icon-base ti tabler-messages"></i>-->
+<!--                <div data-i18n="Chat">Chat</div>-->
+<!--              </a>-->
+<!--            </li>-->
+
             <li class="menu-item">
-              <a href="app-chat.html" class="menu-link">
+              <a href="{% url 'crm_creation' %}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-messages"></i>
-                <div data-i18n="Chat">Chat</div>
+                <div data-i18n="CRM Creation">CRM Creation</div>
               </a>
             </li>
+
             <li class="menu-item">
               <a href="app-calendar.html" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-calendar"></i>
@@ -532,7 +540,7 @@
               </a>
               <ul class="menu-sub">
                 <li class="menu-item active">
-                  <a href="app-access-roles.html" class="menu-link">
+                  <a href="{% url 'user_roles' %}" class="menu-link">
                     <div data-i18n="Roles">Roles</div>
                   </a>
                 </li>
@@ -2135,7 +2143,7 @@
                       <table class="datatables-users table border-top">
                         <thead>
                           <tr>
-                            <th>S.No</th>
+                        <th>S.No</th>
                         <th>Full Name</th>
                         <th>Role</th>
                         <th>Email</th>

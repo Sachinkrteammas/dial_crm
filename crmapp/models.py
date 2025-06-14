@@ -80,7 +80,7 @@ class FieldMaster(models.Model):
 
 
 class FieldMasterValue(models.Model):
-    FieldId = models.ForeignKey(FieldMaster, on_delete=models.CASCADE, null=True, blank=True)
+    FieldId = models.ForeignKey(FieldMaster, on_delete=models.CASCADE, null=True, blank=True,related_name='field_values')
     FieldValueName = models.CharField(max_length=300, null=True, blank=True)
     ClientId = models.CharField(max_length=20, null=True, blank=True)
     FieldStatus = models.CharField(max_length=100, null=True, blank=True)

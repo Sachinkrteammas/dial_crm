@@ -14,6 +14,11 @@ urlpatterns = [
     path("api/add-role/", views.add_role_api, name="add_role_api"),
     path("crm_creation/", views.crm_creation, name="crm_creation"),
     path('user/crm_save/', views.crm_save, name='crm_save'),
+    path('delete/<int:pk>/', views.delete_field, name='delete_field'),
+    path('fields/<int:pk>/edit/', views.get_field_data, name='get_field_data'),
+    path('fields/<int:pk>/edit1/', views.edit_field, name='edit_field'),
+
+
 
 
 ]
