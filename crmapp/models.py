@@ -90,3 +90,25 @@ class FieldMasterValue(models.Model):
 
     class Meta:
         db_table = 'field_master_value'
+
+
+class MenuItem(models.Model):
+    name = models.CharField(max_length=100)
+    url_name = models.CharField(max_length=100, blank=True, null=True)
+    icon_class = models.CharField(max_length=100, blank=True, null=True)
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='children'
+    )
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'menu_item'
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name

@@ -11,10 +11,11 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
+from django.urls import NoReverseMatch
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import UserList, UserRole,FieldMaster, FieldMasterValue
+from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem
 
 User = get_user_model()
 
@@ -63,7 +64,18 @@ def signup(request):
 
 @login_required
 def dashboard(request):
-    return render(request, 'crmapp/dashboard.html')
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
+
+    return render(request, 'crmapp/dashboard.html', {
+        'menu_html': menu_html
+    })
+
 
 
 def logout_view(request):
@@ -120,7 +132,16 @@ def user_list(request):
     active_users = users.filter(is_deactivated=False)
     active_count = active_users.count()
 
-    return render(request, 'crmapp/user_list.html',{'count': user_count,'active_count': active_count})
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
+
+    return render(request, 'crmapp/user_list.html',{'count': user_count,'active_count': active_count,
+                                                    'menu_html':menu_html})
 
 
 def user_list_api(request):
@@ -258,12 +279,21 @@ def user_roles(request):
     admin_count = UserList.objects.filter(user_role='admin').count()
     user_count = UserList.objects.count()
 
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
+
     return render(request, 'crmapp/roles.html', {
         'team_leader_count': team_leader_count,
         'adviser_count': adviser_count,
         'sales_count': sales_count,
         'admin_count': admin_count,
         'user_count': user_count,
+        'menu_html': menu_html,
     })
 
 
@@ -301,16 +331,64 @@ def add_role_api(request):
 
     return JsonResponse({"error": "Invalid method"}, status=405)
 
+
+from django.urls import reverse, NoReverseMatch  # Correct import
+
+
+def render_menu(parent_id=None, menu_tree=None):
+    html = '<ul class="menu-inner py-1">' if parent_id is None else '<ul class="menu-sub">'
+
+    for item in menu_tree.get(parent_id, []):
+        has_children = item.id in menu_tree
+        html += '<li class="menu-item">'
+
+        if has_children:
+            html += '<a href="javascript:void(0);" class="menu-link menu-toggle">'
+        else:
+            try:
+                if item.url_name:
+                    url = reverse(item.url_name)  # This must work now
+                else:
+                    url = "#"
+            except NoReverseMatch:
+                url = "#"
+            html += f'<a href="{url}" class="menu-link">'
+
+        icon_html = f'<i class="menu-icon icon-base ti {getattr(item, "icon_class", "")}"></i>' if getattr(item,
+                                                                                                           'icon_class',
+                                                                                                           None) else ''
+        html += icon_html + f'<div data-i18n="{item.name}">{item.name}</div></a>'
+
+        if has_children:
+            html += render_menu(parent_id=item.id, menu_tree=menu_tree)
+
+        html += '</li>'
+    html += '</ul>'
+    return html
+
+
 @login_required
 def crm_creation(request):
     fields = FieldMaster.objects.prefetch_related('field_values').order_by('Priority')
+
+    # Build menu HTML for sidebar
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
 
     if request.method == "POST":
         form_data = {field.FieldName: request.POST.get(field.FieldName) for field in fields}
         print("Submitted Data:", form_data)
         # You can save form_data into another model or process it further
 
-    return render(request, 'crmapp/crm_creation.html', {'fields': fields})
+    return render(request, 'crmapp/crm_creation.html', {
+        'fields': fields,
+        'menu_html': menu_html,  # Pass menu HTML here
+    })
 
 
 
@@ -454,3 +532,6 @@ def edit_field(request, pk):
 
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+
+
