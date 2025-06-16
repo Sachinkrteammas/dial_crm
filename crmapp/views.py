@@ -15,7 +15,7 @@ from django.urls import NoReverseMatch
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem
+from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData
 
 User = get_user_model()
 
@@ -535,3 +535,21 @@ def edit_field(request, pk):
 
 
 
+
+
+@csrf_exempt
+@login_required
+def save_dynamic_form(request):
+    if request.method == 'POST':
+        try:
+            form_data = json.loads(request.body)
+            # Create a new entry
+            DynamicFormData.objects.create(
+                data=form_data,
+                created_by=request.user
+            )
+            return JsonResponse({'success': True, 'message': 'Form saved successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})

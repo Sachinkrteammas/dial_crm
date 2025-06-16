@@ -112,3 +112,23 @@ class MenuItem(models.Model):
 
     def __str__(self):
         return self.name
+
+
+
+class DynamicFormData(models.Model):
+    data = models.JSONField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name='dynamic_forms_created'
+    )
+    updated_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='dynamic_forms_updated'
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'dynamic_form_data'
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"Form #{self.id} by {self.created_by}"

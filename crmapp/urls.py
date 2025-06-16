@@ -17,6 +17,7 @@ urlpatterns = [
     path('delete/<int:pk>/', views.delete_field, name='delete_field'),
     path('fields/<int:pk>/edit/', views.get_field_data, name='get_field_data'),
     path('fields/<int:pk>/edit1/', views.edit_field, name='edit_field'),
+    path('save_dynamic_form/', views.save_dynamic_form, name='save_dynamic_form'),
 
 
 

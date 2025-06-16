@@ -826,7 +826,7 @@
 <!--          DYANMIC FIELD-->
          <h5 style="margin-left:25px;">Dynamic CRM Field</h5>
 
-<form method="POST">
+<form method="POST" id="dynamicForm">
   {% csrf_token %}
   <div style="display: flex; flex-wrap: wrap; margin-left: 20px; gap: 8px;">
     {% for field in fields %}
@@ -876,9 +876,12 @@
 
   <!-- Submit Button -->
   <div class="mt-4 text-center">
-    <button type="submit" class="btn btn-primary px-4">Submit</button>
+    <button type="submit" id="submitForm" class="btn btn-primary px-4">Submit</button>
   </div>
 </form>
+
+          <!-- Success/Error Message -->
+<div id="formMessage" class="mt-3 text-center"></div>
 
 
 
@@ -1103,11 +1106,11 @@
       input.name = name;
     }
 
-    const editBtn = document.createElement('button');
-    editBtn.innerHTML = '✏️';
-    editBtn.className = 'btn btn-light';
-    editBtn.style.padding = '0.3rem 0.3rem';
-    editBtn.onclick = () => alert('Implement edit logic');
+<!--    const editBtn = document.createElement('button');-->
+<!--    editBtn.innerHTML = '✏️';-->
+<!--    editBtn.className = 'btn btn-light';-->
+<!--    editBtn.style.padding = '0.3rem 0.3rem';-->
+<!--    editBtn.onclick = () => alert('Implement edit logic');-->
 
     const deleteBtn = document.createElement('button');
     deleteBtn.innerHTML = '🗑️';
@@ -1121,7 +1124,7 @@
     };
 
     controls.appendChild(input);
-    controls.appendChild(editBtn);
+<!--    controls.appendChild(editBtn);-->
     controls.appendChild(deleteBtn);
 
     fieldDiv.appendChild(label);
@@ -1351,7 +1354,45 @@
 </script>
 
 
+<!--  dynamic value save start-->
 
+  <script>
+document.getElementById('submitForm').addEventListener('click', function () {
+  const form = document.getElementById('dynamicForm');
+  const formData = new FormData(form);
+
+  const data = {};
+  for (const [key, value] of formData.entries()) {
+    data[key] = value;
+  }
+
+  fetch("{% url 'save_dynamic_form' %}", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}'  // Important for CSRF protection
+    },
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(response => {
+    const msgBox = document.getElementById('formMessage');
+    if (response.success) {
+      msgBox.innerHTML = `<div class="alert alert-success">${response.message}</div>`;
+      form.reset();
+    } else {
+      msgBox.innerHTML = `<div class="alert alert-danger">Error: ${response.error}</div>`;
+    }
+  })
+  .catch(error => {
+    console.error('AJAX error:', error);
+    document.getElementById('formMessage').innerHTML =
+      `<div class="alert alert-danger">Unexpected error occurred</div>`;
+  });
+});
+</script>
+
+<!--  dynamic value save End-->
 
 
   </body>
