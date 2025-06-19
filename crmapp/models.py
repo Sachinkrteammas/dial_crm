@@ -132,3 +132,68 @@ class DynamicFormData(models.Model):
 
     def __str__(self):
         return f"Form #{self.id} by {self.created_by}"
+
+
+
+class LeadTable(models.Model):
+    customer_name = models.CharField(max_length=100, blank=True, null=True)
+    customer_type = models.CharField(max_length=50, blank=True, null=True)
+    calling_number = models.CharField(max_length=15, blank=True, null=True)
+    enquiry_type = models.CharField(max_length=100, blank=True, null=True)
+    enquiry_source = models.CharField(max_length=100, blank=True, null=True)
+    sub_enquiry_source = models.CharField(max_length=100, blank=True, null=True)
+
+    lead_date = models.DateField(blank=True, null=True)
+    call_date = models.DateField(blank=True, null=True)
+
+    call_type = models.CharField(max_length=50, blank=True, null=True)
+    calling_status = models.CharField(max_length=100, blank=True, null=True)
+    interested_status = models.CharField(max_length=100, blank=True, null=True)
+    sub_calling_status = models.CharField(max_length=100, blank=True, null=True)
+    sub_sub_calling_status = models.CharField(max_length=100, blank=True, null=True)
+
+    select_bus = models.CharField(max_length=100, blank=True, null=True)
+    buyer_type = models.CharField(max_length=50, blank=True, null=True)
+    lead_status = models.CharField(max_length=100, blank=True, null=True)
+    construction_level = models.CharField(max_length=100, blank=True, null=True)
+
+    name = models.CharField(max_length=100, blank=True, null=True)
+    alternative_number = models.CharField(max_length=15, blank=True, null=True)
+    email_id = models.EmailField(blank=True, null=True)
+
+    address = models.TextField(blank=True, null=True)
+    landmark = models.CharField(max_length=100, blank=True, null=True)
+
+    brand = models.CharField(max_length=100, blank=True, null=True)
+    product = models.CharField(max_length=100, blank=True, null=True)
+    sub_product = models.CharField(max_length=100, blank=True, null=True)
+
+    state = models.CharField(max_length=50, blank=True, null=True)
+    district = models.CharField(max_length=50, blank=True, null=True)
+    zone = models.CharField(max_length=50, blank=True, null=True)
+    pin_code = models.CharField(max_length=10, blank=True, null=True)
+
+    agent_name = models.CharField(max_length=100, blank=True, null=True)
+    order_qty = models.PositiveIntegerField(blank=True, null=True)
+    order_description = models.TextField(blank=True, null=True)
+    order_value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    customer_type_select = models.CharField(max_length=100, blank=True, null=True)
+
+    registration_status = models.CharField(max_length=50, blank=True, null=True)
+    remark = models.TextField(blank=True, null=True)
+
+    seller_email_id = models.EmailField(blank=True, null=True)
+    seller_phone_no = models.CharField(max_length=15, blank=True, null=True)
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_leads')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_leads')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.customer_name or f"Lead #{self.id}"
+
+    class Meta:
+        db_table = 'lead_table'
+

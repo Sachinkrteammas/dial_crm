@@ -18,6 +18,12 @@ urlpatterns = [
     path('fields/<int:pk>/edit/', views.get_field_data, name='get_field_data'),
     path('fields/<int:pk>/edit1/', views.edit_field, name='edit_field'),
     path('save_dynamic_form/', views.save_dynamic_form, name='save_dynamic_form'),
+    path('lead_table/', views.lead_table, name='lead_table'),
+    path('save_lead/', views.save_lead, name='save_lead'),
+    path('api/lead/<int:lead_id>/', views.get_lead_data, name='get_lead_data'),
+    path('api/update-lead/', views.update_lead, name='update_lead'),
+
+
 
 
 

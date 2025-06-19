@@ -1,5 +1,6 @@
 import json
 from audioop import reverse
+from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -12,10 +13,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.urls import NoReverseMatch
+from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData
+from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable
 
 User = get_user_model()
 
@@ -553,3 +555,170 @@ def save_dynamic_form(request):
             return JsonResponse({'success': False, 'error': str(e)})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+def lead_table(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
+    leads = LeadTable.objects.all().order_by('-created_at')
+    return render(request, 'crmapp/lead.html', {
+        'menu_html': menu_html,
+        'leads': leads
+    })
+
+
+@csrf_exempt  # Optional if CSRF token is already handled via JavaScript
+def save_lead(request):
+    if request.method == "POST":
+        customer_name = request.POST.get('customer_name')
+        calling_number = request.POST.get('calling_number')
+        enquiry_type = request.POST.get('enquiry_type')
+        enquiry_source = request.POST.get('enquiry_source')
+        lead_date = parse_date(request.POST.get('lead_date')) if request.POST.get('lead_date') else None
+
+        lead = LeadTable.objects.create(
+            customer_name=customer_name,
+            calling_number=calling_number,
+            enquiry_type=enquiry_type,
+            enquiry_source=enquiry_source,
+            lead_date=lead_date,
+            created_by=request.user if request.user.is_authenticated else None
+        )
+
+        return JsonResponse({'status': 'success', 'id': lead.id})
+    return JsonResponse({'status': 'fail'}, status=400)
+
+
+
+def get_lead_data(request, lead_id):
+    try:
+        lead = LeadTable.objects.get(id=lead_id)
+        data = {
+            "customer_name": lead.customer_name,
+            "customer_type": lead.customer_type,
+            "calling_number": lead.calling_number,
+            "enquiry_type": lead.enquiry_type,
+            "enquiry_source": lead.enquiry_source,
+            "sub_enquiry_source": lead.sub_enquiry_source,
+            "lead_date": lead.lead_date.strftime("%Y-%m-%d") if lead.lead_date else "",
+            "call_date": lead.call_date.strftime("%Y-%m-%d") if lead.call_date else "",
+            "call_direction": lead.call_type,
+            "calling_status": lead.calling_status,
+            "interest_status": lead.interested_status,
+            "sub_calling_status": lead.sub_calling_status,
+            "sub_sub_calling_status": lead.sub_sub_calling_status,
+            "category": lead.select_bus,
+            "buyer_type": lead.buyer_type,
+            "lead_status": lead.lead_status,
+            "construction_level": lead.construction_level,
+            "name": lead.name,
+            "alternative_number": lead.alternative_number,
+            "email_id": lead.email_id,
+            "address": lead.address,
+            "landmark": lead.landmark,
+            "brand_name": lead.brand,
+            "product": lead.product,
+            "sub_product": lead.sub_product,
+            "state": lead.state,
+            "district": lead.district,
+            "zone": lead.zone,
+            "pin_code": lead.pin_code,
+            "agent_name": lead.agent_name,
+            "order_qty": lead.order_qty,
+            "order_description": lead.order_description,
+            "order_value": str(lead.order_value) if lead.order_value else "",
+            "customer_type_select": lead.customer_type_select,
+            "registration_status": lead.registration_status,
+            "remark": lead.remark,
+            "seller_email": lead.seller_email_id,
+            "seller_phone": lead.seller_phone_no,
+        }
+        return JsonResponse({"status": "success", "data": data})
+    except LeadTable.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Lead not found"}, status=404)
+
+
+
+from datetime import datetime
+@csrf_exempt  # Keep or remove depending on your CSRF setup
+def update_lead(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            lead_id = data.get('lead_id')
+            if not lead_id:
+                return JsonResponse({'status': 'error', 'message': 'Lead ID is required'})
+
+            lead = LeadTable.objects.get(id=lead_id)
+
+            # Helper function to parse date or return None
+            def parse_date(date_str):
+                try:
+                    return datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else None
+                except:
+                    return None
+
+            # Assign fields with fallback and type conversion
+            lead.customer_name = data.get('customer_name', '')
+            lead.customer_type = data.get('customer_type', '')
+            lead.calling_number = data.get('calling_number', '')
+            lead.enquiry_type = data.get('enquiry_type', '')
+            lead.enquiry_source = data.get('enquiry_source', '')
+            lead.sub_enquiry_source = data.get('sub_enquiry_source', '')
+            lead.lead_date = parse_date(data.get('lead_date', None))
+            lead.call_date = parse_date(data.get('call_date', None))
+            lead.call_type = data.get('call_direction', '')
+            lead.calling_status = data.get('calling_status', '')
+            lead.interested_status = data.get('interest_status', '')
+            lead.sub_calling_status = data.get('sub_calling_status', '')
+            lead.sub_sub_calling_status = data.get('sub_sub_calling_status', '')
+            lead.select_bus = data.get('category', '')
+            lead.buyer_type = data.get('buyer_type', '')
+            lead.lead_status = data.get('lead_status', '')
+            lead.construction_level = data.get('construction_level', '')
+            lead.name = data.get('name', '')
+            lead.alternative_number = data.get('alternative_number', '')
+            lead.email_id = data.get('email_id', '')
+            lead.address = data.get('address', '')
+            lead.landmark = data.get('landmark', '')
+            lead.brand = data.get('brand_name', '')
+            lead.product = data.get('product', '')
+            lead.sub_product = data.get('sub_product', '')
+            lead.state = data.get('state', '')
+            lead.district = data.get('district', '')
+            lead.zone = data.get('zone', '')
+            lead.pin_code = data.get('pin_code', '')
+            lead.agent_name = data.get('agent_name', '')
+
+            order_qty = data.get('order_qty')
+            lead.order_qty = int(order_qty) if order_qty not in (None, '', 'null') else None
+
+            lead.order_description = data.get('order_description', '')
+
+            order_value = data.get('order_value')
+            try:
+                lead.order_value = Decimal(order_value) if order_value not in (None, '', 'null') else None
+            except:
+                lead.order_value = None
+
+            lead.customer_type_select = data.get('customer_type_select', '')
+
+            lead.registration_status = data.get('registration_status', '')
+            lead.remark = data.get('remark', '')
+            lead.seller_email_id = data.get('seller_email', '')
+            lead.seller_phone_no = data.get('seller_phone', '')
+
+            lead.save()
+            return JsonResponse({'status': 'success'})
+
+        except LeadTable.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Lead not found'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})

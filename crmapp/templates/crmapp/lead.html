@@ -14,7 +14,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Crm Creation</title>
+    <title>User Roles</title>
 
     <meta name="description" content="" />
 
@@ -46,51 +46,11 @@
 
     <!-- endbuild -->
 
-    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
-    <link rel="stylesheet" href="/assets/vendor/libs/swiper/swiper.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
-    <link rel="stylesheet" href="/assets/vendor/fonts/flag-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/@form-validation/form-validation.css" />
 
     <!-- Page CSS -->
-    <link rel="stylesheet" href="/assets/vendor/css/pages/cards-advance.css" />
-
-    <style>
-
-      #viewFieldsContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem; /* Optional spacing between items */
-}
-
-.field-wrapper {
-  width: 32%;
-  padding: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-  .field-label {
-    flex: 1;
-    font-weight: 500;
-  }
-
-  .field-controls {
-    flex: 4;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .field-controls input {
-    width: 100%;
-  }
-
-  .field-controls button {
-    padding: 0.3rem 0.6rem;
-  }
-</style>
-
-
 
     <!-- Helpers -->
     <script src="/assets/vendor/js/helpers.js"></script>
@@ -110,33 +70,32 @@
       <div class="layout-container">
         <!-- Menu -->
 
-<!--        <aside id="layout-menu" class="layout-menu menu-vertical menu">-->
-<!--    {{ menu_html|safe }}-->
-<!--        </aside>-->
+        <!-- dynamic menu container -->
         <aside id="layout-menu" class="layout-menu menu-vertical menu">
-  <div class="app-brand demo">
-    <a href="{% url 'dashboard' %}" class="app-brand-link">
-      <!-- Logo SVG and Brand Text -->
-      <span class="app-brand-logo demo">
-        <span class="text-primary">
-          <!-- Your SVG here -->
-          <img src="/assets/img/favicon/Mascallnet.png" alt="Mascallnet Logo" style="width: 32px; height: auto; vertical-align: middle;" />
+        <div class="app-brand demo">
+          <a href="{% url 'dashboard' %}" class="app-brand-link">
+            <!-- Logo SVG and Brand Text -->
+            <span class="app-brand-logo demo">
+              <span class="text-primary">
+                <!-- Your SVG here -->
+               <img src="/assets/img/favicon/Mascallnet.png" alt="Mascallnet Logo" style="width: 32px; height: auto; vertical-align: middle;" />
 
-        </span>
-      </span>
-      <span class="app-brand-text demo menu-text fw-bold ms-3">MasCallNet</span>
-    </a>
+              </span>
+            </span>
+            <span class="app-brand-text demo menu-text fw-bold ms-3">MasCallNet</span>
+          </a>
 
-    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-      <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
-      <i class="icon-base ti tabler-x d-block d-xl-none"></i>
-    </a>
-  </div>
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
+            <i class="icon-base ti tabler-x d-block d-xl-none"></i>
+          </a>
+        </div>
 
-  <!-- ✅ Inject dynamic menu here -->
-  {{ menu_html|safe }}
-</aside>
+        <!-- ✅ Inject dynamic menu here -->
+        {{ menu_html|safe }}
+      </aside>
 
+        <!-- dynamic menu container end -->
 
         <div class="menu-mobile-toggler d-xl-none rounded-1">
           <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large text-bg-secondary p-2 rounded-1">
@@ -670,7 +629,7 @@
                     </li>
                     <li>
                       <div class="d-grid px-2 pt-2 pb-1">
-                        <a class="btn btn-sm btn-danger d-flex" href="{% url 'logout' %}" >
+                        <a class="btn btn-sm btn-danger d-flex" href="{% url 'logout' %}" target="_blank">
                           <small class="align-middle">Logout</small>
                           <i class="icon-base ti tabler-logout ms-2 icon-14px"></i>
                         </a>
@@ -685,268 +644,333 @@
 
           <!-- / Navbar -->
 
-          <!-- Content Wrapper -->
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <!-- Content -->
+            <div class="card" style=" width: 95%; margin-left: 25px; margin-top: 32px;">
+                <h5 class="card-header d-flex justify-content-between align-items-center">
+                    Leads
+                    <button
+                      data-bs-toggle="modal"
+                      data-bs-target="#addLeadModal"
+                      class="btn btn-sm btn-primary text-nowrap">
+                      Create Leads
+                    </button>
+                  </h5>
 
-<div class="container py-5">
-  <h4 class="mb-4">Manage Required Fields</h4>
+                <div class="table-responsive text-nowrap">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Customer Name</th>
+                        <th>Calling Number</th>
+                        <th>Enquiry Type</th>
+                        <th>Enquiry Source</th>
+                        <th>Lead Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                      {% for lead in leads %}
+                      <tr>
+                        <td><span class="fw-medium">{{ lead.customer_name }}</span></td>
+                        <input type="hidden" name="lead_id" id="lead_id" value="{{ lead.id }}">
+                        <td>
+                          <a href="javascript:void(0);" class="open-lead-modal btn btn-link p-0" data-id="{{ lead.id }}">
+                            {{ lead.calling_number }}
+                          </a>
+                        </td>
+                        <td>{{ lead.enquiry_type }}</td>
+                        <td>{{ lead.enquiry_source }}</td>
+                        <td>{{ lead.lead_date|date:"d-m-Y" }}</td>
+                        <td>
+                          <div class="dropdown">
+                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                              <i class="icon-base ti tabler-dots-vertical"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                              <a class="dropdown-item" href="javascript:void(0);" data-id="{{ lead.id }}">
+                                <i class="icon-base ti tabler-pencil me-1"></i> Edit
+                              </a>
+                              <a class="dropdown-item" href="javascript:void(0);" data-id="{{ lead.id }}">
+                                <i class="icon-base ti tabler-trash me-1"></i> Delete
+                              </a>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                        <td colspan="6" class="text-center">No leads found.</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
 
-  <div class="card shadow-sm rounded-4 p-4 custom-card">
-    <h5 class="card-title mb-4">Manage Required Fields</h5>
-
-<!--    <form id="fieldForm" class="browser-default-validation">-->
-    <form id="fieldForm" method="POST" >
-{% csrf_token %}
-      <!-- Field Name -->
-      <div class="mb-4">
-        <label class="form-label" for="field-name">Field Name</label>
-        <input type="text" class="form-control" id="field-name" placeholder="Enter field name" style="width: 72%;" required />
-      </div>
-
-      <!-- Field Type -->
-      <!-- Field Type -->
-<div class="mb-4 d-flex flex-wrap align-items-start gap-4">
-  <label class="form-label me-3 mt-2">Field Type</label>
-  <div class="form-check">
-    <input type="radio" id="field-type-box" name="field-type" value="Text Box" class="form-check-input" required checked />
-    <label class="form-check-label" for="field-type-box">Text Box</label>
-  </div>
-  <div class="form-check">
-    <input type="radio" id="field-type-area" name="field-type" value="Text Area" class="form-check-input" required />
-    <label class="form-check-label" for="field-type-area">Text Area</label>
-  </div>
-  <div class="form-check">
-    <input type="radio" id="field-type-dropdown" name="field-type" value="Drop Down" class="form-check-input" required />
-    <label class="form-check-label" for="field-type-dropdown">Drop Down</label>
-  </div>
-</div>
-
-<!-- ✅ Move this OUTSIDE the radio button group -->
-<div id="dropdownValueContainer" class="mb-4" style="display: none;">
-  <label class="form-label" for="dropdown-values">Dropdown Values (comma separated)</label>
-  <input type="text" class="form-control" id="dropdown-values" placeholder="e.g. Option1, Option2" style="width: 72%;" />
-</div>
-
-
-      <!-- Field Validation -->
-      <div class="mb-4 d-flex flex-wrap align-items-start gap-4">
-        <label class="form-label me-3 mt-2">Field Validation</label>
-        <div class="form-check">
-          <input type="radio" id="validation-numeric" name="field-validation" value="Numeric" class="form-check-input" required checked />
-          <label class="form-check-label" for="validation-numeric">Numeric</label>
-        </div>
-        <div class="form-check">
-          <input type="radio" id="validation-character" name="field-validation" value="Character" class="form-check-input" required />
-          <label class="form-check-label" for="validation-character">Character</label>
-        </div>
-        <div class="form-check">
-          <input type="radio" id="validation-alphanumeric" name="field-validation" value="Alphanumeric" class="form-check-input" required />
-          <label class="form-check-label" for="validation-alphanumeric">Alphanumeric</label>
-        </div>
-        <div class="form-check">
-          <input type="radio" id="validation-datepicker" name="field-validation" value="Datepicker" class="form-check-input" required />
-          <label class="form-check-label" for="validation-datepicker">Datepicker</label>
-        </div>
-        <div class="form-check">
-          <input type="radio" id="validation-phone" name="field-validation" value="Phone" class="form-check-input" required />
-          <label class="form-check-label" for="validation-phone">Phone</label>
-        </div>
-      </div>
-
-      <!-- Mandatory Checkbox -->
-      <div class="mb-4">
-        <div class="form-check">
-          <input type="checkbox" class="form-check-input" id="mandatory-check" />
-          <label class="form-check-label" for="mandatory-check">Make This Mandatory</label>
-        </div>
-      </div>
-
-      <!-- Submit Button -->
-      <div class="text-center">
-        <button type="submit" class="btn btn-primary px-4">Add</button>
-      </div>
-    </form>
-  </div>
-
-  <!-- View Fields -->
-  <div class="custom-card" id="customCard" style="display: none;">
-    <h5 class="mb-4">View Required Fields</h5>
-    <div id="viewFieldsContainer"></div>
-  </div>
-
-
-  <!-- Priority Table -->
-<div class="custom-card mt-5" id="prioritySection" style="display: none;">
-  <h5 class="mb-4">Update Required Fields Priority</h5>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Field Name</th>
-        <th>Field Type</th>
-        <th>Field Validation</th>
-        <th>Required</th>
-        <th>Priority</th>
-      </tr>
-    </thead>
-    <tbody id="priorityTableBody">
-      <!-- Dynamic rows will be inserted here -->
-    </tbody>
-  </table>
-
-  <div class="text-center">
-    <button id="submit_id" class="btn btn-primary px-4">Submit</button>
-  </div>
-</div>
-
-</div>
-
-
-
-<!--          DYANMIC FIELD-->
-         <h5 style="margin-left:25px;">Dynamic CRM Field</h5>
-
-<form method="POST" id="dynamicForm">
-  {% csrf_token %}
-  <div style="display: flex; flex-wrap: wrap; margin-left: 20px; gap: 8px;">
-    {% for field in fields %}
-      <div class="mb-3 border p-3 rounded" style="width: 32%;">
-        <label class="form-label fw-bold">{{ field.FieldName }}</label>
-
-        {# Text Box #}
-        {% if field.FieldType == "Text Box" %}
-          {% if field.FieldValidation == "Datepicker" %}
-            <input type="date" name="{{ field.FieldName }}" class="form-control w-100"
-                   {% if field.RequiredCheck == "Yes" %} required {% endif %} />
-          {% else %}
-            <input type="text" name="{{ field.FieldName }}" class="form-control w-100"
-                   {% if field.RequiredCheck == "Yes" %} required {% endif %} />
-          {% endif %}
-
-        {# Text Area #}
-        {% elif field.FieldType == "Text Area" %}
-          <textarea name="{{ field.FieldName }}" class="form-control w-100" rows="3"
-                    {% if field.RequiredCheck == "Yes" %} required {% endif %}></textarea>
-
-        {# Drop Down #}
-        {% elif field.FieldType == "Drop Down" %}
-          <select name="{{ field.FieldName }}" class="form-select w-100"
-                  {% if field.RequiredCheck == "Yes" %} required {% endif %}>
-            <option value="">Select {{ field.FieldName }}</option>
-            {% for option in field.field_values.all %}
-              {% if option.FieldStatus == "Active" %}
-                <option value="{{ option.FieldValueName }}">{{ option.FieldValueName }}</option>
-              {% endif %}
-            {% endfor %}
-          </select>
-        {% endif %}
-
-        <!-- Edit/Delete Buttons -->
-        <div class="mt-3 d-flex justify-content-end gap-2">
-  <a href="#" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal" onclick="populateEditForm({{ field.id }})">✏️ Edit</a>
- <form method="post" action="{% url 'delete_field' field.id %}" style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this field?');">🗑️ Delete</button>
-  </form>
-</div>
-
-      </div>
-    {% endfor %}
-  </div>
-
-  <!-- Submit Button -->
-  <div class="mt-4 text-center">
-    <button type="submit" id="submitForm" class="btn btn-primary px-4">Submit</button>
-  </div>
-</form>
-
-          <!-- Success/Error Message -->
-<div id="formMessage" class="mt-3 text-center"></div>
+                </div>
+              </div>
 
 
 
 
 
-          <!--          DYANMIC FIELD End -->
 
-<!-- Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content rounded-4" style="margin-left: 46px; margin-top: 75px;">
+
+            <!-- Bootstrap Modal -->
+                <<div class="modal fade" id="leadFormModal" tabindex="-1" aria-labelledby="leadFormModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content rounded-4" style="margin-left:45px">
       <div class="modal-header">
-        <h5 class="modal-title" id="editModalLabel">Edit Field</h5>
+        <h5 class="modal-title" id="leadFormModalLabel">Lead Form</h5>
+
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+      <div class="modal-body">
+        <form method="POST" id="leadFormModel">
+          <div class="row g-3">
 
-      <div class="modal-body px-4">
-        <form id="editForm" method="POST">
-          {% csrf_token %}
-          <input type="hidden" id="editFieldId" name="id"  value=""/>
+            <!-- Row 1 -->
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Customer Name" name="customer_name">
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Customer Type" name="customer_type">
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Calling Number" name="calling_number">
+            </div>
 
-          <!-- Field Name -->
-          <div class="mb-4">
-            <label class="form-label" for="editFieldName">Field Name</label>
-            <input type="text" class="form-control" id="editFieldName" name="FieldName" placeholder="Enter field name" style="width: 72%;" required />
-          </div>
+            <!-- Row 2 -->
+            <div class="col-md-4">
+              <select class="form-select" name="enquiry_type">
+                <option value="">-- Select Enquiry Type --</option>
+                <option value="Purchase">Purchase</option>
+                <option value="Tech Query">Tech Query</option>
+                <option value="General Query">General Query</option>
+                <option value="Dealership">Dealership</option>
+                <option value="Complaint">Complaint</option>
+                <option value="Project">Project</option>
+                <option value="Distributor">Distributor</option>
+                <option value="Job">Job</option>
+                <option value="MicroLead">MicroLead</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="enquiry_source">
+                <option value="">-- Select Enquiry Source --</option>
+                <option value="ChatBot">ChatBot</option>
+                <option value="Exhibition">Exhibition</option>
+                <option value="GetDistributor">GetDistributor</option>
+                <option value="Inbound">Inbound</option>
+                <option value="IndiaMart">IndiaMart</option>
+                <option value="Mail">Mail</option>
+                <option value="Meta">Meta</option>
+                <option value="Plantix">Plantix</option>
+                <option value="TradeIndia">TradeIndia</option>
+                <option value="WebScraping">WebScraping</option>
+                <option value="WebSite">WebSite</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="sub_enquiry_source">
+                <option value="">-- Select Sub Enquiry Source --</option>
+                <option value="Form Lead">Form Lead</option>
+                <option value="Call Lead">Call Lead</option>
+              </select>
+            </div>
 
-          <!-- Field Type -->
-          <div class="mb-4 d-flex flex-wrap align-items-start gap-4">
-            <label class="form-label me-3 mt-2">Field Type</label>
-            <div class="form-check">
-              <input type="radio" id="edit-type-box" name="FieldType" value="Text Box" class="form-check-input" required />
-              <label class="form-check-label" for="edit-type-box">Text Box</label>
+            <!-- Row 3 -->
+            <div class="col-md-4">
+              <input type="date" class="form-control" placeholder="Lead Date" name="lead_date">
             </div>
-            <div class="form-check">
-              <input type="radio" id="edit-type-area" name="FieldType" value="Text Area" class="form-check-input" required />
-              <label class="form-check-label" for="edit-type-area">Text Area</label>
+            <div class="col-md-4">
+              <input type="date" class="form-control" placeholder="Call Date" name="call_date">
             </div>
-            <div class="form-check">
-              <input type="radio" id="edit-type-dropdown" name="FieldType" value="Drop Down" class="form-check-input" required />
-              <label class="form-check-label" for="edit-type-dropdown">Drop Down</label>
+            <div class="col-md-4">
+              <select class="form-select" name="call_direction">
+                <option value="Outbound">Outbound</option>
+                <option value="Incoming">Incoming</option>
+              </select>
             </div>
-          </div>
 
-          <!-- Dropdown Values (conditionally visible) -->
-          <div id="editDropdownValueContainer" class="mb-4" style="display: none;">
-            <label class="form-label" for="editDropdownValues">Dropdown Values (comma separated)</label>
-            <input type="text" class="form-control" id="editDropdownValues" name="DropdownValues" placeholder="e.g. Option1, Option2" style="width: 72%;" />
-          </div>
+            <!-- Row 4 -->
+            <div class="col-md-4">
+              <select class="form-select" name="calling_status">
+                <option value="">-- Select Calling Status --</option>
+                <option value="Connect">Connect</option>
+                <option value="Not Connect">Not Connect</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="interest_status">
+                <option value="">-- Select Interested/Not Interested --</option>
+                <option value="Interested">Interested</option>
+                <option value="Not Interested">Not Interested</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="sub_calling_status">
+                <option value="">-- Select Sub Calling Status --</option>
+                <option value="Invalid">Invalid</option>
+                <option value="Call Back">Call Back</option>
+                <option value="Services">Services</option>
+                <option value="Valid">Valid</option>
+                <option value="Complaint">Complaint</option>
+              </select>
+            </div>
 
-          <!-- Field Validation -->
-          <div class="mb-4 d-flex flex-wrap align-items-start gap-4">
-            <label class="form-label me-3 mt-2">Field Validation</label>
-            <div class="form-check">
-              <input type="radio" id="edit-validation-numeric" name="FieldValidation" value="Numeric" class="form-check-input" required />
-              <label class="form-check-label" for="edit-validation-numeric">Numeric</label>
+            <!-- Row 5 -->
+            <div class="col-md-4">
+              <select class="form-select" name="category">
+                <option value="">-- Select Category --</option>
+                <option value="Walls">Walls</option>
+                <option value="Construction Chemicals">Construction Chemicals</option>
+                <option value="Roofs">Roofs</option>
+                <option value="Pipes">Pipes</option>
+                <option value="Putty">Putty</option>
+                <option value="Floors">Floors</option>
+              </select>
             </div>
-            <div class="form-check">
-              <input type="radio" id="edit-validation-character" name="FieldValidation" value="Character" class="form-check-input" required />
-              <label class="form-check-label" for="edit-validation-character">Character</label>
+            <div class="col-md-4">
+              <select class="form-select" name="buyer_type">
+                <option value="">-- Select Buyer Type --</option>
+                <option value="Architect">Architect</option>
+                <option value="Carpenter">Carpenter</option>
+                <option value="Contractor">Contractor</option>
+                <option value="Distributor">Distributor</option>
+                <option value="Engineer">Engineer</option>
+                <option value="Fabricator">Fabricator</option>
+                <option value="Individual Buyer">Individual Buyer</option>
+                <option value="Industrial">Industrial</option>
+                <option value="Mason">Mason</option>
+                <option value="Others">Others</option>
+                <option value="Painter">Painter</option>
+                <option value="Plumber">Plumber</option>
+                <option value="Retailer">Retailer</option>
+                <option value="Wholesaler/stockist">Wholesaler/stockist</option>
+              </select>
             </div>
-            <div class="form-check">
-              <input type="radio" id="edit-validation-alphanumeric" name="FieldValidation" value="Alphanumeric" class="form-check-input" required />
-              <label class="form-check-label" for="edit-validation-alphanumeric">Alphanumeric</label>
+            <div class="col-md-4">
+              <select class="form-select" name="sub_sub_calling_status">
+                <option value="">-- Select Sub Sub Calling Status --</option>
+              </select>
             </div>
-            <div class="form-check">
-              <input type="radio" id="edit-validation-datepicker" name="FieldValidation" value="Datepicker" class="form-check-input" required />
-              <label class="form-check-label" for="edit-validation-datepicker">Datepicker</label>
-            </div>
-            <div class="form-check">
-              <input type="radio" id="edit-validation-phone" name="FieldValidation" value="Phone" class="form-check-input" required />
-              <label class="form-check-label" for="edit-validation-phone">Phone</label>
-            </div>
-          </div>
 
-          <!-- Mandatory Checkbox -->
-          <div class="mb-4">
-            <input type="hidden" name="RequiredCheck" value="off" />
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="editRequiredCheck" name="RequiredCheck" value="on" />
-              <label class="form-check-label" for="editRequiredCheck">Make This Mandatory</label>
+            <!-- Row 6 -->
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Lead Status" name="lead_status">
             </div>
-          </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Construction Level" name="construction_level">
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Name" name="name">
+            </div>
 
-          <!-- Submit Button -->
-          <div class="text-center">
-            <button type="submit" id="model_submit" class="btn btn-primary px-4">Save Changes</button>
+            <!-- Row 7 -->
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Alternative Number" name="alternative_number">
+            </div>
+            <div class="col-md-4">
+              <input type="email" class="form-control" placeholder="Email ID" name="email_id">
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="brand_name">
+                <option value="">-- Select Brand Name --</option>
+                <option value="BirlaNu Charminar">BirlaNu Charminar</option>
+                <option value="BirlaNu Aerocon">BirlaNu Aerocon</option>
+                <option value="BirlaNu Leakproof Pipes">BirlaNu Leakproof Pipes</option>
+                <option value="BirlaNu Construction Chemical">BirlaNu Construction Chemical</option>
+                <option value="BirlaNu Putty">BirlaNu Putty</option>
+              </select>
+            </div>
+
+            <!-- Row 8 -->
+            <div class="col-md-4">
+              <select class="form-select" name="product">
+                <option value="">-- Select Product --</option>
+                <option value="Fibre Cement Roofs">Fibre Cement Roofs</option>
+                <option value="Fortune Fiber Cement Roofs">Fortune Fiber Cement Roofs</option>
+                <option value="Ultracool Fiber Cement Roofs">Ultracool Fiber Cement Roofs</option>
+                <option value="Coloured Steel Roofs">Coloured Steel Roofs</option>
+                <option value="Cement & Steel Roof Accessories">Cement & Steel Roof Accessories</option>
+                <option value="Others (Need Remark)">Others (Need Remark)</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="sub_product">
+                <option value="">-- Select Sub Product --</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="State" name="state">
+            </div>
+
+            <!-- Row 9 -->
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="District" name="district">
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Pin Code" name="pin_code">
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Zone" name="zone">
+            </div>
+
+            <!-- Row 10 -->
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Agent Name" name="agent_name">
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Order Qty" name="order_qty">
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Order Description" name="order_description">
+            </div>
+
+            <!-- Row 11 -->
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Order Value" name="order_value">
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="customer_type_select">
+                <option value="">-- Select Customer Type --</option>
+                <option value="New">New</option>
+                <option value="Existing">Existing</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="registration_status">
+                <option value="">-- Select Registration Status --</option>
+              </select>
+            </div>
+
+            <!-- Row 12 -->
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Remark" name="remark">
+            </div>
+            <div class="col-md-4">
+              <input type="email" class="form-control" placeholder="Seller Email ID" name="seller_email">
+            </div>
+            <div class="col-md-4">
+              <input type="text" class="form-control" placeholder="Seller Phone No" name="seller_phone">
+            </div>
+
+            <!-- Row 13 -->
+            <div class="col-md-6">
+              <textarea class="form-control" placeholder="Address" name="address"></textarea>
+            </div>
+            <div class="col-md-6">
+              <input type="text" class="form-control" placeholder="Landmark" name="landmark">
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="col-12 text-end mt-3">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-success">Submit</button>
+            </div>
+
           </div>
         </form>
       </div>
@@ -956,7 +980,103 @@
 
 
 
+<!--            add lead model-->
 
+            <!-- Modal -->
+<div class="modal fade" id="addLeadModal" tabindex="-1" aria-labelledby="addLeadModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15);margin-left: 45px;">
+
+      <div class="modal-header" style="background-color: #67677f; color: white; padding: 1rem 1.5rem;">
+        <h5 class="modal-title fw-semibold" id="addLeadModalLabel">➕ Add New Lead</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="POST" id="leadForm">
+        {% csrf_token %}
+        <div class="modal-body" style="background-color: #2f3349; padding: 2rem;">
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Customer Name <span style="color: red;">*</span></label>
+              <input type="text" name="customer_name" class="form-control" required
+                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Calling Number <span style="color: red;">*</span></label>
+              <input type="text" name="calling_number" class="form-control" required
+                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Enquiry Type <span style="color: red;">*</span></label>
+              <select class="form-select" name="enquiry_type" required
+                      style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+                <option value="">-- Select Enquiry Type --</option>
+                <option value="Purchase">Purchase</option>
+                <option value="Tech Query">Tech Query</option>
+                <option value="General Query">General Query</option>
+                <option value="Dealership">Dealership</option>
+                <option value="Complaint">Complaint</option>
+                <option value="Project">Project</option>
+                <option value="Distributor">Distributor</option>
+                <option value="Job">Job</option>
+                <option value="MicroLead">MicroLead</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Enquiry Source <span style="color: red;">*</span></label>
+              <select class="form-select" name="enquiry_source" required
+                      style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+                <option value="">-- Select Enquiry Source --</option>
+                <option value="ChatBot">ChatBot</option>
+                <option value="Exhibition">Exhibition</option>
+                <option value="GetDistributor">GetDistributor</option>
+                <option value="Inbound">Inbound</option>
+                <option value="IndiaMart">IndiaMart</option>
+                <option value="Mail">Mail</option>
+                <option value="Meta">Meta</option>
+                <option value="Plantix">Plantix</option>
+                <option value="TradeIndia">TradeIndia</option>
+                <option value="WebScraping">WebScraping</option>
+                <option value="WebSite">WebSite</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Lead Date</label>
+              <input type="date" name="lead_date" class="form-control"
+                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer" style="background-color: #2f3349; border-top: none; padding: 1rem 1.5rem;">
+          <button type="submit" class="btn btn-success px-4" style="border-radius: 30px;">💾 Save Lead</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 30px;">❌ Cancel</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+            <!-- / Content -->
+
+
+
+            <div class="content-backdrop fade"></div>
+          </div>
           <!-- Content wrapper -->
         </div>
         <!-- / Layout page -->
@@ -994,390 +1114,206 @@
     <!-- endbuild -->
 
     <!-- Vendors JS -->
-    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
-    <script src="/assets/vendor/libs/swiper/swiper.js"></script>
     <script src="/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="/assets/vendor/libs/select2/select2.js"></script>
+    <script src="/assets/vendor/libs/@form-validation/popular.js"></script>
+    <script src="/assets/vendor/libs/@form-validation/bootstrap5.js"></script>
+    <script src="/assets/vendor/libs/@form-validation/auto-focus.js"></script>
 
     <!-- Main JS -->
 
     <script src="/assets/js/main.js"></script>
 
     <!-- Page JS -->
-    <script src="/assets/js/dashboards-analytics.js"></script>
+    <script src="/assets/js/app-access-roles.js"></script>
+    <script src="/assets/js/modal-add-role.js"></script>
 
 
-<script>
-  const form = document.getElementById('fieldForm');
-  const container = document.getElementById('viewFieldsContainer');
-  const customCard = document.getElementById('customCard');
-  const priorityTableBody = document.getElementById('priorityTableBody');
-  const prioritySection = document.getElementById('prioritySection');
-
-  const dropdownRadio = document.getElementById('field-type-dropdown');
-  const valueContainer = document.getElementById('dropdownValueContainer');
-  const dropdownInput = document.getElementById('dropdown-values');
-
-  // Show/hide dropdown value input based on selected field type
-  document.querySelectorAll('input[name="field-type"]').forEach((radio) => {
-    radio.addEventListener('change', () => {
-      if (dropdownRadio.checked) {
-        valueContainer.style.display = 'block';
-      } else {
-        valueContainer.style.display = 'none';
-        dropdownInput.value = '';
-      }
-    });
-  });
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const name = document.getElementById('field-name').value.trim();
-    if (!name) return;
-
-    const fieldType = form.querySelector('input[name="field-type"]:checked')?.value || '';
-    const fieldValidation = form.querySelector('input[name="field-validation"]:checked')?.value || '';
-    const isRequired = document.getElementById('mandatory-check').checked ? 'Yes' : 'No';
-
-    customCard.style.display = 'block';
-    prioritySection.style.display = 'block';
-
-    const fieldDiv = document.createElement('div');
-    fieldDiv.className = 'field-wrapper';
-
-    const label = document.createElement('div');
-    label.className = 'field-label';
-    label.textContent = name;
-
-    const controls = document.createElement('div');
-    controls.className = 'field-controls';
-
-    let input;
-
-    if (fieldType === 'Drop Down') {
-      input = document.createElement('select');
-      input.className = 'form-control w-50';
-      input.name = name; // user's selected value
-
-      const values = dropdownInput.value.split(',').map(v => v.trim()).filter(v => v);
-      const placeholder = 'Select ' + name;
-      input.appendChild(new Option(placeholder, '', true, true));
-
-      values.forEach(val => {
-        const option = document.createElement('option');
-        option.textContent = val;
-        option.value = val;
-        input.appendChild(option);
-      });
-
-      // Hidden input to store list of options for saving
-      const hiddenInput = document.createElement('input');
-      hiddenInput.type = 'hidden';
-      hiddenInput.name = `${name}_options`;  // Different name to avoid conflict
-      hiddenInput.value = values.join(',');
-
-      controls.appendChild(hiddenInput);
-    } else {
-      input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'form-control w-50';
-      input.name = name;
-    }
-
-<!--    const editBtn = document.createElement('button');-->
-<!--    editBtn.innerHTML = '✏️';-->
-<!--    editBtn.className = 'btn btn-light';-->
-<!--    editBtn.style.padding = '0.3rem 0.3rem';-->
-<!--    editBtn.onclick = () => alert('Implement edit logic');-->
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = '🗑️';
-    deleteBtn.className = 'btn btn-light';
-    deleteBtn.style.padding = '0.3rem 0.3rem';
-    deleteBtn.onclick = () => {
-      fieldDiv.remove();
-      row.remove();
-      if (!container.children.length) customCard.style.display = 'none';
-      if (!priorityTableBody.children.length) prioritySection.style.display = 'none';
-    };
-
-    controls.appendChild(input);
-<!--    controls.appendChild(editBtn);-->
-    controls.appendChild(deleteBtn);
-
-    fieldDiv.appendChild(label);
-    fieldDiv.appendChild(controls);
-    container.appendChild(fieldDiv);
-
-    // Add priority row
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td data-label="name">${name}</td>
-      <td data-label="fieldType">${fieldType}</td>
-      <td data-label="fieldValidation">${fieldValidation}</td>
-      <td data-label="isRequired">${isRequired}</td>
-      <td data-label="priority">
-        <input type="number" class="form-control priority-input" value="${priorityTableBody.children.length + 1}" />
-      </td>
-    `;
-    priorityTableBody.appendChild(row);
-
-    form.reset();
-    valueContainer.style.display = 'none';
-  });
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const dropdownRadio = document.getElementById("field-type-dropdown");
-    const boxRadio = document.getElementById("field-type-box");
-    const areaRadio = document.getElementById("field-type-area");
-    const dropdownContainer = document.getElementById("dropdownValueContainer");
-
-    function toggleDropdownInput() {
-      if (dropdownRadio.checked) {
-        dropdownContainer.style.display = "block";
-      } else {
-        dropdownContainer.style.display = "none";
-      }
-    }
-
-    toggleDropdownInput(); // Run once on load
-
-    [dropdownRadio, boxRadio, areaRadio].forEach(radio => {
-      radio.addEventListener("change", toggleDropdownInput);
-    });
-  });
-</script>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('fieldForm');
-    const submitBtn = document.getElementById('submit_id');
-    const priorityTableBody = document.getElementById('priorityTableBody');
-    const viewFieldsContainer = document.getElementById('viewFieldsContainer');
-    const customCard = document.getElementById('customCard');
-    const prioritySection = document.getElementById('prioritySection');
-
-    submitBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-
-      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-
-      const dynamicData = {};
-      const hiddenOptions = {};
-      const dynamicInputs = viewFieldsContainer.querySelectorAll('input, select');
-
-      dynamicInputs.forEach(input => {
-        if (input.name) {
-          if (input.name.endsWith('_options')) {
-            hiddenOptions[input.name] = input.value;
-          } else {
-            dynamicData[input.name] = input.value.trim();
-          }
-        }
-      });
-
-      Object.assign(dynamicData, hiddenOptions);
-
-      const rows = priorityTableBody.querySelectorAll('tr');
-      const tableData = [];
-
-      rows.forEach(row => {
-        const rowData = {
-          name: row.querySelector('[data-label="name"]')?.textContent?.trim() || '',
-          fieldType: row.querySelector('[data-label="fieldType"]')?.textContent?.trim() || '',
-          fieldValidation: row.querySelector('[data-label="fieldValidation"]')?.textContent?.trim() || '',
-          isRequired: row.querySelector('[data-label="isRequired"]')?.textContent?.trim() || '',
-          priority: row.querySelector('input.priority-input')?.value || ''
-        };
-        tableData.push(rowData);
-      });
-
-      const payload = {
-        formData: dynamicData,
-        fields: tableData
-      };
-
-      console.log('Sending Payload:', payload);
-
-      fetch('/user/crm_save/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
-      })
-      .then(data => {
-        alert('Successfully saved');
-
-        form.reset();
-        location.reload();
-        container.innerHTML = '';
-        priorityTableBody.innerHTML = '';
-        customCard.style.display = 'none';
-        prioritySection.style.display = 'none';
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-    });
-  });
-</script>
-
-
-    <script>
-  function populateEditForm(fieldId) {
-    // Debug alert
-    console.log('Fetching data for field ID:', fieldId);
-    // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('editModal'));
-        modal.show();
-
-    fetch(`/fields/${fieldId}/edit/`)
-      .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
-      })
-      .then(data => {
-        // Populate text fields
-        document.getElementById('editFieldId').value = data.id || '';
-        document.getElementById('editFieldName').value = data.FieldName || '';
-
-        // Set FieldType radio
-        const typeRadio = document.querySelector(`input[name="FieldType"][value="${data.FieldType}"]`);
-        if (typeRadio) typeRadio.checked = true;
-
-        // Show/hide dropdown value field
-        const dropdownContainer = document.getElementById("editDropdownValueContainer");
-        if (data.FieldType === "Drop Down") {
-          dropdownContainer.style.display = "block";
-          document.getElementById("editDropdownValues").value = data.DropdownValues || '';
-        } else {
-          dropdownContainer.style.display = "none";
-          document.getElementById("editDropdownValues").value = '';
-        }
-
-        // Set FieldValidation radio
-        const validationRadio = document.querySelector(`input[name="FieldValidation"][value="${data.FieldValidation}"]`);
-        if (validationRadio) validationRadio.checked = true;
-
-        // Required checkbox
-        document.getElementById('editRequiredCheck').checked = data.RequiredCheck === true || data.RequiredCheck === "Yes";
-
-
-      })
-      .catch(error => {
-        console.error('Error fetching field data:', error);
-        alert('Failed to load data. Please try again.');
-      });
-  }
-
-  // Form submission handler
-  document.getElementById('editForm').addEventListener('submit', function(event) {
-  event.preventDefault();
-
-  const formData = new FormData(this);
-
-  const checkbox = document.getElementById('editRequiredCheck');
-  formData.set('RequiredCheck', checkbox.checked ? 'Yes' : 'No');
-
-  const fieldId = formData.get('id');
-
-  fetch(`/fields/${fieldId}/edit1/`, {
-    method: 'POST',
-    body: formData,
-  })
-  .then(response => {
-    if (!response.ok) throw new Error('Failed to save');
-    return response.json();
-  })
-  .then(data => {
-    if (data.success) {
-      const modalElement = document.getElementById('editModal');
-      const modalInstance = bootstrap.Modal.getInstance(modalElement);
-      modalInstance.hide();
-      location.reload();
-    } else {
-      alert('Error updating field.');
-    }
-  })
-  .catch(error => {
-    console.error('Error updating field:', error);
-    alert('Something went wrong while saving.');
-  });
-});
-
-
-  // Toggle dropdown value input on FieldType radio change
-  document.addEventListener("DOMContentLoaded", () => {
-    const container = document.getElementById("editDropdownValueContainer");
-
-    const radios = document.querySelectorAll('input[name="FieldType"]');
-    radios.forEach(radio => {
-      radio.addEventListener("change", () => {
-        if (radio.value === "Drop Down" && radio.checked) {
-          container.style.display = "block";
-        } else {
-          container.style.display = "none";
-        }
-      });
-    });
-  });
-</script>
-
-
-<!--  dynamic value save start-->
 
   <script>
-document.getElementById('submitForm').addEventListener('click', function () {
-  const form = document.getElementById('dynamicForm');
-
-  if (!form.checkValidity()) {
-    form.reportValidity();  
-    return;
-  }
-
-
-  const formData = new FormData(form);
-
-  const data = {};
-  for (const [key, value] of formData.entries()) {
-    data[key] = value;
-  }
-
-  fetch("{% url 'save_dynamic_form' %}", {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': '{{ csrf_token }}'  // Important for CSRF protection
-    },
-    body: JSON.stringify(data)
-  })
-  .then(res => res.json())
-  .then(response => {
-    const msgBox = document.getElementById('formMessage');
-    if (response.success) {
-      msgBox.innerHTML = `<div class="alert alert-success">${response.message}</div>`;
-      form.reset();
-    } else {
-      msgBox.innerHTML = `<div class="alert alert-danger">Error: ${response.error}</div>`;
-    }
-  })
-  .catch(error => {
-    console.error('AJAX error:', error);
-    document.getElementById('formMessage').innerHTML =
-      `<div class="alert alert-danger">Unexpected error occurred</div>`;
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.open-lead-modal').forEach(link => {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        const modal = new bootstrap.Modal(document.getElementById('leadFormModal'));
+        modal.show();
+      });
+    });
   });
-});
 </script>
 
-<!--  dynamic value save End-->
+
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById('leadForm');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); // Prevent form from refreshing the page
+
+      const formData = new FormData(form);
+
+      fetch('/save_lead/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': getCSRFToken()
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not OK");
+        return response.json();
+      })
+      .then(data => {
+        if (data.status === "success") {
+          alert("Lead saved successfully!");
+          form.reset();
+
+          const modal = bootstrap.Modal.getInstance(document.getElementById('addLeadModal'));
+          if (modal) modal.hide();
+          setTimeout(() => {
+            location.reload();
+          }, 500);
+
+
+        } else {
+          alert("Failed to save lead.");
+        }
+      })
+      .catch(error => {
+        console.error("Save failed", error);
+        alert("Error while saving lead.");
+      });
+    });
+  });
+
+  function getCSRFToken() {
+    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+    return cookie ? cookie.split('=')[1] : '';
+  }
+</script>
+
+
+
+  <script>
+  document.querySelectorAll('.open-lead-modal').forEach(button => {
+    button.addEventListener('click', function () {
+      const leadId = this.getAttribute('data-id');
+      fetch(`/api/lead/${leadId}/`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.status === "success") {
+            const data = result.data;
+
+            const modal = document.getElementById('leadFormModal');
+
+            modal.querySelector('[name="customer_name"]').value = data.customer_name || '';
+            modal.querySelector('[name="customer_type"]').value = data.customer_type || '';
+            modal.querySelector('[name="calling_number"]').value = data.calling_number || '';
+            modal.querySelector('[name="enquiry_type"]').value = data.enquiry_type || '';
+            modal.querySelector('[name="enquiry_source"]').value = data.enquiry_source || '';
+            modal.querySelector('[name="sub_enquiry_source"]').value = data.sub_enquiry_source || '';
+            modal.querySelector('[name="lead_date"]').value = data.lead_date || '';
+            modal.querySelector('[name="call_date"]').value = data.call_date || '';
+            modal.querySelector('[name="call_direction"]').value = data.call_direction || '';
+            modal.querySelector('[name="calling_status"]').value = data.calling_status || '';
+            modal.querySelector('[name="interest_status"]').value = data.interest_status || '';
+            modal.querySelector('[name="sub_calling_status"]').value = data.sub_calling_status || '';
+            modal.querySelector('[name="category"]').value = data.category || '';
+            modal.querySelector('[name="buyer_type"]').value = data.buyer_type || '';
+            modal.querySelector('[name="sub_sub_calling_status"]').value = data.sub_sub_calling_status || '';
+            modal.querySelector('[name="lead_status"]').value = data.lead_status || '';
+            modal.querySelector('[name="construction_level"]').value = data.construction_level || '';
+            modal.querySelector('[name="name"]').value = data.name || '';
+            modal.querySelector('[name="alternative_number"]').value = data.alternative_number || '';
+            modal.querySelector('[name="email_id"]').value = data.email_id || '';
+            modal.querySelector('[name="brand_name"]').value = data.brand_name || '';
+            modal.querySelector('[name="product"]').value = data.product || '';
+            modal.querySelector('[name="sub_product"]').value = data.sub_product || '';
+            modal.querySelector('[name="state"]').value = data.state || '';
+            modal.querySelector('[name="district"]').value = data.district || '';
+            modal.querySelector('[name="pin_code"]').value = data.pin_code || '';
+            modal.querySelector('[name="zone"]').value = data.zone || '';
+            modal.querySelector('[name="agent_name"]').value = data.agent_name || '';
+            modal.querySelector('[name="order_qty"]').value = data.order_qty || '';
+            modal.querySelector('[name="order_description"]').value = data.order_description || '';
+            modal.querySelector('[name="order_value"]').value = data.order_value || '';
+            modal.querySelector('[name="customer_type_select"]').value = data.customer_type_select || '';
+            modal.querySelector('[name="registration_status"]').value = data.registration_status || '';
+            modal.querySelector('[name="remark"]').value = data.remark || '';
+            modal.querySelector('[name="seller_email"]').value = data.seller_email || '';
+            modal.querySelector('[name="seller_phone"]').value = data.seller_phone || '';
+            modal.querySelector('[name="address"]').value = data.address || '';
+            modal.querySelector('[name="landmark"]').value = data.landmark || '';
+
+            // Show modal
+            const leadModal = new bootstrap.Modal(modal);
+            leadModal.show();
+          } else {
+            alert("Lead not found");
+          }
+        });
+    });
+  });
+</script>
+
+
+
+  <script>
+  document.getElementById('leadFormModel').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const data = {};
+
+    // Fix: Correct way to get lead_id
+    const lead_id = document.getElementById('lead_id').value;
+    data['lead_id'] = lead_id;
+
+    // Convert form data to JSON
+    for (const [key, value] of formData.entries()) {
+      data[key] = value;
+    }
+
+    fetch('/api/update-lead/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+      if (result.status === "success") {
+        alert("Lead saved successfully!");
+        location.reload();
+      } else {
+        alert("Error: " + result.message);
+      }
+    })
+    .catch(err => {
+      alert("Network or server error.");
+      console.error(err);
+    });
+  });
+</script>
+
+
+  <script>
+  const modalElement = document.getElementById('leadFormModal');
+
+  // When modal is fully hidden
+  modalElement.addEventListener('hidden.bs.modal', function () {
+    // Remove Bootstrap blur class and backdrop if still present
+    document.body.classList.remove('modal-open');
+
+    // Remove all backdrops
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+  });
+</script>
+
+
 
 
   </body>
