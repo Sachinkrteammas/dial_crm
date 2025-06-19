@@ -2,6 +2,7 @@ import json
 from audioop import reverse
 from decimal import Decimal
 
+from django.contrib.admin.templatetags.admin_list import search_form
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -558,18 +559,25 @@ def save_dynamic_form(request):
 
 
 def lead_table(request):
+    # Fetch and build menu
     menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
     menu_tree = {}
     for item in menu_items:
         parent_id = item.parent_id
         menu_tree.setdefault(parent_id, []).append(item)
-
     menu_html = render_menu(None, menu_tree)
+
+    # Handle date filter
+    lead_date = request.GET.get('lead_date')
     leads = LeadTable.objects.all().order_by('-created_at')
+    if lead_date:
+        leads = leads.filter(lead_date=lead_date)
+
     return render(request, 'crmapp/lead.html', {
         'menu_html': menu_html,
         'leads': leads
     })
+
 
 
 @csrf_exempt  # Optional if CSRF token is already handled via JavaScript
@@ -606,8 +614,8 @@ def get_lead_data(request, lead_id):
             "enquiry_source": lead.enquiry_source,
             "sub_enquiry_source": lead.sub_enquiry_source,
             "lead_date": lead.lead_date.strftime("%Y-%m-%d") if lead.lead_date else "",
-            "call_date": lead.call_date.strftime("%Y-%m-%d") if lead.call_date else "",
-            "call_direction": lead.call_type,
+            # "call_date": lead.call_date.strftime("%Y-%m-%d") if lead.call_date else "",
+            # "call_direction": lead.call_type,
             "calling_status": lead.calling_status,
             "interest_status": lead.interested_status,
             "sub_calling_status": lead.sub_calling_status,
@@ -628,7 +636,7 @@ def get_lead_data(request, lead_id):
             "district": lead.district,
             "zone": lead.zone,
             "pin_code": lead.pin_code,
-            "agent_name": lead.agent_name,
+            # "agent_name": lead.agent_name,
             "order_qty": lead.order_qty,
             "order_description": lead.order_description,
             "order_value": str(lead.order_value) if lead.order_value else "",
@@ -671,8 +679,8 @@ def update_lead(request):
             lead.enquiry_source = data.get('enquiry_source', '')
             lead.sub_enquiry_source = data.get('sub_enquiry_source', '')
             lead.lead_date = parse_date(data.get('lead_date', None))
-            lead.call_date = parse_date(data.get('call_date', None))
-            lead.call_type = data.get('call_direction', '')
+            # lead.call_date = parse_date(data.get('call_date', None))
+            # lead.call_type = data.get('call_direction', '')
             lead.calling_status = data.get('calling_status', '')
             lead.interested_status = data.get('interest_status', '')
             lead.sub_calling_status = data.get('sub_calling_status', '')
@@ -693,7 +701,7 @@ def update_lead(request):
             lead.district = data.get('district', '')
             lead.zone = data.get('zone', '')
             lead.pin_code = data.get('pin_code', '')
-            lead.agent_name = data.get('agent_name', '')
+            # lead.agent_name = data.get('agent_name', '')
 
             order_qty = data.get('order_qty')
             lead.order_qty = int(order_qty) if order_qty not in (None, '', 'null') else None
@@ -722,3 +730,30 @@ def update_lead(request):
             return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+@csrf_exempt
+def delete_lead(request, lead_id):
+    if request.method == "POST":
+        try:
+            lead = LeadTable.objects.get(id=lead_id)
+            lead.delete()
+            return JsonResponse({'status': 'success'})
+        except LeadTable.DoesNotExist:
+            return JsonResponse({'status': 'not_found'}, status=404)
+    return JsonResponse({'status': 'invalid'}, status=400)
+
+
+def get_user_emails(request):
+    users = UserList.objects.all().values('id', 'email_id')
+    return JsonResponse(list(users), safe=False)
+
+def get_contact_by_email(request):
+    email = request.GET.get('email')
+    try:
+        user = UserList.objects.get(email_id=email)
+        return JsonResponse({'contact_no': user.contact_no})
+    except UserList.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+
+

@@ -197,3 +197,32 @@ class LeadTable(models.Model):
     class Meta:
         db_table = 'lead_table'
 
+
+class ZoneTable(models.Model):
+    zone = models.CharField(max_length=100, blank=True, null=True)
+    state_ut = models.CharField(max_length=100, blank=True, null=True)
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_zone')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_zone')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'zone_table'
+
+
+class BrandTable(models.Model):
+    brand = models.CharField(max_length=100, blank=True, null=True)
+    product_types = models.CharField(max_length=100, blank=True, null=True)
+    sub_product_types = models.CharField(max_length=100, blank=True, null=True)
+    escalation_matrix = models.CharField(max_length=100, blank=True, null=True)
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_brand')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_brand')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'brand_table'

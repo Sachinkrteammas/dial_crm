@@ -22,6 +22,11 @@ urlpatterns = [
     path('save_lead/', views.save_lead, name='save_lead'),
     path('api/lead/<int:lead_id>/', views.get_lead_data, name='get_lead_data'),
     path('api/update-lead/', views.update_lead, name='update_lead'),
+    path('delete-lead/<int:lead_id>/', views.delete_lead, name='delete_lead'),
+    path('api/user-emails/', views.get_user_emails, name='get_user_emails'),
+    path('api/user-contact/', views.get_contact_by_email, name='get_contact_by_email'),
+
+
 
 
 
