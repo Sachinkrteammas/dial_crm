@@ -749,7 +749,7 @@ def delete_lead(request, lead_id):
 
 
 def get_user_emails(request):
-    users = UserList.objects.all().values('id', 'email_id')
+    users = UserList.objects.filter(user_role='sales').values('id', 'email_id')
     return JsonResponse(list(users), safe=False)
 
 def get_contact_by_email(request):
@@ -765,3 +765,42 @@ def get_states_by_zone(request):
     zone = request.GET.get('zone')
     states = ZoneTable.objects.filter(zone=zone).values_list('state_ut', flat=True).distinct()
     return JsonResponse({'states': list(states)})
+
+
+@login_required
+def sales_user(request):
+    # Render Menu
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    # Use email-based matching instead of user FK
+    try:
+        user_obj = UserList.objects.get(email_id=request.user.email, user_role='Sales')
+    except UserList.DoesNotExist:
+        return render(request, 'crmapp/sales.html', {
+            'menu_html': menu_html,
+            'leads': [],
+            'zones': [],
+            'error': "You are not authorized to view sales leads."
+        })
+
+    # Filter leads assigned to this sales user's email
+    leads = LeadTable.objects.filter(seller_email_id=user_obj.email_id).order_by('-created_at')
+
+    # Optional: Date filter
+    lead_date = request.GET.get('lead_date')
+    if lead_date:
+        leads = leads.filter(lead_date=lead_date)
+
+    # Zone list for filter dropdowns
+    zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
+
+    return render(request, 'crmapp/sales.html', {
+        'menu_html': menu_html,
+        'leads': leads,
+        'zones': zones
+    })

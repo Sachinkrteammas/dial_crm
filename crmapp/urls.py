@@ -26,6 +26,8 @@ urlpatterns = [
     path('api/user-emails/', views.get_user_emails, name='get_user_emails'),
     path('api/user-contact/', views.get_contact_by_email, name='get_contact_by_email'),
     path('api/get-states/', views.get_states_by_zone, name='get_states_by_zone'),
+    path('sales/', views.sales_user, name='sales_user')
+
 
 
 

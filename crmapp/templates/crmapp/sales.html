@@ -55,6 +55,7 @@
         flex: 0 0 auto;
         width: 24.333333%;
     }
+
     </style>
 
     <!-- Page CSS -->
@@ -664,7 +665,7 @@
                         <input type="date" name="lead_date" class="form-control form-control-sm" value="{{ request.GET.lead_date }}">
                         <button type="submit" class="btn btn-sm btn-outline-primary">Search</button>
                         {% if request.GET.lead_date %}
-                          <a href="{% url 'lead_table' %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                          <a href="{% url 'sales_user' %}" class="btn btn-sm btn-outline-secondary">Clear</a>
                         {% endif %}
                       </form>
                     </div>
