@@ -18,7 +18,7 @@ from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable
+from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable
 
 User = get_user_model()
 
@@ -573,9 +573,12 @@ def lead_table(request):
     if lead_date:
         leads = leads.filter(lead_date=lead_date)
 
+    zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
+
     return render(request, 'crmapp/lead.html', {
         'menu_html': menu_html,
-        'leads': leads
+        'leads': leads,
+        'zones': zones
     })
 
 
@@ -607,6 +610,7 @@ def get_lead_data(request, lead_id):
     try:
         lead = LeadTable.objects.get(id=lead_id)
         data = {
+            "id":lead.id,
             "customer_name": lead.customer_name,
             "customer_type": lead.customer_type,
             "calling_number": lead.calling_number,
@@ -632,9 +636,9 @@ def get_lead_data(request, lead_id):
             "brand_name": lead.brand,
             "product": lead.product,
             "sub_product": lead.sub_product,
-            "state": lead.state,
             "district": lead.district,
             "zone": lead.zone,
+            "state": lead.state,
             "pin_code": lead.pin_code,
             # "agent_name": lead.agent_name,
             "order_qty": lead.order_qty,
@@ -757,3 +761,7 @@ def get_contact_by_email(request):
         return JsonResponse({'error': 'User not found'}, status=404)
 
 
+def get_states_by_zone(request):
+    zone = request.GET.get('zone')
+    states = ZoneTable.objects.filter(zone=zone).values_list('state_ut', flat=True).distinct()
+    return JsonResponse({'states': list(states)})

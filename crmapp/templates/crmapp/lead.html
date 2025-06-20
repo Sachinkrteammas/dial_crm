@@ -686,7 +686,7 @@
                       {% for lead in leads %}
                       <tr>
                         <td><span class="fw-medium">{{ lead.customer_name }}</span></td>
-                        <input type="hidden" name="lead_id" id="lead_id" value="{{ lead.id }}">
+
                         <td>
                           <a href="javascript:void(0);" class="open-lead-modal btn btn-link p-0" data-id="{{ lead.id }}">
                             {{ lead.calling_number }}
@@ -739,6 +739,7 @@
       </div>
       <div class="modal-body">
         <form method="POST" id="leadFormModel">
+          <input  type="hidden" name="lead_id" id="lead_id" value="">
           <div class="row g-3">
 
             <!-- Row 1 -->
@@ -938,10 +939,7 @@
                 <option value="">-- Select Sub Product --</option>
               </select>
             </div>
-            <div class="col-md-4">
-              <label>State:</label>
-              <input type="text" class="form-control" placeholder="State" name="state">
-            </div>
+
 
             <!-- Row 9 -->
             <div class="col-md-4">
@@ -954,7 +952,19 @@
             </div>
             <div class="col-md-4">
               <label>Zone:</label>
-              <input type="text" class="form-control" placeholder="Zone" name="zone">
+              <select name="zone" id="zoneDropdown" class="form-select" required>
+                <option value="">-- Select Zone --</option>
+                {% for zone in zones %}
+                <option value="{{ zone }}">{{ zone }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label>State:</label>
+              <select name="state" id="stateDropdown" class="form-select" required>
+                <option value="">-- Select State --</option>
+              </select>
             </div>
 
             <!-- Row 10 -->
@@ -1253,6 +1263,7 @@
   document.querySelectorAll('.open-lead-modal').forEach(button => {
     button.addEventListener('click', function () {
       const leadId = this.getAttribute('data-id');
+      document.getElementById('lead_id').value=leadId;
       fetch(`/api/lead/${leadId}/`)
         .then(response => response.json())
         .then(result => {
@@ -1284,10 +1295,34 @@
             modal.querySelector('[name="brand_name"]').value = data.brand_name || '';
             modal.querySelector('[name="product"]').value = data.product || '';
             modal.querySelector('[name="sub_product"]').value = data.sub_product || '';
-            modal.querySelector('[name="state"]').value = data.state || '';
             modal.querySelector('[name="district"]').value = data.district || '';
             modal.querySelector('[name="pin_code"]').value = data.pin_code || '';
-            modal.querySelector('[name="zone"]').value = data.zone || '';
+<!--            modal.querySelector('[name="zone"]').value = data.zone || '';-->
+<!--            modal.querySelector('[name="state"]').value = data.state || '';-->
+            const zoneDropdown = modal.querySelector('[name="zone"]');
+            const stateDropdown = modal.querySelector('[name="state"]');
+
+            zoneDropdown.value = data.zone || '';
+
+            // Load states for selected zone
+            stateDropdown.innerHTML = '<option value="">Loading...</option>';
+
+            fetch(`/api/get-states/?zone=${encodeURIComponent(data.zone)}`)
+              .then(response => response.json())
+              .then(stateData => {
+                stateDropdown.innerHTML = '<option value="">-- Select State --</option>';
+                stateData.states.forEach(state => {
+                  const option = document.createElement('option');
+                  option.value = state;
+                  option.textContent = state;
+                  if (state === data.state) {
+                    option.selected = true; // set selected value here
+                  }
+                  stateDropdown.appendChild(option);
+                });
+              });
+
+
 <!--            modal.querySelector('[name="agent_name"]').value = data.agent_name || '';-->
             modal.querySelector('[name="order_qty"]').value = data.order_qty || '';
             modal.querySelector('[name="order_description"]').value = data.order_description || '';
@@ -1438,6 +1473,39 @@
       }
     });
   });
+
+
+<!--    zone filter-->
+
+
+document.getElementById('zoneDropdown').addEventListener('change', function () {
+  const zone = this.value;
+  const stateDropdown = document.getElementById('stateDropdown');
+
+  stateDropdown.innerHTML = '<option value="">Loading...</option>';
+
+  fetch(`/api/get-states/?zone=${encodeURIComponent(zone)}`)
+    .then(response => response.json())
+    .then(data => {
+      stateDropdown.innerHTML = '<option value="">-- Select State --</option>';
+      data.states.forEach(state => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        stateDropdown.appendChild(option);
+      });
+    })
+    .catch(err => {
+      console.error('Failed to load states', err);
+      stateDropdown.innerHTML = '<option value="">-- Select State --</option>';
+    });
+});
+
+
+
+
+
+
 </script>
 
 
