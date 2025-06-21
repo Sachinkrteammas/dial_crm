@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.core.validators import validate_email
 from django.forms import model_to_dict
 from django.http import JsonResponse, HttpResponse, Http404
@@ -570,15 +571,29 @@ def lead_table(request):
     # Handle date filter
     lead_date = request.GET.get('lead_date')
     leads = LeadTable.objects.all().order_by('-created_at')
-    if lead_date:
-        leads = leads.filter(lead_date=lead_date)
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Apply date filters
+    if start_date:
+        leads = leads.filter(lead_date__gte=parse_date(start_date))
+    if end_date:
+        leads = leads.filter(lead_date__lte=parse_date(end_date))
+
+    # Apply pagination
+    paginator = Paginator(leads, 10)  # 10 leads per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
 
     zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
 
     return render(request, 'crmapp/lead.html', {
         'menu_html': menu_html,
-        'leads': leads,
-        'zones': zones
+        'leads': page_obj,
+        'zones': zones,
+        'paginator': paginator,
+        'page_obj': page_obj,
     })
 
 
@@ -792,15 +807,27 @@ def sales_user(request):
     leads = LeadTable.objects.filter(seller_email_id=user_obj.email_id).order_by('-created_at')
 
     # Optional: Date filter
-    lead_date = request.GET.get('lead_date')
-    if lead_date:
-        leads = leads.filter(lead_date=lead_date)
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Apply date filters
+    if start_date:
+        leads = leads.filter(lead_date__gte=parse_date(start_date))
+    if end_date:
+        leads = leads.filter(lead_date__lte=parse_date(end_date))
+
+    # Apply pagination
+    paginator = Paginator(leads, 10)  # 10 leads per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     # Zone list for filter dropdowns
     zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
 
     return render(request, 'crmapp/sales.html', {
         'menu_html': menu_html,
-        'leads': leads,
-        'zones': zones
+        'leads': page_obj,
+        'zones': zones,
+        'paginator': paginator,
+        'page_obj': page_obj,
     })
