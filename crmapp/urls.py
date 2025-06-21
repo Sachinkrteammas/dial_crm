@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views,sales_views
 from .api_view import WebhookLeadsView
 
 urlpatterns = [
@@ -27,7 +27,17 @@ urlpatterns = [
     path('api/user-emails/', views.get_user_emails, name='get_user_emails'),
     path('api/user-contact/', views.get_contact_by_email, name='get_contact_by_email'),
     path('api/get-states/', views.get_states_by_zone, name='get_states_by_zone'),
-    path('sales/', views.sales_user, name='sales_user'),
+
     #API VIEW
     path('api/webhook-leads/', WebhookLeadsView.as_view(), name='webhook_leads_api'),
+    #API VIEW END
+
+    #Sales url
+    path('sales/', sales_views.sales_user, name='sales_user'),
+    path('sales_get_data/', sales_views.sales_get_data, name='sales_get_data'),
+
+    path('sales_get_data/<int:uid>/', sales_views.sales_get_data, name='sales_get_data'),
+
+    path('update_sales_info/', sales_views.update_sales_info, name='update_sales_info'),
+
 ]

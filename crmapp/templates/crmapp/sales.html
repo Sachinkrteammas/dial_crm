@@ -55,6 +55,9 @@
         flex: 0 0 auto;
         width: 24.333333%;
     }
+      .px-4 {
+            padding-inline-end: 9rem !important;
+      }
 
     </style>
 
@@ -658,9 +661,20 @@
             <div class="card" style=" width: 95%; margin-left: 25px; margin-top: 32px;">
                 <h5 class="card-header d-flex justify-content-between align-items-center">
                     Leads
-                   <!-- 🔍 Search Filter -->
-                    <div class="px-4 d-flex justify-content-end" style="margin-left: 200px;">
+                    <button
+                      data-bs-toggle="modal"
+                      data-bs-target="#addLeadModal"
+                      class="btn btn-sm btn-primary text-nowrap">
+                      Create Leads
+                    </button>
+                  </h5>
+
+              <!-- 🔍 Search Filter -->
+                    <div class="px-4 d-flex justify-content-end" >
                         <form method="get" class="d-flex align-items-center gap-2">
+                          <label for="query" class="form-label m-0">Search:</label>
+                          <input type="text" name="query" id="query" class="form-control form-control-sm" placeholder="Name, Phone, Enquiry..." value="{{ request.GET.query }}">
+
                           <label for="start_date" class="form-label m-0">Start:</label>
                           <input type="date" name="start_date" id="start_date" class="form-control form-control-sm"
                                  value="{{ request.GET.start_date }}">
@@ -669,22 +683,15 @@
                           <input type="date" name="end_date" id="end_date" class="form-control form-control-sm"
                                  value="{{ request.GET.end_date }}">
 
-                          <button type="submit" class="btn btn-sm btn-outline-primary" style="width:90px;">Search</button>
+                          <button type="submit" class="btn btn-sm btn-outline-primary" style="width:120px;">Search</button>
 
-                          {% if request.GET.start_date or request.GET.end_date %}
-                            <a href="{% url 'sales_user' %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                          {% if request.GET.start_date or request.GET.end_date or request.GET.query %}
+                            <a href="{% url 'sales_user' %}" class="btn btn-outline-secondary">Clear</a>
                           {% endif %}
+
                         </form>
                       </div>
 
-
-                    <button
-                      data-bs-toggle="modal"
-                      data-bs-target="#addLeadModal"
-                      class="btn btn-sm btn-primary text-nowrap">
-                      Create Leads
-                    </button>
-                  </h5>
 
                 <div class="table-responsive text-nowrap">
                   <table class="table table-sm">

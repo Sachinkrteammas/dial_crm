@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
+from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import JsonResponse, HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
@@ -569,7 +570,7 @@ def lead_table(request):
     menu_html = render_menu(None, menu_tree)
 
     # Handle date filter
-    lead_date = request.GET.get('lead_date')
+    query = request.GET.get('query')
     leads = LeadTable.objects.all().order_by('-created_at')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -579,6 +580,14 @@ def lead_table(request):
         leads = leads.filter(lead_date__gte=parse_date(start_date))
     if end_date:
         leads = leads.filter(lead_date__lte=parse_date(end_date))
+
+    if query:
+        leads = leads.filter(
+            Q(customer_name__icontains=query) |
+            Q(calling_number__icontains=query) |
+            Q(enquiry_type__icontains=query) |
+            Q(enquiry_source__icontains=query)
+        )
 
     # Apply pagination
     paginator = Paginator(leads, 10)  # 10 leads per page
@@ -782,52 +791,4 @@ def get_states_by_zone(request):
     return JsonResponse({'states': list(states)})
 
 
-@login_required
-def sales_user(request):
-    # Render Menu
-    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
-    menu_tree = {}
-    for item in menu_items:
-        parent_id = item.parent_id
-        menu_tree.setdefault(parent_id, []).append(item)
-    menu_html = render_menu(None, menu_tree)
 
-    # Use email-based matching instead of user FK
-    try:
-        user_obj = UserList.objects.get(email_id=request.user.email, user_role='Sales')
-    except UserList.DoesNotExist:
-        return render(request, 'crmapp/sales.html', {
-            'menu_html': menu_html,
-            'leads': [],
-            'zones': [],
-            'error': "You are not authorized to view sales leads."
-        })
-
-    # Filter leads assigned to this sales user's email
-    leads = LeadTable.objects.filter(seller_email_id=user_obj.email_id).order_by('-created_at')
-
-    # Optional: Date filter
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-
-    # Apply date filters
-    if start_date:
-        leads = leads.filter(lead_date__gte=parse_date(start_date))
-    if end_date:
-        leads = leads.filter(lead_date__lte=parse_date(end_date))
-
-    # Apply pagination
-    paginator = Paginator(leads, 10)  # 10 leads per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    # Zone list for filter dropdowns
-    zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
-
-    return render(request, 'crmapp/sales.html', {
-        'menu_html': menu_html,
-        'leads': page_obj,
-        'zones': zones,
-        'paginator': paginator,
-        'page_obj': page_obj,
-    })

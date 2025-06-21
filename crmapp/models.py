@@ -226,3 +226,27 @@ class BrandTable(models.Model):
 
     class Meta:
         db_table = 'brand_table'
+
+
+class SalesInfoTable(models.Model):
+    lead_table = models.ForeignKey(LeadTable, on_delete=models.CASCADE, null=True, blank=True, related_name='lead_table')
+    sale_mt = models.CharField(max_length=100, blank=True, null=True)
+    sale_inr = models.CharField(max_length=100, blank=True, null=True)
+    sale_team_remarks = models.TextField(blank=True, null=True)
+    lead_status = models.CharField(max_length=100, blank=True, null=True)
+    cc_final_remarks_reformat = models.TextField(blank=True, null=True)
+    lead_category = models.CharField(max_length=100, blank=True, null=True)
+    product = models.CharField(max_length=100, blank=True, null=True)
+    product_value = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=100, blank=True, null=True)
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_sales_info')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_sales_info')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'sales_info_table'
+
+
