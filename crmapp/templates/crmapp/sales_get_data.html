@@ -62,6 +62,15 @@
           color: #59888d;
       }
 
+    .col-md-12
+     {
+        width: 100%;
+     }
+      .col-md-6
+      {
+        width: 25%;
+      }
+
     </style>
 
     <!-- Page CSS -->
@@ -170,10 +179,7 @@
         <input type="text" name="sale_inr" value="{{ sales.sale_inr|default:'' }}" class="form-control">
       </div>
 
-      <div class="col-md-12">
-        <label class="form-label">Sales Team Remarks</label>
-        <textarea name="sale_team_remarks" class="form-control" rows="2">{{ sales.sale_team_remarks|default:'' }}</textarea>
-      </div>
+
 
       <div class="col-md-6">
         <label class="form-label">Lead Status</label>
@@ -213,6 +219,11 @@
           <option value="Closed" {% if sales.status == "Closed" %}selected{% endif %}>Closed</option>
           <option value="Pending" {% if sales.status == "Pending" %}selected{% endif %}>Pending</option>
         </select>
+      </div>
+
+      <div class="col-md-12">
+        <label class="form-label">Sales Team Remarks</label>
+        <textarea name="sale_team_remarks" class="form-control" rows="2">{{ sales.sale_team_remarks|default:'' }}</textarea>
       </div>
 
       <div class="col-12 text-center mt-4">

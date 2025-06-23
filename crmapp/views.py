@@ -6,6 +6,7 @@ from django.contrib.admin.templatetags.admin_list import search_form
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.core import signing
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
@@ -20,7 +21,8 @@ from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable
+from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
+    HistoryLead
 
 User = get_user_model()
 
@@ -276,7 +278,7 @@ def delete_user(request, user_id):
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
-
+@login_required
 def user_roles(request):
     team_leader_count = UserList.objects.filter(user_role='team-leader').count()
     adviser_count = UserList.objects.filter(user_role='adviser').count()
@@ -559,7 +561,7 @@ def save_dynamic_form(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-
+@login_required
 def lead_table(request):
     # Fetch and build menu
     menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
@@ -633,6 +635,12 @@ def save_lead(request):
 def get_lead_data(request, lead_id):
     try:
         lead = LeadTable.objects.get(id=lead_id)
+
+        # Create encrypted URL
+        payload = {'uid': lead.id, 'email': lead.seller_email_id}
+        encrypted_data = signing.dumps(payload)
+        secure_url = request.build_absolute_uri(f"/sales_get_data/?data={encrypted_data}")
+
         data = {
             "id":lead.id,
             "customer_name": lead.customer_name,
@@ -673,6 +681,7 @@ def get_lead_data(request, lead_id):
             "remark": lead.remark,
             "seller_email": lead.seller_email_id,
             "seller_phone": lead.seller_phone_no,
+            "secure_url": secure_url,
         }
         return JsonResponse({"status": "success", "data": data})
     except LeadTable.DoesNotExist:
@@ -749,7 +758,57 @@ def update_lead(request):
             lead.seller_email_id = data.get('seller_email', '')
             lead.seller_phone_no = data.get('seller_phone', '')
 
+            lead.secure_url = data.get('secure_link', '')
+
             lead.save()
+
+            # --- Create HistoryLead record ---
+            HistoryLead.objects.create(
+                lead_table=lead,
+                customer_name=lead.customer_name,
+                customer_type=lead.customer_type,
+                calling_number=lead.calling_number,
+                enquiry_type=lead.enquiry_type,
+                enquiry_source=lead.enquiry_source,
+                sub_enquiry_source=lead.sub_enquiry_source,
+                lead_date=lead.lead_date,
+                call_date=lead.call_date,
+                call_type=lead.call_type,
+                calling_status=lead.calling_status,
+                interested_status=lead.interested_status,
+                sub_calling_status=lead.sub_calling_status,
+                sub_sub_calling_status=lead.sub_sub_calling_status,
+                select_bus=lead.select_bus,
+                buyer_type=lead.buyer_type,
+                lead_status=lead.lead_status,
+                construction_level=lead.construction_level,
+                name=lead.name,
+                alternative_number=lead.alternative_number,
+                email_id=lead.email_id,
+                address=lead.address,
+                landmark=lead.landmark,
+                brand=lead.brand,
+                product=lead.product,
+                sub_product=lead.sub_product,
+                state=lead.state,
+                district=lead.district,
+                zone=lead.zone,
+                pin_code=lead.pin_code,
+                agent_name=lead.agent_name,
+                order_qty=lead.order_qty,
+                order_description=lead.order_description,
+                order_value=lead.order_value,
+                customer_type_select=lead.customer_type_select,
+                registration_status=lead.registration_status,
+                remark=lead.remark,
+                secure_url=lead.secure_url,
+                seller_email_id=lead.seller_email_id,
+                seller_phone_no=lead.seller_phone_no,
+                created_by=lead.created_by,  # or request.user if preferred
+                updated_by=lead.updated_by,
+            )
+
+
             return JsonResponse({'status': 'success'})
 
         except LeadTable.DoesNotExist:

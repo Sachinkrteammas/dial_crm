@@ -725,12 +725,12 @@
                               <i class="icon-base ti tabler-dots-vertical"></i>
                             </button>
                             <div class="dropdown-menu">
-                              <a class="dropdown-item text-success" href="javascript:void(0);" data-id="{{ lead.id }}">
-                                <i class="icon-base ti tabler-pencil me-1"></i> Edit
-                              </a>
-                              <a class="dropdown-item text-danger delete-lead" href="javascript:void(0);" data-id="{{ lead.id }}">
-                                <i class="icon-base ti tabler-trash me-1"></i> Delete
-                              </a>
+<!--                              <a class="dropdown-item text-success" href="javascript:void(0);" data-id="{{ lead.id }}">-->
+<!--                                <i class="icon-base ti tabler-pencil me-1"></i> Edit-->
+<!--                              </a>-->
+<!--                              <a class="dropdown-item text-danger delete-lead" href="javascript:void(0);" data-id="{{ lead.id }}">-->
+<!--                                <i class="icon-base ti tabler-trash me-1"></i> Delete-->
+<!--                              </a>-->
                             </div>
                           </div>
                         </td>
@@ -804,6 +804,9 @@
       <div class="modal-body">
         <form method="POST" id="leadFormModel">
           <input  type="hidden" name="lead_id" id="lead_id" value="">
+          <!-- Hidden input field in your HTML -->
+          <input type="hidden" name="secure_link" id="secure_link">
+
           <div class="row g-3">
 
             <!-- Row 1 -->
@@ -1184,7 +1187,7 @@
         </div>
 
         <div class="modal-footer" style="background-color: #2f3349; border-top: none; padding: 1rem 1.5rem;">
-          <button type="submit" class="btn btn-success px-4" style="border-radius: 30px;">Save Lead</button>
+          <button type="submit" class="btn btn-success " style="border-radius: 30px;">Save Lead</button>
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 30px;">Cancel</button>
         </div>
       </form>
@@ -1361,10 +1364,14 @@
             modal.querySelector('[name="sub_product"]').value = data.sub_product || '';
             modal.querySelector('[name="district"]').value = data.district || '';
             modal.querySelector('[name="pin_code"]').value = data.pin_code || '';
+            document.querySelector('[name="secure_link"]').value = data.secure_url || '';
+
 <!--            modal.querySelector('[name="zone"]').value = data.zone || '';-->
 <!--            modal.querySelector('[name="state"]').value = data.state || '';-->
             const zoneDropdown = modal.querySelector('[name="zone"]');
             const stateDropdown = modal.querySelector('[name="state"]');
+
+
 
             zoneDropdown.value = data.zone || '';
 

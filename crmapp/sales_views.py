@@ -1,11 +1,13 @@
 from django.contrib.auth.decorators import login_required
+from django.core import signing
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.dateparse import parse_date
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
-    SalesInfoTable
+    SalesInfoTable, HistorySalesInfo
 from .views import render_menu
 
 
@@ -68,24 +70,38 @@ def sales_user(request):
         'page_obj': page_obj,
     })
 
-def sales_get_data(request):
-    uid = request.GET.get('uid')
-    email = request.GET.get('email')
 
-    # Search with all conditions
-    lead = LeadTable.objects.filter(
-        id=uid,
-        seller_email_id=email,
-    ).first()
+def sales_get_data(request):
+    encrypted_data = request.GET.get('data')
+    if not encrypted_data:
+        message = "Missing encrypted data in the URL."
+        return render(request, 'crmapp/sales_get_data.html', {'message': message})
+
+    try:
+        data = signing.loads(encrypted_data)
+        uid = data.get('uid')
+        email = data.get('email')
+    except signing.BadSignature:
+        message = "Invalid or tampered URL."
+        return render(request, 'crmapp/sales_get_data.html', {'message': message})
+
+    # Validate presence of uid and email
+    if not uid:
+        return render(request, 'crmapp/sales_get_data.html', {'message': "UID is missing in the encrypted data."})
+
+    if not email:
+        return render(request, 'crmapp/sales_get_data.html', {'message': "Email is missing in the encrypted data."})
+
+    # Query only if both uid and email are present
+    lead = LeadTable.objects.filter(id=uid, seller_email_id=email).first()
 
     if not lead:
         message = "No matching lead found for the given ID and email."
         return render(request, 'crmapp/sales_get_data.html', {'message': message})
-    # Get or create sales data for the lead
+
     sales, created = SalesInfoTable.objects.get_or_create(lead_table=lead)
 
-    return render(request, 'crmapp/sales_get_data.html', {'lead': lead,
-                                                          'sales': sales})
+    return render(request, 'crmapp/sales_get_data.html', {'lead': lead, 'sales': sales})
 
 
 def update_sales_info(request):
@@ -93,9 +109,7 @@ def update_sales_info(request):
         lead_id = request.POST.get('lead_id')
         lead = get_object_or_404(LeadTable, id=lead_id)
 
-        # Either get existing sales info or create new
         sales_info, created = SalesInfoTable.objects.get_or_create(lead_table=lead)
-
 
         sales_info.sale_mt = request.POST.get('sale_mt')
         sales_info.sale_inr = request.POST.get('sale_inr')
@@ -113,6 +127,29 @@ def update_sales_info(request):
 
         sales_info.save()
 
-        return redirect('sales_get_data', uid=lead.id)
-    else:
-        return redirect('dashboard')  # Or a default fallback
+        # --- Create history record ---
+
+        HistorySalesInfo.objects.create(
+            lead_table=sales_info,
+            sale_mt=sales_info.sale_mt,
+            sale_inr=sales_info.sale_inr,
+            sale_team_remarks=sales_info.sale_team_remarks,
+            lead_status=sales_info.lead_status,
+            cc_final_remarks_reformat=sales_info.cc_final_remarks_reformat,
+            lead_category=sales_info.lead_category,
+            product=sales_info.product,
+            product_value=sales_info.product_value,
+            status=sales_info.status,
+            created_by=request.user,
+            updated_by=request.user,
+        )
+
+        # ✅ Encrypt and redirect
+        encrypted_data = signing.dumps({
+            'uid': lead.id,
+            'email': lead.seller_email_id
+        })
+
+        return redirect(f'/sales_get_data/?data={encrypted_data}')
+
+    return redirect('dashboard')
