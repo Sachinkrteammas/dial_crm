@@ -39,5 +39,8 @@ urlpatterns = [
     path('sales_get_data/<int:uid>/', sales_views.sales_get_data, name='sales_get_data'),
 
     path('update_sales_info/', sales_views.update_sales_info, name='update_sales_info'),
+    path('lead_detail/<int:lead_id>/', sales_views.lead_detail, name='lead_detail'),
+    path('api/zone-info/', sales_views.get_zone_data, name='get_zone_data'),
+
 
 ]

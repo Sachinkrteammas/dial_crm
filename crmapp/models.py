@@ -133,6 +133,22 @@ class DynamicFormData(models.Model):
     def __str__(self):
         return f"Form #{self.id} by {self.created_by}"
 
+class ContactDetails(models.Model):
+    name = models.CharField(max_length=100, blank=True, null=True)
+    customer_type = models.CharField(max_length=100, blank=True, null=True)
+    contact_number = models.CharField(max_length=100, blank=True, null=True)
+    email = models.CharField(max_length=100, blank=True, null=True)
+
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='created_contact_details')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='updated_contact_details')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'contact_details'
 
 
 class LeadTable(models.Model):
@@ -186,6 +202,8 @@ class LeadTable(models.Model):
     seller_email_id = models.EmailField(blank=True, null=True)
     seller_phone_no = models.CharField(max_length=15, blank=True, null=True)
 
+    contact_details = models.ForeignKey(ContactDetails, on_delete=models.CASCADE, null=True, blank=True, related_name='contact_details')
+
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_leads')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_leads')
 
@@ -200,6 +218,8 @@ class LeadTable(models.Model):
 
 
 class ZoneTable(models.Model):
+    pincode = models.CharField(max_length=100, blank=True, null=True)
+    district = models.CharField(max_length=100, blank=True, null=True)
     zone = models.CharField(max_length=100, blank=True, null=True)
     state_ut = models.CharField(max_length=100, blank=True, null=True)
 
@@ -344,3 +364,49 @@ class HistorySalesInfo(models.Model):
 
     class Meta:
         db_table = 'history_sales_info'
+
+
+
+class SalesContact(models.Model):
+    bus = models.CharField(max_length=100)
+    brand = models.CharField(max_length=100)
+    product = models.CharField(max_length=100)
+    zone = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    city_custom = models.CharField(max_length=100)  # From CITY(CUSTOM)
+
+    l1_name = models.CharField(max_length=100)
+    l1_mail = models.EmailField(max_length=150)
+    l1_mobile = models.CharField(max_length=20)
+
+    l2_name = models.CharField(max_length=100)
+    l2_mail = models.EmailField(max_length=150)
+    l2_mobile = models.CharField(max_length=20)
+
+    l3_mail = models.EmailField(max_length=150)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.brand} - {self.product}"
+
+    class Meta:
+        db_table = 'sales_contact'
+
+
+
+class CallDisposition(models.Model):
+    type = models.CharField(max_length=100, blank=True, null=True)
+    sub_type = models.CharField(max_length=100, blank=True, null=True)
+    sub_sub_type = models.CharField(max_length=255, blank=True, null=True)
+    disposition_1 = models.CharField(max_length=100, blank=True, null=True)
+    disposition_2 = models.CharField(max_length=100, blank=True, null=True)
+    follow_up_time = models.CharField(max_length=255, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        parts = [self.type, self.sub_type, self.sub_sub_type]
+        return " > ".join([p for p in parts if p])

@@ -50,19 +50,6 @@
     <link rel="stylesheet" href="/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/@form-validation/form-validation.css" />
 
-    <style>
-          .col-md-4 {
-        flex: 0 0 auto;
-        width: 24.333333%;
-    }
-
-      .px-4 {
-            padding-inline-end: 9rem !important;
-      }
-
-
-    </style>
-
     <!-- Page CSS -->
 
     <!-- Helpers -->
@@ -658,133 +645,111 @@
           <!-- / Navbar -->
 
           <!-- Content wrapper -->
-          <div class="content-wrapper">
+         <div class="content-wrapper">
             <!-- Content -->
-            <div class="card" style=" width: 95%; margin-left: 25px; margin-top: 32px;">
-                <h5 class="card-header d-flex justify-content-between align-items-center">
-                    Leads
-                    <button
-                      data-bs-toggle="modal"
-                      data-bs-target="#addLeadModal"
-                      class="btn btn-sm btn-primary text-nowrap">
-                      Create Leads
-                    </button>
-                  </h5>
+            <div class="container-xxl flex-grow-1 container-p-y">
+              <!-- Header -->
 
-              <!-- 🔍 Search Filter -->
-                    <div class="px-4 d-flex justify-content-end" >
-                        <form method="get" class="d-flex align-items-center gap-2">
-                          <label for="query" class="form-label m-0">Search:</label>
-                          <input type="text" name="query" id="query" class="form-control form-control-sm" placeholder="Name, Phone, Enquiry..." value="{{ request.GET.query }}">
+              <!--/ Header -->
 
-                          <label for="start_date" class="form-label m-0">Start:</label>
-                          <input type="date" name="start_date" id="start_date" class="form-control form-control-sm"
-                                 value="{{ request.GET.start_date }}">
-
-                          <label for="end_date" class="form-label m-0">End:</label>
-                          <input type="date" name="end_date" id="end_date" class="form-control form-control-sm"
-                                 value="{{ request.GET.end_date }}">
-
-                          <button type="submit" class="btn btn-sm btn-outline-primary" style="width:120px;">Search</button>
-
-                          {% if request.GET.start_date or request.GET.end_date or request.GET.query %}
-                            <a href="{% url 'lead_table' %}" class="btn btn-outline-secondary">Clear</a>
-                          {% endif %}
-
-                        </form>
-                      </div>
-
-                <div class="table-responsive text-nowrap">
-                  <table class="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>Customer Name</th>
-                        <th>Calling Number</th>
-                        <th>Enquiry Type</th>
-                        <th>Enquiry Source</th>
-                        <th>Lead Date</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody class="table-border-bottom-0">
-                      {% for lead in leads %}
-                      <tr>
-                        <td><span class="fw-medium">{{ lead.customer_name }}</span></td>
-
-                        <td>
-                          <a href="{% url 'lead_detail' lead.id %}" class=" btn btn-link p-0" data-id="{{ lead.id }}">
-                            {{ lead.calling_number }}
-                          </a>
-                        </td>
-                        <td>{{ lead.enquiry_type }}</td>
-                        <td>{{ lead.enquiry_source }}</td>
-                        <td>{{ lead.lead_date|date:"d-m-Y" }}</td>
-                        <td>
-                          <div class="dropdown">
-                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                              <i class="icon-base ti tabler-dots-vertical"></i>
-                            </button>
-                            <div class="dropdown-menu">
-<!--                              <a class="dropdown-item text-success" href="javascript:void(0);" data-id="{{ lead.id }}">-->
-<!--                                <i class="icon-base ti tabler-pencil me-1"></i> Edit-->
-<!--                              </a>-->
-<!--                              <a class="dropdown-item text-danger delete-lead" href="javascript:void(0);" data-id="{{ lead.id }}">-->
-<!--                                <i class="icon-base ti tabler-trash me-1"></i> Delete-->
-<!--                              </a>-->
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      {% empty %}
-                      <tr>
-                        <td colspan="6" class="text-center">No leads found.</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-
-                 <div class="d-flex justify-content-center mt-3">
-                  <nav>
-                    <ul class="pagination pagination-sm">
-                      {% if leads.has_previous %}
-                        <li class="page-item">
-                          <a class="page-link" href="?page={{ leads.previous_page_number }}
-                            {% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}
-                            {% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">
-                            « Prev
-                          </a>
-                        </li>
-                      {% endif %}
-
-                      {% for num in leads.paginator.page_range %}
-                        {% if leads.number == num %}
-                          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                        {% elif num > leads.number|add:'-3' and num < leads.number|add:'3' %}
-                          <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}
-                              {% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}
-                              {% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">{{ num }}</a>
-                          </li>
-                        {% endif %}
-                      {% endfor %}
-
-                      {% if leads.has_next %}
-                        <li class="page-item">
-                          <a class="page-link" href="?page={{ leads.next_page_number }}
-                            {% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}
-                            {% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">
-                            Next »
-                          </a>
-                        </li>
-                      {% endif %}
+              <!-- Navbar pills -->
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="nav-align-top">
+                    <ul class="nav nav-pills flex-column flex-sm-row mb-6 gap-sm-0 gap-2">
+                      <li class="nav-item">
+                        <a class="nav-link active" href="javascript:void(0);"
+                          ><i class="icon-base ti tabler-user-check icon-sm me-1_5"></i> Profile</a
+                        >
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="pages-profile-teams.html"
+                          ><i class="icon-base ti tabler-users icon-sm me-1_5"></i> Teams</a
+                        >
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="pages-profile-projects.html"
+                          ><i class="icon-base ti tabler-layout-grid icon-sm me-1_5"></i> Projects</a
+                        >
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" href="pages-profile-connections.html"
+                          ><i class="icon-base ti tabler-link icon-sm me-1_5"></i> Connections</a
+                        >
+                      </li>
                     </ul>
-                  </nav>
-                </div>
-
-
-
+                  </div>
                 </div>
               </div>
+              <!--/ Navbar pills -->
+
+              <!-- User Profile Content -->
+              <div class="row">
+                <div class="col-xl-4 col-lg-5 col-md-5">
+                  <!-- About User -->
+                  <div class="card mb-6">
+                    <div class="card-body">
+                      <p class="card-text text-uppercase text-body-secondary small mb-0">Profile</p>
+                      <ul class="list-unstyled my-3 py-1">
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-user icon-lg"></i
+                          ><span class="fw-medium mx-2">Full Name:</span> <span>{{ lead.customer_name }}</span>
+                        </li>
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">Customer Type:</span>
+                          <span>{{ lead.customer_type }}</span>
+                        </li>
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-crown icon-lg"></i><span class="fw-medium mx-2">Number:</span>
+                          <span>{{ lead.calling_number }}</span>
+                          <a href="" class="btn btn-sm btn-outline-primary">
+                            <i class="ti-phone"></i> Call
+                          </a>
+                        </li>
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-flag icon-lg"></i><span class="fw-medium mx-2">Email:</span>
+                          <span>{{ lead.email_id }}</span>
+                        </li>
+<!--                        <li class="d-flex align-items-center mb-2">-->
+<!--                          <i class="icon-base ti tabler-language icon-lg"></i-->
+<!--                          ><span class="fw-medium mx-2">Languages:</span> <span>English</span>-->
+<!--                        </li>-->
+                      </ul>
+<!--                      <p class="card-text text-uppercase text-body-secondary small mb-0">Contacts</p>-->
+<!--                      <ul class="list-unstyled my-3 py-1">-->
+<!--                        <li class="d-flex align-items-center mb-4">-->
+<!--                          <i class="icon-base ti tabler-phone-call icon-lg"></i-->
+<!--                          ><span class="fw-medium mx-2">Contact:</span>-->
+<!--                          <span>(123) 456-7890</span>-->
+<!--                        </li>-->
+<!--                        <li class="d-flex align-items-center mb-4">-->
+<!--                          <i class="icon-base ti tabler-messages icon-lg"></i-->
+<!--                          ><span class="fw-medium mx-2">Skype:</span> <span>john.doe</span>-->
+<!--                        </li>-->
+<!--                        <li class="d-flex align-items-center mb-4">-->
+<!--                          <i class="icon-base ti tabler-mail icon-lg"></i><span class="fw-medium mx-2">Email:</span>-->
+<!--                          <span>john.doe@example.com</span>-->
+<!--                        </li>-->
+<!--                      </ul>-->
+<!--                      <p class="card-text text-uppercase text-body-secondary small mb-0">Teams</p>-->
+<!--                      <ul class="list-unstyled mb-0 mt-3 pt-1">-->
+<!--                        <li class="d-flex flex-wrap mb-4">-->
+<!--                          <span class="fw-medium me-2">Backend Developer</span><span>(126 Members)</span>-->
+<!--                        </li>-->
+<!--                        <li class="d-flex flex-wrap">-->
+<!--                          <span class="fw-medium me-2">React Developer</span><span>(98 Members)</span>-->
+<!--                        </li>-->
+<!--                      </ul>-->
+                    </div>
+                  </div>
+                  <!--/ About User -->
+                  <!-- Profile Overview -->
+
+                  <!--/ Profile Overview -->
+                </div>
+                <div class="col-xl-8 col-lg-7 col-md-7">
+                  <!-- Activity Timeline -->
+                  <div class="card card-action mb-6">
 
 
 
@@ -792,8 +757,385 @@
 
 
 
-            <!-- Bootstrap Modal -->
-                <div class="modal fade" id="leadFormModal" tabindex="-1" aria-labelledby="leadFormModalLabel" aria-hidden="true">
+              {% block content %}
+              <div class="container mt-4">
+                <h3 class="mb-4">Lead Form</h3>
+                <form method="POST" id="leadFormModel" action="{% url 'update_lead' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="lead_id" id="lead_id" value="{{ lead.id }}">
+                  <!-- Hidden input field in your HTML -->
+                  <input type="hidden" name="secure_link" id="secure_link" value="{{ secure_url }}">
+                  <input type="hidden" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">
+
+
+                  <div class="row g-3">
+
+                    <div class="col-md-4">
+                      <label>Customer Name:</label>
+                      <input type="text" class="form-control" name="customer_name" value="{{ lead.customer_name }}">
+                    </div>
+                    <div class="col-md-4">
+                      <label>Customer Type:</label>
+                      <input type="text" class="form-control" name="customer_type" value="{{ lead.customer_type }}">
+                    </div>
+                    <div class="col-md-4">
+                      <label>Calling Number:</label>
+                      <input type="text" class="form-control" name="calling_number" value="{{ lead.calling_number }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Enquiry Type:</label>
+                        <input type="text" class="form-control" name="enquiry_type" value="{{ lead.enquiry_type }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Enquiry Source:</label>
+                      <select class="form-select" name="enquiry_source">
+                        <option value="">-- Select Enquiry Source --</option>
+                        {% for val in enquiry_sources %}
+                          <option value="{{ val }}" {% if lead.enquiry_source == val %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Sub Enquiry Source:</label>
+                   <input type="text" class="form-control" name="sub_enquiry_source" value="{{ lead.sub_enquiry_source }}">
+
+                    </div>
+
+                    <div class="col-md-4">
+  <label>Calling Status:</label>
+  <select class="form-select" name="calling_status" id="calling_status_select">
+    <option value="">--Select--</option>
+    <option value="Connect" {% if lead.calling_status == 'Connect' %}selected{% endif %}>Connect</option>
+    <option value="Not Connect" {% if lead.calling_status == 'Not Connect' %}selected{% endif %}>Not Connect</option>
+  </select>
+</div>
+
+  <div id="connectedFields" class="row g-3" style="display: {% if lead.calling_status == 'Connect' %}flex{% else %}none{% endif %};">
+  <div class="col-md-4">
+    <label>Sub Calling Status:</label>
+    <select class="form-select" name="sub_calling_status" id="sub_calling_status_select">
+      <option value="">--Select Sub Type--</option>
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label>Sub Sub Calling Status:</label>
+    <select class="form-select" name="sub_sub_calling_status" id="sub_sub_calling_status_select">
+      <option value="">--Select Sub Sub Type--</option>
+    </select>
+  </div>
+
+
+{{ call_dispositions|json_script:"call-disposition-data" }}
+
+
+                    <div class="col-md-4">
+                      <label>Interested/Not Interested:</label>
+                      <select class="form-select" name="interest_status">
+                        <option value="Interested" {% if lead.interested_status == 'Interested' %}selected{% endif %}>Interested</option>
+                        <option value="Not Interested" {% if lead.interested_status == 'Not Interested' %}selected{% endif %}>Not Interested</option>
+                      </select>
+                    </div>
+
+
+
+                    <div class="col-md-4">
+                      <label>Buyer Type:</label>
+                      <input type="text" class="form-control" name="buyer_type" value="{{ lead.buyer_type }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Select BUs:</label>
+                      <input type="text" class="form-control" name="category" value="{{ lead.select_bus }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Brand Name:</label>
+                        <select id="brandSelect" name="brand_name" class="form-control">
+                          <option value="">--Select Brand--</option>
+                          {% for brand in brands %}
+                            <option value="{{ brand }}" {% if lead.brand == brand %}selected{% endif %}>{{ brand }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+
+                      <div class="col-md-4">
+                        <label>Product:</label>
+                        <select id="productSelect" name="product" class="form-control">
+                          <option value="">--Select Product--</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-4">
+                        <label>Sub Product:</label>
+                        <select id="subProductSelect" name="sub_product" class="form-control">
+                          <option value="">--Select Sub Product--</option>
+                        </select>
+                      </div>
+
+
+
+
+                    <div class="col-md-4">
+                      <label>Lead Status:</label>
+                      <select class="form-select" name="lead_status" id="lead_status_select">
+                        <option value="">--Select Lead Status--</option>
+                        <option value="Hot" {% if lead.lead_status == 'Hot' %}selected{% endif %}>Hot</option>
+                        <option value="Warm" {% if lead.lead_status == 'Warm' %}selected{% endif %}>Warm</option>
+                        <option value="Cold" {% if lead.lead_status == 'Cold' %}selected{% endif %}>Cold</option>
+                      </select>
+                    </div>
+
+
+                    <div class="col-md-4">
+                      <label>Name:</label>
+                      <input type="text" class="form-control" name="name" value="{{ lead.name }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Pin Code:</label>
+                      <input type="text" class="form-control" name="pin_code" value="{{ lead.pin_code }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>District:</label>
+                      <input type="text" class="form-control" name="district" value="{{ lead.district }}">
+                    </div>
+
+
+                    <div class="col-md-4">
+                      <label>State:</label>
+                      <input type="text" class="form-control" name="state" value="{{ lead.state }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Zone:</label>
+                      <input type="text" class="form-control" name="zone" value="{{ lead.zone }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Order Qty:</label>
+                      <input type="number" class="form-control" name="order_qty" value="{{ lead.order_qty }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Order Value:</label>
+                      <input type="text" class="form-control" name="order_value" value="{{ lead.order_value }}">
+                    </div>
+
+
+                    <div class="col-md-4">
+                      <label>Order Description:</label>
+                      <input type="text" class="form-control" name="order_description" value="{{ lead.order_description }}">
+                    </div>
+
+
+
+                    <div class="col-md-4">
+                      <label>Construction Level:</label>
+                      <input type="text" class="form-control" name="construction_level" value="{{ lead.construction_level }}">
+                    </div>
+
+
+                    <div class="col-md-4">
+                      <label>Customer Type:</label>
+                      <input type="text" class="form-control" name="customer_type_select" value="{{ lead.customer_type_select }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Registration Status:</label>
+                      <input type="text" class="form-control" name="registration_status" value="{{ lead.registration_status }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Remark:</label>
+                      <input type="text" class="form-control" name="remark" value="{{ lead.remark }}">
+                    </div>
+
+
+
+                    <div class="col-md-4">
+                      <label>Alternative Number:</label>
+                      <input type="text" class="form-control" name="alternative_number" value="{{ lead.alternative_number }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Email ID:</label>
+                      <input type="email" class="form-control" name="email_id" value="{{ lead.email_id }}">
+                    </div>
+
+                    <div class="col-md-4">
+  <label>Seller Email ID:</label>
+  <select class="form-select" name="seller_email" id="seller_email_select">
+    <option value="">--Select Seller--</option>
+    {% for contact in sales_contacts %}
+      <option value="{{ contact.l1_mail }}"
+        {% if lead.seller_email_id == contact.l1_mail %}selected{% endif %}>
+        City: {{ contact.city_custom }} | Name: {{ contact.l1_name }} | Email: {{ contact.l1_mail }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="col-md-4">
+  <label>Seller Phone No:</label>
+<input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no }}">
+</div>
+
+
+                    <div class="col-md-6">
+                      <label>Address:</label>
+                      <textarea class="form-control" name="address">{{ lead.address }}</textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label>Landmark:</label>
+                      <input type="text" class="form-control" name="landmark" value="{{ lead.landmark }}">
+                    </div>
+
+
+                  </div>
+
+                  <div class="mt-4 text-end">
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back</a>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                  </div>
+                    </div>
+                </form>
+              </div>
+              {% endblock %}
+
+                  </div>
+                  <!--/ Activity Timeline -->
+
+                    <!--/ Teams -->
+                  </div>
+                  <!-- Projects table -->
+                  <div class="card mb-6">
+                    <div class="mb-4">
+                      <h3>Lead History</h3>
+                      <table class="table datatable-project">
+                        <thead class="border-top">
+                          <tr>
+                            <th>Name</th>
+                            <th>Customer Type</th>
+                            <th>Number</th>
+                            <th>Email</th>
+                            <th>Date</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for history in lead_history %}
+                            <tr>
+                              <td>{{ history.lead_table.name }}</td>
+                              <td>{{ history.lead_table.customer_type }}</td>
+                              <td>{{ history.lead_table.calling_number }}</td>
+                              <td>{{ history.lead_table.email_id }}</td>
+                              <td>{{ history.lead_table.lead_date }}</td>
+                              <td>{{ history.lead_table.remark }}</td>
+                             <td>
+                              <a href="javascript:void(0);" class="open-lead-modal btn btn-sm btn-primary" data-id="{{ history.id }}">
+                                View
+                              </a>
+                            </td>
+                            </tr>
+                          {% empty %}
+                            <tr><td colspan="7" class="text-center">No history found.</td></tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+
+                      <nav>
+                        <ul class="pagination justify-content-center">
+                          {% if lead_history.has_previous %}
+                            <li class="page-item">
+                              <a class="page-link" href="?page_lead={{ lead_history.previous_page_number }}">Previous</a>
+                            </li>
+                          {% endif %}
+                          {% for num in lead_history.paginator.page_range %}
+                            <li class="page-item {% if lead_history.number == num %}active{% endif %}">
+                              <a class="page-link" href="?page_lead={{ num }}">{{ num }}</a>
+                            </li>
+                          {% endfor %}
+                          {% if lead_history.has_next %}
+                            <li class="page-item">
+                              <a class="page-link" href="?page_lead={{ lead_history.next_page_number }}">Next</a>
+                            </li>
+                          {% endif %}
+                        </ul>
+                      </nav>
+
+                    </div>
+                  </div>
+
+                <div class="card mb-6">
+                    <div class="mb-4">
+                      <h3>Sales History</h3>
+                     <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Sale MT</th>
+                          <th>Sale INR</th>
+                          <th>Product</th>
+                          <th>Value</th>
+                          <th>Lead Status</th>
+                          <th>Remarks</th>
+                          <th>Status</th>
+                          <th>Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item in sales_history %}
+                        <tr>
+                          <td>{{ item.sale_mt }}</td>
+                          <td>{{ item.sale_inr }}</td>
+                          <td>{{ item.product }}</td>
+                          <td>{{ item.product_value }}</td>
+                          <td>{{ item.lead_status }}</td>
+                          <td>{{ item.sale_team_remarks }}</td>
+                          <td>{{ item.status }}</td>
+                          <td>{{ item.created_at|date:"d M Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                          <tr><td colspan="8" class="text-center">No sales history found.</td></tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+
+                    <nav>
+                      <ul class="pagination justify-content-center">
+                        {% if sales_history.has_previous %}
+                          <li class="page-item">
+                            <a class="page-link" href="?page_sales={{ sales_history.previous_page_number }}">Previous</a>
+                          </li>
+                        {% endif %}
+                        {% for num in sales_history.paginator.page_range %}
+                          <li class="page-item {% if sales_history.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page_sales={{ num }}">{{ num }}</a>
+                          </li>
+                        {% endfor %}
+                        {% if sales_history.has_next %}
+                          <li class="page-item">
+                            <a class="page-link" href="?page_sales={{ sales_history.next_page_number }}">Next</a>
+                          </li>
+                        {% endif %}
+                      </ul>
+                    </nav>
+
+                    </div>
+                  </div>
+                  <!--/ Projects table -->
+                </div>
+              </div>
+              <!--/ User Profile Content -->
+
+<!--           MODEL START-->
+           <div class="modal fade" id="leadFormModal" tabindex="-1" aria-labelledby="leadFormModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content rounded-4" style="margin-left:45px">
       <div class="modal-header">
@@ -804,9 +1146,6 @@
       <div class="modal-body">
         <form method="POST" id="leadFormModel">
           <input  type="hidden" name="lead_id" id="lead_id" value="">
-          <!-- Hidden input field in your HTML -->
-          <input type="hidden" name="secure_link" id="secure_link">
-
           <div class="row g-3">
 
             <!-- Row 1 -->
@@ -1108,103 +1447,13 @@
     </div>
   </div>
 </div>
+<!--           MODEL  END-->
 
-
-
-<!--            add lead model-->
-
-            <!-- Modal -->
-<div class="modal fade" id="addLeadModal" tabindex="-1" aria-labelledby="addLeadModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="border-radius: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15);margin-left: 45px;">
-
-      <div class="modal-header" style="background-color: #67677f; color: white; padding: 1rem 1.5rem;">
-        <h5 class="modal-title fw-semibold" id="addLeadModalLabel">➕ Add New Lead</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <form method="POST" id="leadForm">
-        {% csrf_token %}
-        <div class="modal-body" style="background-color: #2f3349; padding: 2rem;">
-          <div class="row g-3">
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Customer Name <span style="color: red;">*</span></label>
-              <input type="text" name="customer_name" class="form-control" required
-                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
             </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Calling Number <span style="color: red;">*</span></label>
-              <input type="text" name="calling_number" class="form-control" required
-                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Enquiry Type <span style="color: red;">*</span></label>
-              <select class="form-select" name="enquiry_type" required
-                      style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
-                <option value="">-- Select Enquiry Type --</option>
-                <option value="Purchase">Purchase</option>
-                <option value="Tech Query">Tech Query</option>
-                <option value="General Query">General Query</option>
-                <option value="Dealership">Dealership</option>
-                <option value="Complaint">Complaint</option>
-                <option value="Project">Project</option>
-                <option value="Distributor">Distributor</option>
-                <option value="Job">Job</option>
-                <option value="MicroLead">MicroLead</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Enquiry Source <span style="color: red;">*</span></label>
-              <select class="form-select" name="enquiry_source" required
-                      style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
-                <option value="">-- Select Enquiry Source --</option>
-                <option value="ChatBot">ChatBot</option>
-                <option value="Exhibition">Exhibition</option>
-                <option value="GetDistributor">GetDistributor</option>
-                <option value="Inbound">Inbound</option>
-                <option value="IndiaMart">IndiaMart</option>
-                <option value="Mail">Mail</option>
-                <option value="Meta">Meta</option>
-                <option value="Plantix">Plantix</option>
-                <option value="TradeIndia">TradeIndia</option>
-                <option value="WebScraping">WebScraping</option>
-                <option value="WebSite">WebSite</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Lead Date</label>
-              <input type="date" name="lead_date" class="form-control"
-                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
-            </div>
-
-          </div>
-        </div>
-
-        <div class="modal-footer" style="background-color: #2f3349; border-top: none; padding: 1rem 1.5rem;">
-          <button type="submit" class="btn btn-success " style="border-radius: 30px;">Save Lead</button>
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 30px;">Cancel</button>
-        </div>
-      </form>
-
-    </div>
-  </div>
-</div>
-
-
-
-
-
-
-
             <!-- / Content -->
 
-
+            <!-- Footer -->
+            <!-- / Footer -->
 
             <div class="content-backdrop fade"></div>
           </div>
@@ -1251,17 +1500,7 @@
     <script src="/assets/vendor/libs/@form-validation/bootstrap5.js"></script>
     <script src="/assets/vendor/libs/@form-validation/auto-focus.js"></script>
 
-    <!-- Main JS -->
-
-    <script src="/assets/js/main.js"></script>
-
-    <!-- Page JS -->
-    <script src="/assets/js/app-access-roles.js"></script>
-    <script src="/assets/js/modal-add-role.js"></script>
-
-
-
-  <script>
+    <script>
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.open-lead-modal').forEach(link => {
       link.addEventListener('click', function (e) {
@@ -1274,62 +1513,11 @@
 </script>
 
 
-
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById('leadForm');
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault(); // Prevent form from refreshing the page
-
-      const formData = new FormData(form);
-
-      fetch('/save_lead/', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRFToken': getCSRFToken()
-        }
-      })
-      .then(response => {
-        if (!response.ok) throw new Error("Network response was not OK");
-        return response.json();
-      })
-      .then(data => {
-        if (data.status === "success") {
-          alert("Lead saved successfully!");
-          form.reset();
-
-          const modal = bootstrap.Modal.getInstance(document.getElementById('addLeadModal'));
-          if (modal) modal.hide();
-          setTimeout(() => {
-            location.reload();
-          }, 500);
-
-
-        } else {
-          alert("Failed to save lead.");
-        }
-      })
-      .catch(error => {
-        console.error("Save failed", error);
-        alert("Error while saving lead.");
-      });
-    });
-  });
-
-  function getCSRFToken() {
-    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
-    return cookie ? cookie.split('=')[1] : '';
-  }
-</script>
-
-
-
-  <script>
+    <script>
   document.querySelectorAll('.open-lead-modal').forEach(button => {
     button.addEventListener('click', function () {
       const leadId = this.getAttribute('data-id');
+
       document.getElementById('lead_id').value=leadId;
       fetch(`/api/lead/${leadId}/`)
         .then(response => response.json())
@@ -1364,14 +1552,10 @@
             modal.querySelector('[name="sub_product"]').value = data.sub_product || '';
             modal.querySelector('[name="district"]').value = data.district || '';
             modal.querySelector('[name="pin_code"]').value = data.pin_code || '';
-            document.querySelector('[name="secure_link"]').value = data.secure_url || '';
-
 <!--            modal.querySelector('[name="zone"]').value = data.zone || '';-->
 <!--            modal.querySelector('[name="state"]').value = data.state || '';-->
             const zoneDropdown = modal.querySelector('[name="zone"]');
             const stateDropdown = modal.querySelector('[name="state"]');
-
-
 
             zoneDropdown.value = data.zone || '';
 
@@ -1417,50 +1601,7 @@
   });
 </script>
 
-
-
-  <script>
-  document.getElementById('leadFormModel').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-    const data = {};
-
-    // Fix: Correct way to get lead_id
-    const lead_id = document.getElementById('lead_id').value;
-    data['lead_id'] = lead_id;
-
-    // Convert form data to JSON
-    for (const [key, value] of formData.entries()) {
-      data[key] = value;
-    }
-
-    fetch('/api/update-lead/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': '{{ csrf_token }}'
-      },
-      body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(result => {
-      if (result.status === "success") {
-        alert("Lead saved successfully!");
-        location.reload();
-      } else {
-        alert("Error: " + result.message);
-      }
-    })
-    .catch(err => {
-      alert("Network or server error.");
-      console.error(err);
-    });
-  });
-</script>
-
-
-  <script>
+    <script>
   const modalElement = document.getElementById('leadFormModal');
 
   // When modal is fully hidden
@@ -1473,114 +1614,276 @@
   });
 </script>
 
-
-  <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.delete-lead').forEach(item => {
-      item.addEventListener('click', function () {
-        const leadId = this.getAttribute('data-id');
-
-        if (confirm("Are you sure you want to delete this lead?")) {
-          fetch(`/delete-lead/${leadId}/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCSRFToken()
-            }
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.status === 'success') {
-              alert("Lead deleted successfully.");
-              document.querySelector(`[data-id="${leadId}"]`).closest('tr').remove();
-            } else {
-              alert("Failed to delete lead.");
-            }
-          })
-          .catch(error => {
-            console.error("Delete error", error);
-            alert("Error deleting lead.");
-          });
-        }
-      });
-    });
-  });
-
-  function getCSRFToken() {
-    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
-    return cookie ? cookie.split('=')[1] : '';
-  }
-</script>
-
-  <script>
+<script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Populate the dropdown
-    fetch('/api/user-emails/')
-      .then(res => res.json())
-      .then(data => {
-        const emailDropdown = document.getElementById('seller_email');
-        data.forEach(user => {
-          const option = document.createElement('option');
-          option.value = user.email_id;
-          option.textContent = user.email_id;
-          emailDropdown.appendChild(option);
-        });
-      });
+    const callingSelect = document.getElementById('calling_status_select');
+    const connectedFields = document.getElementById('connectedFields');
 
-    // Handle email selection and fill phone number
-    document.getElementById('seller_email').addEventListener('change', function () {
-      const email = this.value;
-      if (email) {
-        fetch(`/api/user-contact/?email=${encodeURIComponent(email)}`)
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById('seller_phone').value = data.contact_no || '';
-          })
-          .catch(() => {
-            document.getElementById('seller_phone').value = '';
-          });
+    function toggleConnectedFields() {
+      if (callingSelect.value === 'Connect') {
+        connectedFields.style.display = 'flex';
       } else {
-        document.getElementById('seller_phone').value = '';
+        connectedFields.style.display = 'none';
+        // Optional: clear inputs if hidden
+<!--        connectedFields.querySelectorAll('input, select').forEach(input => input.value = '');-->
       }
+    }
+
+    callingSelect.addEventListener('change', toggleConnectedFields);
+    toggleConnectedFields(); // run on load to sync initial state
+  });
+</script>
+
+
+
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+  const pincodeInput = document.querySelector('[name="pin_code"]');
+  const districtInput = document.querySelector('[name="district"]');
+  const stateInput = document.querySelector('[name="state"]');
+  const zoneInput = document.querySelector('[name="zone"]');
+
+  pincodeInput.addEventListener('change', function () {
+    const pincode = this.value;
+
+
+
+    if (pincode.length >= 4) {
+      fetch(`/api/zone-info/?pincode=${pincode}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            districtInput.value = data.district || '';
+            stateInput.value = data.state || '';
+            zoneInput.value = data.zone || '';
+          } else {
+            districtInput.value = '';
+            stateInput.value = '';
+            zoneInput.value = '';
+          }
+        })
+        .catch(error => {
+          console.error('Zone fetch error:', error);
+        });
+    }
+  });
+});
+</script>
+
+
+    <script>
+  // brand_data passed from Django to JS as JSON
+  const brandData = {{ brand_data|safe }};
+
+  const brandSelect = document.getElementById('brandSelect');
+  const productSelect = document.getElementById('productSelect');
+  const subProductSelect = document.getElementById('subProductSelect');
+
+  // Helper to clear options
+  function clearSelect(select) {
+    select.innerHTML = '<option value="">--Select--</option>';
+  }
+
+  // Populate products based on selected brand
+  function populateProducts(selectedBrand) {
+    clearSelect(productSelect);
+    clearSelect(subProductSelect);
+
+    if (!selectedBrand) return;
+
+    // Get unique product_types for selected brand
+    const products = [...new Set(
+      brandData.filter(item => item.brand === selectedBrand)
+               .map(item => item.product_types).filter(Boolean)
+    )];
+
+    products.forEach(prod => {
+      let option = document.createElement('option');
+      option.value = prod;
+      option.textContent = prod;
+      productSelect.appendChild(option);
     });
+  }
+
+  // Populate sub-products based on selected brand & product
+  function populateSubProducts(selectedBrand, selectedProduct) {
+    clearSelect(subProductSelect);
+
+    if (!selectedBrand || !selectedProduct) return;
+
+    // Get unique sub_product_types for selected brand and product
+    const subs = [...new Set(
+      brandData.filter(item => item.brand === selectedBrand && item.product_types === selectedProduct)
+               .map(item => item.sub_product_types).filter(Boolean)
+    )];
+
+    subs.forEach(sub => {
+      let option = document.createElement('option');
+      option.value = sub;
+      option.textContent = sub;
+      subProductSelect.appendChild(option);
+    });
+  }
+
+  // Event Listeners
+  brandSelect.addEventListener('change', () => {
+    populateProducts(brandSelect.value);
   });
 
+  productSelect.addEventListener('change', () => {
+    populateSubProducts(brandSelect.value, productSelect.value);
+  });
 
-<!--    zone filter-->
+  // On page load, populate dropdowns and select current lead values
+  window.addEventListener('DOMContentLoaded', () => {
+    const currentBrand = "{{ lead.brand|escapejs }}";
+    const currentProduct = "{{ lead.product|escapejs }}";
+    const currentSubProduct = "{{ lead.sub_product|escapejs }}";
+
+    if(currentBrand) {
+      populateProducts(currentBrand);
+      brandSelect.value = currentBrand;
+
+      if(currentProduct) {
+        productSelect.value = currentProduct;
+        populateSubProducts(currentBrand, currentProduct);
+
+        if(currentSubProduct) {
+          subProductSelect.value = currentSubProduct;
+        }
+      }
+    }
+  });
+</script>
 
 
-document.getElementById('zoneDropdown').addEventListener('change', function () {
-  const zone = this.value;
-  const stateDropdown = document.getElementById('stateDropdown');
+    <script>
+  const dispositionData = JSON.parse(document.getElementById('call-disposition-data').textContent);
 
-  stateDropdown.innerHTML = '<option value="">Loading...</option>';
+  const callingStatus = document.getElementById('calling_status_select');
+  const subCallingStatus = document.getElementById('sub_calling_status_select');
+  const subSubCallingStatus = document.getElementById('sub_sub_calling_status_select');
+  const connectedFields = document.getElementById('connectedFields');
 
-  fetch(`/api/get-states/?zone=${encodeURIComponent(zone)}`)
-    .then(response => response.json())
-    .then(data => {
-      stateDropdown.innerHTML = '<option value="">-- Select State --</option>';
-      data.states.forEach(state => {
+  function clearAndInit(select, label) {
+    select.innerHTML = `<option value="">--Select ${label}--</option>`;
+  }
+
+  function populateSubTypes() {
+    clearAndInit(subCallingStatus, "Sub Type");
+    clearAndInit(subSubCallingStatus, "Sub Sub Type");
+
+    const selectedType = callingStatus.value;
+
+    if (selectedType === "Connect") {
+      const subTypes = [...new Set(dispositionData
+        .filter(d => d.type === "Connected" && d.sub_type)
+        .map(d => d.sub_type))];
+
+      subTypes.forEach(sub => {
         const option = document.createElement('option');
-        option.value = state;
-        option.textContent = state;
-        stateDropdown.appendChild(option);
+        option.value = sub;
+        option.textContent = sub;
+        subCallingStatus.appendChild(option);
       });
-    })
-    .catch(err => {
-      console.error('Failed to load states', err);
-      stateDropdown.innerHTML = '<option value="">-- Select State --</option>';
-    });
-});
+    }
+  }
 
+  function populateSubSubTypes() {
+    clearAndInit(subSubCallingStatus, "Sub Sub Type");
 
+    const selectedType = callingStatus.value;
+    const selectedSubType = subCallingStatus.value;
 
+    if (selectedType === "Connect" && selectedSubType) {
+      const subSubTypes = [...new Set(dispositionData
+        .filter(d => d.type === "Connected" && d.sub_type === selectedSubType && d.sub_sub_type)
+        .map(d => d.sub_sub_type))];
 
+      subSubTypes.forEach(sub => {
+        const option = document.createElement('option');
+        option.value = sub;
+        option.textContent = sub;
+        subSubCallingStatus.appendChild(option);
+      });
+    }
+  }
 
+  // On change logic
+  callingStatus.addEventListener('change', () => {
+    if (callingStatus.value === "Connect") {
+      connectedFields.style.display = "flex";
+      populateSubTypes();
+    } else {
+      connectedFields.style.display = "none";
+      clearAndInit(subCallingStatus, "Sub Type");
+      clearAndInit(subSubCallingStatus, "Sub Sub Type");
+    }
+  });
 
+  subCallingStatus.addEventListener('change', () => {
+    populateSubSubTypes();
+  });
+
+  // Set selected values from lead data on load
+  document.addEventListener("DOMContentLoaded", () => {
+    const leadSub = "{{ lead.sub_calling_status|escapejs }}";
+    const leadSubSub = "{{ lead.sub_sub_calling_status|escapejs }}";
+
+    if (callingStatus.value === "Connect") {
+      connectedFields.style.display = "flex";
+      populateSubTypes();
+
+      // Wait a bit to ensure sub types are loaded
+      setTimeout(() => {
+        if (leadSub) subCallingStatus.value = leadSub;
+        populateSubSubTypes();
+        if (leadSubSub) subSubCallingStatus.value = leadSubSub;
+      }, 100); // small delay to allow dropdown fill
+    }
+  });
+</script>
+
+{{ sales_contacts|json_script:"sales-contact-data" }}
+
+<script>
+  const contactData = JSON.parse(document.getElementById("sales-contact-data").textContent);
+  const emailSelect = document.getElementById("seller_email_select");
+  const phoneInput = document.getElementById("seller_phone");
+
+  // When seller email is selected
+  emailSelect.addEventListener("change", function () {
+    const selectedEmail = this.value;
+
+    const matchedContact = contactData.find(c => c.l1_mail === selectedEmail);
+
+    if (matchedContact) {
+      phoneInput.value = matchedContact.l1_mobile || "";
+    } else {
+      phoneInput.value = "";
+    }
+  });
+
+  // ✅ Trigger once on page load to fill phone if already selected
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectedEmail = emailSelect.value;
+    const matchedContact = contactData.find(c => c.l1_mail === selectedEmail);
+    if (matchedContact) {
+      phoneInput.value = matchedContact.l1_mobile || "";
+    }
+  });
 </script>
 
 
 
 
+
+    <!-- Main JS -->
+
+    <script src="/assets/js/main.js"></script>
+
+    <!-- Page JS -->
+    <script src="/assets/js/app-access-roles.js"></script>
+    <script src="/assets/js/modal-add-role.js"></script>
   </body>
 </html>

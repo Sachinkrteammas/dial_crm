@@ -634,7 +634,7 @@ def save_lead(request):
 
 def get_lead_data(request, lead_id):
     try:
-        lead = LeadTable.objects.get(id=lead_id)
+        lead = HistoryLead.objects.get(id=lead_id)
 
         # Create encrypted URL
         payload = {'uid': lead.id, 'email': lead.seller_email_id}
@@ -694,8 +694,8 @@ from datetime import datetime
 def update_lead(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            lead_id = data.get('lead_id')
+            lead_id = request.POST.get('lead_id')
+            print("Lead ID ====", lead_id)
             if not lead_id:
                 return JsonResponse({'status': 'error', 'message': 'Lead ID is required'})
 
@@ -707,6 +707,8 @@ def update_lead(request):
                     return datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else None
                 except:
                     return None
+
+            data= request.POST
 
             # Assign fields with fallback and type conversion
             lead.customer_name = data.get('customer_name', '')
