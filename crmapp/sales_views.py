@@ -8,7 +8,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.dateparse import parse_date
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
-    SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact
+    SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact, TBLFollowUp
 from .views import render_menu
 
 
@@ -222,6 +222,17 @@ def lead_detail(request, lead_id):
     # Convert to list if needed
     sales_contacts = list(sales_contacts)
 
+    # Fetch follow-up history for this lead
+    followup_qs = TBLFollowUp.objects.filter(lead_table=lead).all()
+    page_followup = request.GET.get('page_followup')
+
+    paginator_followup = Paginator(followup_qs, 5)  # Show 5 per page
+    try:
+        followup_history = paginator_followup.page(page_followup)
+    except PageNotAnInteger:
+        followup_history = paginator_followup.page(1)
+    except EmptyPage:
+        followup_history = paginator_followup.page(paginator_followup.num_pages)
 
     return render(request, 'crmapp/lead_detail.html', {
         'lead': lead,
@@ -235,6 +246,7 @@ def lead_detail(request, lead_id):
         'brand_data': brand_data,  # queryset or list of dicts
         'call_dispositions': call_dispositions,
         'sales_contacts': sales_contacts,
+        'followup_history': followup_history,
     })
 
 
@@ -251,13 +263,49 @@ def get_zone_data(request):
         print(f'SELECT * FROM zone_table WHERE pincode="{pincode}" LIMIT 1;')
 
         if zone_info:
+            state = zone_info.state_ut or ''
+
+            # Fetch sales contacts for the detected state
+            sales_contacts = list(
+                SalesContact.objects.filter(state__iexact=state).values(
+                    'city_custom', 'l1_name', 'l1_mail', 'l1_mobile'
+                )
+            )
+
             return JsonResponse({
                 'status': 'success',
                 'district': zone_info.district or '',
-                'state': zone_info.state_ut or '',
-                'zone': zone_info.zone or ''
+                'state': state,
+                'zone': zone_info.zone or '',
+                'sales_contacts': sales_contacts,
             })
+
         else:
             return JsonResponse({'status': 'not_found', 'message': 'No data found for this pincode'})
+
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+
+
+@login_required
+def save_follow_up(request, lead_id):
+    if request.method == 'POST':
+        lead = get_object_or_404(LeadTable, id=lead_id)
+        status = request.POST.get('status')
+        sub_status = request.POST.get('sub_status')
+        remark = request.POST.get('remark')
+        follow_up_from = request.POST.get('follow_up')  # should be 'customer' or 'seller'
+
+        TBLFollowUp.objects.create(
+            lead_table=lead,
+            status=status,
+            sub_status=sub_status,
+            remark=remark,
+            follow_up=follow_up_from,
+            created_by=request.user,
+            updated_by=request.user,
+        )
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

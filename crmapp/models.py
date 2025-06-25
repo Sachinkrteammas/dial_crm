@@ -410,3 +410,23 @@ class CallDisposition(models.Model):
     def __str__(self):
         parts = [self.type, self.sub_type, self.sub_sub_type]
         return " > ".join([p for p in parts if p])
+
+
+class TBLFollowUp(models.Model):
+    lead_table = models.ForeignKey(LeadTable, on_delete=models.CASCADE, null=True, blank=True, related_name='follow_lead_table')
+    status = models.CharField(max_length=100, blank=True, null=True)
+    sub_status = models.CharField(max_length=100, blank=True, null=True)
+    remark = models.TextField(blank=True, null=True)
+    follow_up = models.CharField(max_length=100, blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='created_by_follow_up')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='updated_by_follow_up')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'tbl_follow_up'
+
+

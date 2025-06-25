@@ -811,7 +811,10 @@ def update_lead(request):
             )
 
 
-            return JsonResponse({'status': 'success'})
+            # return JsonResponse({'status': 'success'})
+            messages.success(request, 'Lead updated successfully!')
+            return redirect('lead_detail', lead_id=lead.id)
+
 
         except LeadTable.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Lead not found'})

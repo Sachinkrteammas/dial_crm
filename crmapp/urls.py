@@ -41,6 +41,6 @@ urlpatterns = [
     path('update_sales_info/', sales_views.update_sales_info, name='update_sales_info'),
     path('lead_detail/<int:lead_id>/', sales_views.lead_detail, name='lead_detail'),
     path('api/zone-info/', sales_views.get_zone_data, name='get_zone_data'),
-
+    path('save_follow_up/<int:lead_id>/', sales_views.save_follow_up, name='save_follow_up'),
 
 ]

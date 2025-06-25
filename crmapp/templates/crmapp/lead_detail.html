@@ -700,15 +700,85 @@
                           <span>{{ lead.customer_type }}</span>
                         </li>
                         <li class="d-flex align-items-center mb-4">
-                          <i class="icon-base ti tabler-crown icon-lg"></i><span class="fw-medium mx-2">Number:</span>
+                          <i class="icon-base ti tabler-crown icon-lg"></i>
+                          <span class="fw-medium mx-2">Number:</span>
                           <span>{{ lead.calling_number }}</span>
-                          <a href="" class="btn btn-sm btn-outline-primary">
+
+                          <!-- Button to open modal -->
+                          <button type="button" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="customer" data-bs-toggle="modal" data-bs-target="#callModal">
                             <i class="ti-phone"></i> Call
-                          </a>
+                          </button>
                         </li>
+
+
+
+
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-flag icon-lg"></i><span class="fw-medium mx-2">Email:</span>
                           <span>{{ lead.email_id }}</span>
+                        </li>
+<!--                        <li class="d-flex align-items-center mb-2">-->
+<!--                          <i class="icon-base ti tabler-language icon-lg"></i-->
+<!--                          ><span class="fw-medium mx-2">Languages:</span> <span>English</span>-->
+<!--                        </li>-->
+                      </ul>
+<!--                      <p class="card-text text-uppercase text-body-secondary small mb-0">Contacts</p>-->
+<!--                      <ul class="list-unstyled my-3 py-1">-->
+<!--                        <li class="d-flex align-items-center mb-4">-->
+<!--                          <i class="icon-base ti tabler-phone-call icon-lg"></i-->
+<!--                          ><span class="fw-medium mx-2">Contact:</span>-->
+<!--                          <span>(123) 456-7890</span>-->
+<!--                        </li>-->
+<!--                        <li class="d-flex align-items-center mb-4">-->
+<!--                          <i class="icon-base ti tabler-messages icon-lg"></i-->
+<!--                          ><span class="fw-medium mx-2">Skype:</span> <span>john.doe</span>-->
+<!--                        </li>-->
+<!--                        <li class="d-flex align-items-center mb-4">-->
+<!--                          <i class="icon-base ti tabler-mail icon-lg"></i><span class="fw-medium mx-2">Email:</span>-->
+<!--                          <span>john.doe@example.com</span>-->
+<!--                        </li>-->
+<!--                      </ul>-->
+<!--                      <p class="card-text text-uppercase text-body-secondary small mb-0">Teams</p>-->
+<!--                      <ul class="list-unstyled mb-0 mt-3 pt-1">-->
+<!--                        <li class="d-flex flex-wrap mb-4">-->
+<!--                          <span class="fw-medium me-2">Backend Developer</span><span>(126 Members)</span>-->
+<!--                        </li>-->
+<!--                        <li class="d-flex flex-wrap">-->
+<!--                          <span class="fw-medium me-2">React Developer</span><span>(98 Members)</span>-->
+<!--                        </li>-->
+<!--                      </ul>-->
+                    </div>
+                  </div>
+
+<!--                  sales profile data-->
+                  <div class="card mb-6">
+                    <div class="card-body">
+                      <p class="card-text text-uppercase text-body-secondary small mb-0">Seller Profile</p>
+                      <ul class="list-unstyled my-3 py-1">
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-user icon-lg"></i
+                          ><span class="fw-medium mx-2">Seller Name:</span> <span id="seller_name"> </span>
+                        </li>
+<!--                        <li class="d-flex align-items-center mb-4">-->
+<!--                          <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">Customer Type:</span>-->
+<!--                          <span>{{ lead.customer_type }}</span>-->
+<!--                        </li>-->
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-crown icon-lg"></i><span class="fw-medium mx-2">Number:</span>
+                          <span id="mob_num_id"></span>
+                          <!-- Button to open modal -->
+                          <button type="button" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="seller" data-bs-toggle="modal" data-bs-target="#callModal">
+                            <i class="ti-phone"></i> Call
+                          </button>
+                        </li>
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">City:</span>
+                          <span id="city_id"></span>
+                        </li>
+
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-flag icon-lg"></i><span class="fw-medium mx-2">Email:</span>
+                          <span id="email_id"></span>
                         </li>
 <!--                        <li class="d-flex align-items-center mb-2">-->
 <!--                          <i class="icon-base ti tabler-language icon-lg"></i-->
@@ -772,20 +842,20 @@
 
                     <div class="col-md-4">
                       <label>Customer Name:</label>
-                      <input type="text" class="form-control" name="customer_name" value="{{ lead.customer_name }}">
+                      <input type="text" class="form-control" name="customer_name" value="{{ lead.customer_name|default_if_none:'' }}">
                     </div>
                     <div class="col-md-4">
                       <label>Customer Type:</label>
-                      <input type="text" class="form-control" name="customer_type" value="{{ lead.customer_type }}">
+                    <input type="text" class="form-control" name="customer_type" value="{{ lead.customer_type|default_if_none:'' }}">
                     </div>
                     <div class="col-md-4">
                       <label>Calling Number:</label>
-                      <input type="text" class="form-control" name="calling_number" value="{{ lead.calling_number }}">
+                      <input type="text" class="form-control" name="calling_number" value="{{ lead.calling_number|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>Enquiry Type:</label>
-                        <input type="text" class="form-control" name="enquiry_type" value="{{ lead.enquiry_type }}">
+                        <input type="text" class="form-control" name="enquiry_type" value="{{ lead.enquiry_type |default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
@@ -800,7 +870,7 @@
 
                     <div class="col-md-4">
                       <label>Sub Enquiry Source:</label>
-                   <input type="text" class="form-control" name="sub_enquiry_source" value="{{ lead.sub_enquiry_source }}">
+                   <input type="text" class="form-control" name="sub_enquiry_source" value="{{ lead.sub_enquiry_source|default_if_none:'' }}">
 
                     </div>
 
@@ -844,12 +914,12 @@
 
                     <div class="col-md-4">
                       <label>Buyer Type:</label>
-                      <input type="text" class="form-control" name="buyer_type" value="{{ lead.buyer_type }}">
+                      <input type="text" class="form-control" name="buyer_type" value="{{ lead.buyer_type|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>Select BUs:</label>
-                      <input type="text" class="form-control" name="category" value="{{ lead.select_bus }}">
+                      <input type="text" class="form-control" name="category" value="{{ lead.select_bus|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
@@ -892,44 +962,44 @@
 
                     <div class="col-md-4">
                       <label>Name:</label>
-                      <input type="text" class="form-control" name="name" value="{{ lead.name }}">
+                      <input type="text" class="form-control" name="name" value="{{ lead.name|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>Pin Code:</label>
-                      <input type="text" class="form-control" name="pin_code" value="{{ lead.pin_code }}">
+                      <input type="text" class="form-control" name="pin_code" value="{{ lead.pin_code|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>District:</label>
-                      <input type="text" class="form-control" name="district" value="{{ lead.district }}">
+                      <input type="text" class="form-control" name="district" value="{{ lead.district|default_if_none:'' }}">
                     </div>
 
 
                     <div class="col-md-4">
                       <label>State:</label>
-                      <input type="text" class="form-control" name="state" value="{{ lead.state }}">
+                      <input type="text" class="form-control" name="state" value="{{ lead.state|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>Zone:</label>
-                      <input type="text" class="form-control" name="zone" value="{{ lead.zone }}">
+                      <input type="text" class="form-control" name="zone" value="{{ lead.zone|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>Order Qty:</label>
-                      <input type="number" class="form-control" name="order_qty" value="{{ lead.order_qty }}">
+                      <input type="number" class="form-control" name="order_qty" value="{{ lead.order_qty|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>Order Value:</label>
-                      <input type="text" class="form-control" name="order_value" value="{{ lead.order_value }}">
+                      <input type="text" class="form-control" name="order_value" value="{{ lead.order_value|default_if_none:'' }}">
                     </div>
 
 
                     <div class="col-md-4">
                       <label>Order Description:</label>
-                      <input type="text" class="form-control" name="order_description" value="{{ lead.order_description }}">
+                      <input type="text" class="form-control" name="order_description" value="{{ lead.order_description|default_if_none:'' }}">
                     </div>
 
 
@@ -942,12 +1012,12 @@
 
                     <div class="col-md-4">
                       <label>Customer Type:</label>
-                      <input type="text" class="form-control" name="customer_type_select" value="{{ lead.customer_type_select }}">
+                      <input type="text" class="form-control" name="customer_type_select" value="{{ lead.customer_type_select|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>Registration Status:</label>
-                      <input type="text" class="form-control" name="registration_status" value="{{ lead.registration_status }}">
+                      <input type="text" class="form-control" name="registration_status" value="{{ lead.registration_status|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
@@ -959,12 +1029,12 @@
 
                     <div class="col-md-4">
                       <label>Alternative Number:</label>
-                      <input type="text" class="form-control" name="alternative_number" value="{{ lead.alternative_number }}">
+                      <input type="text" class="form-control" name="alternative_number" value="{{ lead.alternative_number|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label>Email ID:</label>
-                      <input type="email" class="form-control" name="email_id" value="{{ lead.email_id }}">
+                      <input type="email" class="form-control" name="email_id" value="{{ lead.email_id|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
@@ -982,7 +1052,7 @@
 
 <div class="col-md-4">
   <label>Seller Phone No:</label>
-<input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no }}">
+<input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no|default_if_none:'' }}">
 </div>
 
 
@@ -993,7 +1063,7 @@
 
                     <div class="col-md-6">
                       <label>Landmark:</label>
-                      <input type="text" class="form-control" name="landmark" value="{{ lead.landmark }}">
+                      <input type="text" class="form-control" name="landmark" value="{{ lead.landmark|default_if_none:'' }}">
                     </div>
 
 
@@ -1014,6 +1084,68 @@
                     <!--/ Teams -->
                   </div>
                   <!-- Projects table -->
+<!--                follow_up history-->
+
+                 <div class="card mb-6">
+  <div class="mb-4">
+    <h3>Follow Up History</h3>
+    <table class="table datatable-project">
+      <thead class="border-top">
+        <tr>
+          <th>Status</th>
+          <th>Sub Status</th>
+          <th>Remark</th>
+          <th>Follow Up From</th>
+          <th>Created At</th>
+          <th>Created By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for followup in followup_history %}
+          <tr>
+            <td>{{ followup.status }}</td>
+            <td>{{ followup.sub_status }}</td>
+            <td>{{ followup.remark }}</td>
+            <td>{{ followup.follow_up }}</td>
+            <td>{{ followup.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ followup.created_by.username }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="text-center">No follow up history found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Pagination for Follow Up History -->
+    <nav>
+      <ul class="pagination justify-content-center">
+        {% if followup_history.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page_followup={{ followup_history.previous_page_number }}">Previous</a>
+          </li>
+        {% endif %}
+        {% for num in followup_history.paginator.page_range %}
+          <li class="page-item {% if followup_history.number == num %}active{% endif %}">
+            <a class="page-link" href="?page_followup={{ num }}">{{ num }}</a>
+          </li>
+        {% endfor %}
+        {% if followup_history.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page_followup={{ followup_history.next_page_number }}">Next</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+<!--                follow up history end-->
+
+
+
                   <div class="card mb-6">
                     <div class="mb-4">
                       <h3>Lead History</h3>
@@ -1449,6 +1581,52 @@
 </div>
 <!--           MODEL  END-->
 
+<!--           calling model-->
+           <!-- Follow-Up Modal -->
+<div class="modal fade" id="callModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" id="followUpForm">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Follow-Up</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="follow_up" id="follow_up_type">
+          <div class="mb-3">
+            <label>Calling Status</label>
+           <select name="status" class="form-select" required>
+            <option value="">-- Select Status --</option>
+            <option value="Connected">Connected</option>
+            <option value="Not Connected">Not Connected</option>
+          </select>
+          </div>
+          <div class="mb-3">
+            <label>Sub Type</label>
+<select class="form-select" name="sub_status">
+                      <option value="">-- Select Sub Calling Status --</option>
+                      <option value="Invalid">Invalid</option>
+                      <option value="Call Back">Call Back</option>
+                      <option value="Services">Services</option>
+                      <option value="Valid">Valid</option>
+                      <option value="Complaint">Complaint</option>
+                    </select>          </div>
+          <div class="mb-3">
+            <label>Remarks</label>
+            <textarea class="form-control" name="remark"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!--calling nodel end-->
+
             </div>
             <!-- / Content -->
 
@@ -1643,10 +1821,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const stateInput = document.querySelector('[name="state"]');
   const zoneInput = document.querySelector('[name="zone"]');
 
+  const emailSelect = document.getElementById("seller_email_select");
+  const phoneInput = document.getElementById("seller_phone");
+  const sellerNameSpan = document.getElementById("seller_name");
+
+  const mobSpan = document.getElementById("mob_num_id");
+  const citySpan = document.getElementById("city_id");
+  const emailSpan = document.getElementById("email_id");
+
   pincodeInput.addEventListener('change', function () {
     const pincode = this.value;
-
-
 
     if (pincode.length >= 4) {
       fetch(`/api/zone-info/?pincode=${pincode}`)
@@ -1656,10 +1840,34 @@ document.addEventListener('DOMContentLoaded', function () {
             districtInput.value = data.district || '';
             stateInput.value = data.state || '';
             zoneInput.value = data.zone || '';
+
+            const contacts = data.sales_contacts || [];
+
+            // Clear existing options
+            emailSelect.innerHTML = '<option value="">--Select Seller--</option>';
+
+            contacts.forEach(contact => {
+              const option = document.createElement('option');
+              option.value = contact.l1_mail;
+              option.textContent = `City: ${contact.city_custom} | Name: ${contact.l1_name} | Email: ${contact.l1_mail}`;
+              option.dataset.mobile = contact.l1_mobile;
+              option.dataset.city = contact.city_custom;
+              option.dataset.name = contact.l1_name;
+
+              emailSelect.appendChild(option);
+            });
+
+            // Clear display fields
+            phoneInput.value = '';
+            sellerNameSpan.textContent = '';
+            mobSpan.textContent = '';
+            citySpan.textContent = '';
+            emailSpan.textContent = '';
           } else {
             districtInput.value = '';
             stateInput.value = '';
             zoneInput.value = '';
+            emailSelect.innerHTML = '<option value="">--Select Seller--</option>';
           }
         })
         .catch(error => {
@@ -1667,8 +1875,27 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
   });
+
+  emailSelect.addEventListener("change", function () {
+    const selectedOption = emailSelect.options[emailSelect.selectedIndex];
+  if (selectedOption) {
+    const mobile = selectedOption.dataset.mobile || "";
+
+    // Set the phone input value dynamically from dataset
+    phoneInput.value = mobile;
+
+    const name = selectedOption.dataset.name || "";
+    const city = selectedOption.dataset.city || "";
+    const email = selectedOption.value || "";
+
+    sellerNameSpan.textContent = name;
+    mobSpan.textContent = mobile;
+    citySpan.textContent = city;
+    emailSpan.textContent = email;
+  });
 });
 </script>
+
 
 
     <script>
@@ -1847,30 +2074,72 @@ document.addEventListener('DOMContentLoaded', function () {
 {{ sales_contacts|json_script:"sales-contact-data" }}
 
 <script>
-  const contactData = JSON.parse(document.getElementById("sales-contact-data").textContent);
-  const emailSelect = document.getElementById("seller_email_select");
-  const phoneInput = document.getElementById("seller_phone");
+  document.addEventListener("DOMContentLoaded", function () {
+    const contactData = JSON.parse(document.getElementById("sales-contact-data").textContent);
+    const emailSelect = document.getElementById("seller_email_select");
+    const phoneInput = document.getElementById("seller_phone");
+    const sellerNameSpan = document.getElementById("seller_name");
+    const mobNumSpan = document.getElementById("mob_num_id");
+    const citySpan = document.getElementById("city_id");
+    const emailSpan = document.getElementById("email_id");
 
-  // When seller email is selected
-  emailSelect.addEventListener("change", function () {
-    const selectedEmail = this.value;
 
-    const matchedContact = contactData.find(c => c.l1_mail === selectedEmail);
+    // Function to update phone and seller name
+    function updateSellerInfo(selectedEmail) {
+      const matchedContact = contactData.find(c => c.l1_mail === selectedEmail);
+      if (matchedContact) {
+        phoneInput.value = matchedContact.l1_mobile || "";
+        sellerNameSpan.textContent = matchedContact.l1_name || "";
+         mobNumSpan.textContent = matchedContact.l1_mobile || "";
+        citySpan.textContent = (matchedContact.city_custom || "").replace(/and/g, ", ");
 
-    if (matchedContact) {
-      phoneInput.value = matchedContact.l1_mobile || "";
-    } else {
-      phoneInput.value = "";
+        emailSpan.textContent = matchedContact.l1_mail || "";
+      } else {
+        phoneInput.value = "";
+        sellerNameSpan.textContent = "";
+        mobNumSpan.textContent = "";
+        citySpan.textContent = "";
+        emailSpan.textContent = "";
+      }
     }
+
+    // Trigger on dropdown change
+    emailSelect.addEventListener("change", function () {
+      updateSellerInfo(this.value);
+    });
+
+    updateSellerInfo(emailSelect.value);
+  });
+</script>
+
+<script>
+  // Button triggers
+  document.querySelectorAll('.call-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const followUpType = this.getAttribute('data-follow-up');
+      document.getElementById('follow_up_type').value = followUpType;
+    });
   });
 
-  // ✅ Trigger once on page load to fill phone if already selected
-  document.addEventListener("DOMContentLoaded", function () {
-    const selectedEmail = emailSelect.value;
-    const matchedContact = contactData.find(c => c.l1_mail === selectedEmail);
-    if (matchedContact) {
-      phoneInput.value = matchedContact.l1_mobile || "";
-    }
+  // Form submission
+  document.getElementById('followUpForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch("{% url 'save_follow_up' lead.id %}", {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+      }
+    }).then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert('Follow-up saved');
+          location.reload();
+        } else {
+          alert('Error: ' + data.message);
+        }
+      });
   });
 </script>
 
