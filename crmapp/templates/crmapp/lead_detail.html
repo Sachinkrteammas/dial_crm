@@ -662,21 +662,21 @@
                           ><i class="icon-base ti tabler-user-check icon-sm me-1_5"></i> Profile</a
                         >
                       </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="pages-profile-teams.html"
-                          ><i class="icon-base ti tabler-users icon-sm me-1_5"></i> Teams</a
-                        >
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="pages-profile-projects.html"
-                          ><i class="icon-base ti tabler-layout-grid icon-sm me-1_5"></i> Projects</a
-                        >
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link" href="pages-profile-connections.html"
-                          ><i class="icon-base ti tabler-link icon-sm me-1_5"></i> Connections</a
-                        >
-                      </li>
+<!--                      <li class="nav-item">-->
+<!--                        <a class="nav-link" href="pages-profile-teams.html"-->
+<!--                          ><i class="icon-base ti tabler-users icon-sm me-1_5"></i> Teams</a-->
+<!--                        >-->
+<!--                      </li>-->
+<!--                      <li class="nav-item">-->
+<!--                        <a class="nav-link" href="pages-profile-projects.html"-->
+<!--                          ><i class="icon-base ti tabler-layout-grid icon-sm me-1_5"></i> Projects</a-->
+<!--                        >-->
+<!--                      </li>-->
+<!--                      <li class="nav-item">-->
+<!--                        <a class="nav-link" href="pages-profile-connections.html"-->
+<!--                          ><i class="icon-base ti tabler-link icon-sm me-1_5"></i> Connections</a-->
+<!--                        >-->
+<!--                      </li>-->
                     </ul>
                   </div>
                 </div>
@@ -705,7 +705,7 @@
                           <span>{{ lead.calling_number }}</span>
 
                           <!-- Button to open modal -->
-                          <button type="button" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="customer" data-bs-toggle="modal" data-bs-target="#callModal">
+                          <button type="button" onclick="customer_call('{{ lead.calling_number }}')" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="customer" data-bs-toggle="modal" data-bs-target="#callModal">
                             <i class="ti-phone"></i> Call
                           </button>
                         </li>
@@ -780,6 +780,25 @@
                           <i class="icon-base ti tabler-flag icon-lg"></i><span class="fw-medium mx-2">Email:</span>
                           <span id="email_id"></span>
                         </li>
+
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-flag icon-lg"></i>
+                          <span class="fw-medium mx-2">Seller URL:</span>
+
+                          <div class="d-flex align-items-center flex-wrap" style="max-width: 100%;">
+                            <input type="text"
+                                   id="secureUrlInput"
+                                   class="form-control form-control-sm me-2"
+                                   style="max-width: 350px;"
+                                   readonly
+                                   value="{{ lead.secure_url|default_if_none:'' }}" />
+
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="copySecureUrl()">
+                              <i class="ti ti-copy"></i> Copy
+                            </button>
+                          </div>
+                        </li>
+
 <!--                        <li class="d-flex align-items-center mb-2">-->
 <!--                          <i class="icon-base ti tabler-language icon-lg"></i-->
 <!--                          ><span class="fw-medium mx-2">Languages:</span> <span>English</span>-->
@@ -2143,6 +2162,36 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 </script>
 
+<script>
+  function customer_call(number) {
+    alert("Calling: " + number);
+
+    fetch(`/api/make-call/?number=${encodeURIComponent(number)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("API Response:", data);
+      // Optionally show success message to user
+    })
+    .catch(error => {
+      console.error("API Error:", error);
+    });
+  }
+</script>
+<script>
+  function copySecureUrl() {
+    const input = document.getElementById('secureUrlInput');
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile compatibility
+    document.execCommand('copy');
+
+  }
+</script>
 
 
 

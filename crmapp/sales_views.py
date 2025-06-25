@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.sites import requests
 from django.core import signing
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.signing import Signer
@@ -94,7 +95,7 @@ def sales_get_data(request):
         return render(request, 'crmapp/sales_get_data.html', {'message': "Email is missing in the encrypted data."})
 
     # Query only if both uid and email are present
-    lead = LeadTable.objects.filter(id=uid, seller_email_id=email).first()
+    lead = LeadTable.objects.filter(id=uid).first()
 
     if not lead:
         message = "No matching lead found for the given ID and email."
@@ -309,3 +310,31 @@ def save_follow_up(request, lead_id):
         )
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+import requests
+def make_call_api(request):
+    number = request.GET.get('number')
+
+    if not number:
+        return JsonResponse({'status': 'error', 'message': 'Number is required'})
+
+    # Prepare API parameters
+    api_url = "https://api.teammas.co.in/C2Capi/api.php"
+    params = {
+        "customer_number": number,
+        "agent_user": "6666",
+        "token": "VHJoc2xkZ2dkXjc1MzYzNVVVR2hzZ3M2",
+    }
+
+    try:
+        response = requests.get(api_url, params=params)
+        response_data = response.json()
+
+
+        return JsonResponse({'status': 'success', 'api_response': response_data})
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+    except ValueError:
+        # If response is not JSON
+        return JsonResponse({'status': 'error', 'message': 'Invalid response from API'})

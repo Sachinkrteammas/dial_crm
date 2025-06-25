@@ -43,4 +43,7 @@ urlpatterns = [
     path('api/zone-info/', sales_views.get_zone_data, name='get_zone_data'),
     path('save_follow_up/<int:lead_id>/', sales_views.save_follow_up, name='save_follow_up'),
 
+
+    path('api/make-call/', sales_views.make_call_api, name='make_call_api')
+
 ]
