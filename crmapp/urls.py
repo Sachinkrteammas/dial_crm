@@ -44,6 +44,12 @@ urlpatterns = [
     path('save_follow_up/<int:lead_id>/', sales_views.save_follow_up, name='save_follow_up'),
 
 
-    path('api/make-call/', sales_views.make_call_api, name='make_call_api')
+    path('api/make-call/', sales_views.make_call_api, name='make_call_api'),
+
+    #Exports leads
+    path('leads_export/',sales_views.leads_export,name="leads_export"),
+    path('sales_export/',sales_views.sales_export,name="sales_export"),
+    path('follow_up/',sales_views.follow_up,name="follow_up"),
+    path('main_leads_export/',sales_views.main_leads_export,name="main_leads_export"),
 
 ]

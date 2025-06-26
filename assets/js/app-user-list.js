@@ -157,213 +157,213 @@ document.addEventListener('DOMContentLoaded', function (e) {
             },
             {
               buttons: [
-                {
-                  extend: 'collection',
-                  className: 'btn btn-label-secondary dropdown-toggle',
-                  text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-upload icon-xs"></i> <span class="d-none d-sm-inline-block">Export</span></span>',
-                  buttons: [
-                    {
-                      extend: 'print',
-                      text: `<span class="d-flex align-items-center"><i class="icon-base ti tabler-printer me-1"></i>Print</span>`,
-                      className: 'dropdown-item',
-                      exportOptions: {
-                        columns: [3, 4, 5, 6, 7],
-                        format: {
-                          body: function (inner, coldex, rowdex) {
-                            if (inner.length <= 0) return inner;
-
-                            // Check if inner is HTML content
-                            if (inner.indexOf('<') > -1) {
-                              const parser = new DOMParser();
-                              const doc = parser.parseFromString(inner, 'text/html');
-
-                              // Get all text content
-                              let text = '';
-
-                              // Handle specific elements
-                              const userNameElements = doc.querySelectorAll('.user-name');
-                              if (userNameElements.length > 0) {
-                                userNameElements.forEach(el => {
-                                  // Get text from nested structure
-                                  const nameText =
-                                    el.querySelector('.fw-medium')?.textContent ||
-                                    el.querySelector('.d-block')?.textContent ||
-                                    el.textContent;
-                                  text += nameText.trim() + ' ';
-                                });
-                              } else {
-                                // Get regular text content
-                                text = doc.body.textContent || doc.body.innerText;
-                              }
-
-                              return text.trim();
-                            }
-
-                            return inner;
-                          }
-                        }
-                      },
-                      customize: function (win) {
-                        win.document.body.style.color = config.colors.headingColor;
-                        win.document.body.style.borderColor = config.colors.borderColor;
-                        win.document.body.style.backgroundColor = config.colors.bodyBg;
-                        const table = win.document.body.querySelector('table');
-                        table.classList.add('compact');
-                        table.style.color = 'inherit';
-                        table.style.borderColor = 'inherit';
-                        table.style.backgroundColor = 'inherit';
-                      }
-                    },
-                    {
-                      extend: 'csv',
-                      text: `<span class="d-flex align-items-center"><i class="icon-base ti tabler-file-text me-1"></i>Csv</span>`,
-                      className: 'dropdown-item',
-                      exportOptions: {
-                        columns: [3, 4, 5, 6, 7],
-                        format: {
-                          body: function (inner, coldex, rowdex) {
-                            if (inner.length <= 0) return inner;
-
-                            // Parse HTML content
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(inner, 'text/html');
-
-                            let text = '';
-
-                            // Handle user-name elements specifically
-                            const userNameElements = doc.querySelectorAll('.user-name');
-                            if (userNameElements.length > 0) {
-                              userNameElements.forEach(el => {
-                                // Get text from nested structure - try different selectors
-                                const nameText =
-                                  el.querySelector('.fw-medium')?.textContent ||
-                                  el.querySelector('.d-block')?.textContent ||
-                                  el.textContent;
-                                text += nameText.trim() + ' ';
-                              });
-                            } else {
-                              // Handle other elements (status, role, etc)
-                              text = doc.body.textContent || doc.body.innerText;
-                            }
-
-                            return text.trim();
-                          }
-                        }
-                      }
-                    },
-                    {
-                      extend: 'excel',
-                      text: `<span class="d-flex align-items-center"><i class="icon-base ti tabler-file-spreadsheet me-1"></i>Excel</span>`,
-                      className: 'dropdown-item',
-                      exportOptions: {
-                        columns: [3, 4, 5, 6, 7],
-                        format: {
-                          body: function (inner, coldex, rowdex) {
-                            if (inner.length <= 0) return inner;
-
-                            // Parse HTML content
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(inner, 'text/html');
-
-                            let text = '';
-
-                            // Handle user-name elements specifically
-                            const userNameElements = doc.querySelectorAll('.user-name');
-                            if (userNameElements.length > 0) {
-                              userNameElements.forEach(el => {
-                                // Get text from nested structure - try different selectors
-                                const nameText =
-                                  el.querySelector('.fw-medium')?.textContent ||
-                                  el.querySelector('.d-block')?.textContent ||
-                                  el.textContent;
-                                text += nameText.trim() + ' ';
-                              });
-                            } else {
-                              // Handle other elements (status, role, etc)
-                              text = doc.body.textContent || doc.body.innerText;
-                            }
-
-                            return text.trim();
-                          }
-                        }
-                      }
-                    },
-                    {
-                      extend: 'pdf',
-                      text: `<span class="d-flex align-items-center"><i class="icon-base ti tabler-file-description me-1"></i>Pdf</span>`,
-                      className: 'dropdown-item',
-                      exportOptions: {
-                        columns: [3, 4, 5, 6, 7],
-                        format: {
-                          body: function (inner, coldex, rowdex) {
-                            if (inner.length <= 0) return inner;
-
-                            // Parse HTML content
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(inner, 'text/html');
-
-                            let text = '';
-
-                            // Handle user-name elements specifically
-                            const userNameElements = doc.querySelectorAll('.user-name');
-                            if (userNameElements.length > 0) {
-                              userNameElements.forEach(el => {
-                                // Get text from nested structure - try different selectors
-                                const nameText =
-                                  el.querySelector('.fw-medium')?.textContent ||
-                                  el.querySelector('.d-block')?.textContent ||
-                                  el.textContent;
-                                text += nameText.trim() + ' ';
-                              });
-                            } else {
-                              // Handle other elements (status, role, etc)
-                              text = doc.body.textContent || doc.body.innerText;
-                            }
-
-                            return text.trim();
-                          }
-                        }
-                      }
-                    },
-                    {
-                      extend: 'copy',
-                      text: `<i class="icon-base ti tabler-copy me-1"></i>Copy`,
-                      className: 'dropdown-item',
-                      exportOptions: {
-                        columns: [3, 4, 5, 6, 7],
-                        format: {
-                          body: function (inner, coldex, rowdex) {
-                            if (inner.length <= 0) return inner;
-
-                            // Parse HTML content
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(inner, 'text/html');
-
-                            let text = '';
-
-                            // Handle user-name elements specifically
-                            const userNameElements = doc.querySelectorAll('.user-name');
-                            if (userNameElements.length > 0) {
-                              userNameElements.forEach(el => {
-                                // Get text from nested structure - try different selectors
-                                const nameText =
-                                  el.querySelector('.fw-medium')?.textContent ||
-                                  el.querySelector('.d-block')?.textContent ||
-                                  el.textContent;
-                                text += nameText.trim() + ' ';
-                              });
-                            } else {
-                              // Handle other elements (status, role, etc)
-                              text = doc.body.textContent || doc.body.innerText;
-                            }
-
-                            return text.trim();
-                          }
-                        }
-                      }
-                    }
-                  ]
-                },
+//                {
+//                  extend: 'collection',
+//                  className: 'btn btn-label-secondary dropdown-toggle',
+//                  text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-upload icon-xs"></i> <span class="d-none d-sm-inline-block">Export</span></span>',
+//                  buttons: [
+//                    {
+//                      extend: 'print',
+//                      text: `<span class="d-flex align-items-center"><i class="icon-base ti tabler-printer me-1"></i>Print</span>`,
+//                      className: 'dropdown-item',
+//                      exportOptions: {
+//                        columns: [3, 4, 5, 6, 7],
+//                        format: {
+//                          body: function (inner, coldex, rowdex) {
+//                            if (inner.length <= 0) return inner;
+//
+//                            // Check if inner is HTML content
+//                            if (inner.indexOf('<') > -1) {
+//                              const parser = new DOMParser();
+//                              const doc = parser.parseFromString(inner, 'text/html');
+//
+//                              // Get all text content
+//                              let text = '';
+//
+//                              // Handle specific elements
+//                              const userNameElements = doc.querySelectorAll('.user-name');
+//                              if (userNameElements.length > 0) {
+//                                userNameElements.forEach(el => {
+//                                  // Get text from nested structure
+//                                  const nameText =
+//                                    el.querySelector('.fw-medium')?.textContent ||
+//                                    el.querySelector('.d-block')?.textContent ||
+//                                    el.textContent;
+//                                  text += nameText.trim() + ' ';
+//                                });
+//                              } else {
+//                                // Get regular text content
+//                                text = doc.body.textContent || doc.body.innerText;
+//                              }
+//
+//                              return text.trim();
+//                            }
+//
+//                            return inner;
+//                          }
+//                        }
+//                      },
+//                      customize: function (win) {
+//                        win.document.body.style.color = config.colors.headingColor;
+//                        win.document.body.style.borderColor = config.colors.borderColor;
+//                        win.document.body.style.backgroundColor = config.colors.bodyBg;
+//                        const table = win.document.body.querySelector('table');
+//                        table.classList.add('compact');
+//                        table.style.color = 'inherit';
+//                        table.style.borderColor = 'inherit';
+//                        table.style.backgroundColor = 'inherit';
+//                      }
+//                    },
+//                    {
+//                      extend: 'csv',
+//                      text: `<span class="d-flex align-items-center"><i class="icon-base ti tabler-file-text me-1"></i>Csv</span>`,
+//                      className: 'dropdown-item',
+//                      exportOptions: {
+//                        columns: [3, 4, 5, 6, 7],
+//                        format: {
+//                          body: function (inner, coldex, rowdex) {
+//                            if (inner.length <= 0) return inner;
+//
+//                            // Parse HTML content
+//                            const parser = new DOMParser();
+//                            const doc = parser.parseFromString(inner, 'text/html');
+//
+//                            let text = '';
+//
+//                            // Handle user-name elements specifically
+//                            const userNameElements = doc.querySelectorAll('.user-name');
+//                            if (userNameElements.length > 0) {
+//                              userNameElements.forEach(el => {
+//                                // Get text from nested structure - try different selectors
+//                                const nameText =
+//                                  el.querySelector('.fw-medium')?.textContent ||
+//                                  el.querySelector('.d-block')?.textContent ||
+//                                  el.textContent;
+//                                text += nameText.trim() + ' ';
+//                              });
+//                            } else {
+//                              // Handle other elements (status, role, etc)
+//                              text = doc.body.textContent || doc.body.innerText;
+//                            }
+//
+//                            return text.trim();
+//                          }
+//                        }
+//                      }
+//                    },
+//                    {
+//                      extend: 'excel',
+//                      text: `<span class="d-flex align-items-center"><i class="icon-base ti tabler-file-spreadsheet me-1"></i>Excel</span>`,
+//                      className: 'dropdown-item',
+//                      exportOptions: {
+//                        columns: [3, 4, 5, 6, 7],
+//                        format: {
+//                          body: function (inner, coldex, rowdex) {
+//                            if (inner.length <= 0) return inner;
+//
+//                            // Parse HTML content
+//                            const parser = new DOMParser();
+//                            const doc = parser.parseFromString(inner, 'text/html');
+//
+//                            let text = '';
+//
+//                            // Handle user-name elements specifically
+//                            const userNameElements = doc.querySelectorAll('.user-name');
+//                            if (userNameElements.length > 0) {
+//                              userNameElements.forEach(el => {
+//                                // Get text from nested structure - try different selectors
+//                                const nameText =
+//                                  el.querySelector('.fw-medium')?.textContent ||
+//                                  el.querySelector('.d-block')?.textContent ||
+//                                  el.textContent;
+//                                text += nameText.trim() + ' ';
+//                              });
+//                            } else {
+//                              // Handle other elements (status, role, etc)
+//                              text = doc.body.textContent || doc.body.innerText;
+//                            }
+//
+//                            return text.trim();
+//                          }
+//                        }
+//                      }
+//                    },
+//                    {
+//                      extend: 'pdf',
+//                      text: `<span class="d-flex align-items-center"><i class="icon-base ti tabler-file-description me-1"></i>Pdf</span>`,
+//                      className: 'dropdown-item',
+//                      exportOptions: {
+//                        columns: [3, 4, 5, 6, 7],
+//                        format: {
+//                          body: function (inner, coldex, rowdex) {
+//                            if (inner.length <= 0) return inner;
+//
+//                            // Parse HTML content
+//                            const parser = new DOMParser();
+//                            const doc = parser.parseFromString(inner, 'text/html');
+//
+//                            let text = '';
+//
+//                            // Handle user-name elements specifically
+//                            const userNameElements = doc.querySelectorAll('.user-name');
+//                            if (userNameElements.length > 0) {
+//                              userNameElements.forEach(el => {
+//                                // Get text from nested structure - try different selectors
+//                                const nameText =
+//                                  el.querySelector('.fw-medium')?.textContent ||
+//                                  el.querySelector('.d-block')?.textContent ||
+//                                  el.textContent;
+//                                text += nameText.trim() + ' ';
+//                              });
+//                            } else {
+//                              // Handle other elements (status, role, etc)
+//                              text = doc.body.textContent || doc.body.innerText;
+//                            }
+//
+//                            return text.trim();
+//                          }
+//                        }
+//                      }
+//                    },
+//                    {
+//                      extend: 'copy',
+//                      text: `<i class="icon-base ti tabler-copy me-1"></i>Copy`,
+//                      className: 'dropdown-item',
+//                      exportOptions: {
+//                        columns: [3, 4, 5, 6, 7],
+//                        format: {
+//                          body: function (inner, coldex, rowdex) {
+//                            if (inner.length <= 0) return inner;
+//
+//                            // Parse HTML content
+//                            const parser = new DOMParser();
+//                            const doc = parser.parseFromString(inner, 'text/html');
+//
+//                            let text = '';
+//
+//                            // Handle user-name elements specifically
+//                            const userNameElements = doc.querySelectorAll('.user-name');
+//                            if (userNameElements.length > 0) {
+//                              userNameElements.forEach(el => {
+//                                // Get text from nested structure - try different selectors
+//                                const nameText =
+//                                  el.querySelector('.fw-medium')?.textContent ||
+//                                  el.querySelector('.d-block')?.textContent ||
+//                                  el.textContent;
+//                                text += nameText.trim() + ' ';
+//                              });
+//                            } else {
+//                              // Handle other elements (status, role, etc)
+//                              text = doc.body.textContent || doc.body.innerText;
+//                            }
+//
+//                            return text.trim();
+//                          }
+//                        }
+//                      }
+//                    }
+//                  ]
+//                },
                 {
                   text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-plus icon-xs"></i> <span class="d-none d-sm-inline-block">Add New User</span></span>',
                   className: 'add-new btn btn-primary',

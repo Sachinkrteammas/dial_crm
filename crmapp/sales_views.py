@@ -1,10 +1,12 @@
+from io import BytesIO
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites import requests
 from django.core import signing
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.signing import Signer
 from django.db.models import Q
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.dateparse import parse_date
 
@@ -91,8 +93,8 @@ def sales_get_data(request):
     if not uid:
         return render(request, 'crmapp/sales_get_data.html', {'message': "UID is missing in the encrypted data."})
 
-    if not email:
-        return render(request, 'crmapp/sales_get_data.html', {'message': "Email is missing in the encrypted data."})
+    # if not email:
+    #     return render(request, 'crmapp/sales_get_data.html', {'message': "Email is missing in the encrypted data."})
 
     # Query only if both uid and email are present
     lead = LeadTable.objects.filter(id=uid).first()
@@ -158,7 +160,7 @@ def update_sales_info(request):
 
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
+@login_required
 def lead_detail(request, lead_id):
     state = request.GET.get('state', '')
     menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
@@ -179,7 +181,7 @@ def lead_detail(request, lead_id):
     secure_url = request.build_absolute_uri(f"/sales_get_data/?data={encrypted_data}")
 
     # 🔹 Paginate Lead History
-    lead_history_qs = HistoryLead.objects.filter(lead_table=lead)
+    lead_history_qs = HistoryLead.objects.filter(lead_table_id=lead_id).order_by('-created_at')
     page_lead = request.GET.get('page_lead')
 
     paginator_lead = Paginator(lead_history_qs, 5)
@@ -338,3 +340,352 @@ def make_call_api(request):
     except ValueError:
         # If response is not JSON
         return JsonResponse({'status': 'error', 'message': 'Invalid response from API'})
+
+import openpyxl
+@login_required
+def leads_export(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+
+    if from_date_str and to_date_str:
+        from_date = parse_date(from_date_str)
+        to_date = parse_date(to_date_str)
+
+        if not from_date or not to_date:
+            return render(request, 'crmapp/leads_export.html', {
+                "menu_html": menu_html,
+                "error": "Invalid date format."
+            })
+
+        leads = HistoryLead.objects.filter(lead_date__range=(from_date, to_date))
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Leads"
+
+        ws.append([
+            'Customer Name', 'Customer Type', 'Calling Number', 'Enquiry Type', 'Enquiry Source', 'Sub Enquiry Source',
+            'Lead Date', 'Call Date', 'Call Type', 'Calling Status', 'Interested Status',
+            'Sub Calling Status', 'Sub Sub Calling Status', 'Select Business', 'Buyer Type',
+            'Lead Status', 'Construction Level', 'Name', 'Alternative Number', 'Email ID',
+            'Address', 'Landmark', 'Brand', 'Product', 'Sub Product',
+            'State', 'District', 'Zone', 'Pincode', 'Agent Name',
+            'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
+            'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No',
+            'Created By', 'Updated By', 'Created At', 'Updated At'
+        ])
+
+        for lead in leads:
+            ws.append([
+                lead.customer_name,
+                lead.customer_type,
+                lead.calling_number,
+                lead.enquiry_type,
+                lead.enquiry_source,
+                lead.sub_enquiry_source,
+                lead.lead_date.strftime('%Y-%m-%d') if lead.lead_date else '',
+                lead.call_date.strftime('%Y-%m-%d') if lead.call_date else '',
+                lead.call_type,
+                lead.calling_status,
+                lead.interested_status,
+                lead.sub_calling_status,
+                lead.sub_sub_calling_status,
+                lead.select_bus,
+                lead.buyer_type,
+                lead.lead_status,
+                lead.construction_level,
+                lead.name,
+                lead.alternative_number,
+                lead.email_id,
+                lead.address,
+                lead.landmark,
+                lead.brand,
+                lead.product,
+                lead.sub_product,
+                lead.state,
+                lead.district,
+                lead.zone,
+                lead.pin_code,
+                lead.agent_name,
+                lead.order_qty,
+                lead.order_description,
+                float(lead.order_value) if lead.order_value else '',
+                lead.customer_type_select,
+                lead.registration_status,
+                lead.remark,
+                lead.secure_url,
+                lead.seller_email_id,
+                lead.seller_phone_no,
+                str(lead.created_by) if lead.created_by else '',
+                str(lead.updated_by) if lead.updated_by else '',
+                lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
+                lead.updated_at.strftime('%Y-%m-%d %H:%M:%S') if lead.updated_at else ''
+            ])
+
+        file_stream = BytesIO()
+        wb.save(file_stream)
+        file_stream.seek(0)
+
+        return FileResponse(
+            file_stream,
+            as_attachment=True,
+            filename='history_leads.xlsx',
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    # No export, show template
+    return render(request, 'crmapp/leads_export.html', {
+        "menu_html": menu_html
+    })
+
+@login_required
+def sales_export(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+
+    if from_date_str and to_date_str:
+        from_date = parse_date(from_date_str)
+        to_date = parse_date(to_date_str)
+
+        if not from_date or not to_date:
+            return render(request, 'crmapp/sales_export.html', {
+                "menu_html": menu_html,
+                "error": "Invalid date format."
+            })
+
+        leads = HistorySalesInfo.objects.filter(
+            created_at__date__range=(from_date, to_date)
+        )
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Sales Leads"
+
+        # Header row
+        ws.append([
+            'Sale MT', 'Sale INR', 'Sale Team Remarks', 'Lead Status',
+            'CC Final Remarks Reformat', 'Lead Category', 'Product',
+            'Product Value', 'Status', 'Created By', 'Updated By',
+            'Created At', 'Updated At'
+        ])
+
+        # Data rows
+        for lead in leads:
+            ws.append([
+                lead.sale_mt,
+                lead.sale_inr,
+                lead.sale_team_remarks,
+                lead.lead_status,
+                lead.cc_final_remarks_reformat,
+                lead.lead_category,
+                lead.product,
+                lead.product_value,
+                lead.status,
+                str(lead.created_by) if lead.created_by else '',
+                str(lead.updated_by) if lead.updated_by else '',
+                lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
+                lead.updated_at.strftime('%Y-%m-%d %H:%M:%S') if lead.updated_at else ''
+            ])
+
+        file_stream = BytesIO()
+        wb.save(file_stream)
+        file_stream.seek(0)
+
+        return FileResponse(
+            file_stream,
+            as_attachment=True,
+            filename='sales_history_leads.xlsx',
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    # Show template
+    return render(request, 'crmapp/sales_export.html', {
+        "menu_html": menu_html
+    })
+
+@login_required
+def follow_up(request):
+    # Build the menu
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        menu_tree.setdefault(item.parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    # Get dates
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+
+    if from_date_str and to_date_str:
+        from_date = parse_date(from_date_str)
+        to_date = parse_date(to_date_str)
+
+        if not from_date or not to_date:
+            return render(request, 'crmapp/follow_up.html', {
+                "menu_html": menu_html,
+                "error": "Invalid date format."
+            })
+
+        # ✅ Use created_at for date filtering
+        followups = TBLFollowUp.objects.filter(created_at__date__range=(from_date, to_date))
+
+        # Create workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Follow Ups"
+
+        # Header
+        ws.append([
+            'Lead ID', 'Status', 'Sub Status', 'Remark', 'Follow Up',
+            'Created By', 'Updated By', 'Created At'
+        ])
+
+        # Data rows
+        for entry in followups:
+            ws.append([
+                entry.lead_table.id if entry.lead_table else '',
+                entry.status,
+                entry.sub_status,
+                entry.remark,
+                entry.follow_up,
+                entry.created_by.username if entry.created_by else '',
+                entry.updated_by.username if entry.updated_by else '',
+                entry.created_at.strftime('%Y-%m-%d %H:%M:%S') if entry.created_at else '',
+            ])
+
+        # Save to in-memory file
+        file_stream = BytesIO()
+        wb.save(file_stream)
+        file_stream.seek(0)
+
+        return FileResponse(
+            file_stream,
+            as_attachment=True,
+            filename='follow_up_export.xlsx',
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    # Initial load without export
+    return render(request, 'crmapp/follow_up.html', {
+        "menu_html": menu_html
+    })
+
+
+
+
+@login_required
+def main_leads_export(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+
+    if from_date_str and to_date_str:
+        from_date = parse_date(from_date_str)
+        to_date = parse_date(to_date_str)
+
+        if not from_date or not to_date:
+            return render(request, 'crmapp/leads_export.html', {
+                "menu_html": menu_html,
+                "error": "Invalid date format."
+            })
+
+        leads = LeadTable.objects.filter(lead_date__range=(from_date, to_date))
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Leads"
+
+        ws.append([
+            'Customer Name', 'Customer Type', 'Calling Number', 'Enquiry Type', 'Enquiry Source', 'Sub Enquiry Source',
+            'Lead Date', 'Call Date', 'Call Type', 'Calling Status', 'Interested Status',
+            'Sub Calling Status', 'Sub Sub Calling Status', 'Select Business', 'Buyer Type',
+            'Lead Status', 'Construction Level', 'Name', 'Alternative Number', 'Email ID',
+            'Address', 'Landmark', 'Brand', 'Product', 'Sub Product',
+            'State', 'District', 'Zone', 'Pincode', 'Agent Name',
+            'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
+            'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No',
+            'Created By', 'Updated By', 'Created At', 'Updated At'
+        ])
+
+        for lead in leads:
+            ws.append([
+                lead.customer_name,
+                lead.customer_type,
+                lead.calling_number,
+                lead.enquiry_type,
+                lead.enquiry_source,
+                lead.sub_enquiry_source,
+                lead.lead_date.strftime('%Y-%m-%d') if lead.lead_date else '',
+                lead.call_date.strftime('%Y-%m-%d') if lead.call_date else '',
+                lead.call_type,
+                lead.calling_status,
+                lead.interested_status,
+                lead.sub_calling_status,
+                lead.sub_sub_calling_status,
+                lead.select_bus,
+                lead.buyer_type,
+                lead.lead_status,
+                lead.construction_level,
+                lead.name,
+                lead.alternative_number,
+                lead.email_id,
+                lead.address,
+                lead.landmark,
+                lead.brand,
+                lead.product,
+                lead.sub_product,
+                lead.state,
+                lead.district,
+                lead.zone,
+                lead.pin_code,
+                lead.agent_name,
+                lead.order_qty,
+                lead.order_description,
+                float(lead.order_value) if lead.order_value else '',
+                lead.customer_type_select,
+                lead.registration_status,
+                lead.remark,
+                lead.secure_url,
+                lead.seller_email_id,
+                lead.seller_phone_no,
+                str(lead.created_by) if lead.created_by else '',
+                str(lead.updated_by) if lead.updated_by else '',
+                lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
+                lead.updated_at.strftime('%Y-%m-%d %H:%M:%S') if lead.updated_at else ''
+            ])
+
+        file_stream = BytesIO()
+        wb.save(file_stream)
+        file_stream.seek(0)
+
+        return FileResponse(
+            file_stream,
+            as_attachment=True,
+            filename='leads_data.xlsx',
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    # No export, show template
+    return render(request, 'crmapp/leads_export.html', {
+        "menu_html": menu_html
+    })
