@@ -948,7 +948,7 @@
 
                     <div class="col-md-4">
                         <label>Brand Name:</label>
-                        <select id="brandSelect" name="brand_name" class="form-control">
+                        <select id="brandSelect" name="brand_name" class="form-select">
                           <option value="">--Select Brand--</option>
                           {% for brand in brands %}
                             <option value="{{ brand }}" {% if lead.brand == brand %}selected{% endif %}>{{ brand }}</option>
@@ -958,14 +958,14 @@
 
                       <div class="col-md-4">
                         <label>Product:</label>
-                        <select id="productSelect" name="product" class="form-control">
+                        <select id="productSelect" name="product" class="form-select">
                           <option value="">--Select Product--</option>
                         </select>
                       </div>
 
                       <div class="col-md-4">
                         <label>Sub Product:</label>
-                        <select id="subProductSelect" name="sub_product" class="form-control">
+                        <select id="subProductSelect" name="sub_product" class="form-select">
                           <option value="">--Select Sub Product--</option>
                         </select>
                       </div>

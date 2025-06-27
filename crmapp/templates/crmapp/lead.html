@@ -1315,7 +1315,13 @@
           }, 500);
 
 
-        } else {
+        }
+        else if (data.status === "exists" && data.lead_url) {
+        alert("Lead already exists. Redirecting to existing lead...");
+        window.location.href = data.lead_url;
+      }
+
+         else {
           alert("Failed to save lead.");
         }
       })

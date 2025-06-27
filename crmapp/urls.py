@@ -51,5 +51,6 @@ urlpatterns = [
     path('sales_export/',sales_views.sales_export,name="sales_export"),
     path('follow_up/',sales_views.follow_up,name="follow_up"),
     path('main_leads_export/',sales_views.main_leads_export,name="main_leads_export"),
+    path('reallocate/',sales_views.reallocate,name="reallocate"),
 
 ]

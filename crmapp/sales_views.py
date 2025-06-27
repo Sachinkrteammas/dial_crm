@@ -13,6 +13,8 @@ from django.utils.dateparse import parse_date
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
     SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact, TBLFollowUp
 from .views import render_menu
+from django.contrib.auth.models import User
+from django.contrib import messages
 
 
 @login_required
@@ -689,3 +691,44 @@ def main_leads_export(request):
     return render(request, 'crmapp/leads_export.html', {
         "menu_html": menu_html
     })
+
+
+
+@login_required
+def reallocate(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    users = User.objects.all()
+
+    if request.method == 'POST':
+        from_user_id = request.POST.get('from_user')
+        to_user_id = request.POST.get('to_user')
+
+        try:
+            from_user = User.objects.get(id=from_user_id)
+            to_user = User.objects.get(id=to_user_id)
+
+            # ✅ Transfer all leads regardless of current logged-in user
+            updated_count = LeadTable.objects.filter(created_by=from_user).update(created_by=to_user)
+
+            messages.success(
+                request,
+                f"✅ {updated_count} leads successfully transferred from {from_user.email} to {to_user.email}."
+            )
+        except User.DoesNotExist:
+            messages.error(request, "❌ One or both users not found.")
+        except Exception as e:
+            messages.error(request, f"❌ Error: {str(e)}")
+
+        return redirect('reallocate')
+
+    return render(request, 'crmapp/reallocate.html', {
+        'users': users,
+        'menu_html': menu_html,
+    })
+

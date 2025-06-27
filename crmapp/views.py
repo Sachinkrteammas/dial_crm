@@ -22,7 +22,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
-    HistoryLead
+    HistoryLead, SalesInfoTable
 
 User = get_user_model()
 
@@ -573,7 +573,8 @@ def lead_table(request):
 
     # Handle date filter
     query = request.GET.get('query')
-    leads = LeadTable.objects.all().order_by('-created_at')
+    # leads = LeadTable.objects.all().order_by('-created_at')
+    leads = LeadTable.objects.filter(created_by=request.user).order_by('-created_at')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
@@ -608,8 +609,7 @@ def lead_table(request):
     })
 
 
-
-@csrf_exempt  # Optional if CSRF token is already handled via JavaScript
+@csrf_exempt
 def save_lead(request):
     if request.method == "POST":
         customer_name = request.POST.get('customer_name')
@@ -618,6 +618,32 @@ def save_lead(request):
         enquiry_source = request.POST.get('enquiry_source')
         lead_date = parse_date(request.POST.get('lead_date')) if request.POST.get('lead_date') else None
 
+        # Step 1: Check for leads with same phone number
+        matching_leads = LeadTable.objects.filter(calling_number=calling_number)
+        print(matching_leads,"matching_leads")
+
+        for lead in matching_leads:
+            # Step 2: If any related SalesInfoTable has status != 'close', block
+            sales_info_qs = SalesInfoTable.objects.filter(lead_table=lead)
+            if sales_info_qs.exists():
+                if not sales_info_qs.filter(status__iexact='closed').exists():
+                    # Status is not closed → block registration
+                    lead_url = request.build_absolute_uri(reverse('lead_detail', args=[lead.id]))
+                    return JsonResponse({
+                        'status': 'exists',
+                        'message': 'Lead already exists and is still open.',
+                        'lead_url': lead_url
+                    })
+            else:
+                # No SalesInfoTable = treated as open → block registration
+                lead_url = request.build_absolute_uri(reverse('lead_detail', args=[lead.id]))
+                return JsonResponse({
+                    'status': 'exists',
+                    'message': 'Lead already exists without close status.',
+                    'lead_url': lead_url
+                })
+
+        # Step 3: If no blocking lead found → allow new registration
         lead = LeadTable.objects.create(
             customer_name=customer_name,
             calling_number=calling_number,
@@ -628,6 +654,7 @@ def save_lead(request):
         )
 
         return JsonResponse({'status': 'success', 'id': lead.id})
+
     return JsonResponse({'status': 'fail'}, status=400)
 
 
