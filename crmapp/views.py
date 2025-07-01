@@ -735,6 +735,17 @@ def update_lead(request):
                 except:
                     return None
 
+            # --- Parse and set callback_time (new field) ---
+            callback_time_str = request.POST.get('callback_time')
+            if callback_time_str:
+                try:
+                    # Parse datetime in format 'YYYY-MM-DD HH:MM'
+                    lead.callback_time = datetime.strptime(callback_time_str, '%Y-%m-%d %H:%M')
+                except ValueError:
+                    lead.callback_time = None
+            else:
+                lead.callback_time = None
+
             data= request.POST
 
             # Assign fields with fallback and type conversion
@@ -833,6 +844,7 @@ def update_lead(request):
                 secure_url=lead.secure_url,
                 seller_email_id=lead.seller_email_id,
                 seller_phone_no=lead.seller_phone_no,
+                callback_time=lead.callback_time,
                 created_by=lead.created_by,  # or request.user if preferred
                 updated_by=lead.updated_by,
             )

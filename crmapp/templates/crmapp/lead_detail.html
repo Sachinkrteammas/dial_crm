@@ -49,6 +49,8 @@
     <link rel="stylesheet" href="/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/@form-validation/form-validation.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/flatpickr/flatpickr.css" />
+
 
     <!-- Page CSS -->
 
@@ -710,9 +712,13 @@
                           <span>{{ lead.calling_number }}</span>
 
                           <!-- Button to open modal -->
-                          <button type="button" onclick="customer_call('{{ lead.calling_number }}')" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="customer" data-bs-toggle="modal" data-bs-target="#callModal">
-                            <i class="ti-phone"></i> Call
-                          </button>
+                          <button type="button"
+                                onclick="customer_call('{{ lead.calling_number }}')"
+                                class="btn btn-sm btn-outline-primary ms-2 call-btn"
+                                data-follow-up="customer">
+                          <i class="ti-phone"></i> Call
+                        </button>
+
                         </li>
 
 
@@ -907,7 +913,7 @@
   </select>
 </div>
 
-  <div id="connectedFields" class="row g-3" style="display: {% if lead.calling_status == 'Connect' %}flex{% else %}none{% endif %};">
+
   <div class="col-md-4">
     <label>Sub Calling Status:</label>
     <select class="form-select" name="sub_calling_status" id="sub_calling_status_select">
@@ -922,10 +928,24 @@
     </select>
   </div>
 
+<div class="col-md-4" id="callbackTimeField" style="display: none;">
+  <label>Callback Time:</label>
+  <input
+    type="text"
+    class="form-control"
+    name="callback_time"
+    placeholder="YYYY-MM-DD HH:MM"
+    id="flatpickr-datetime"
+    value="{{ lead.callback_time|default_if_none:''|date:'Y-m-d H:i' }}"
+ />
+</div>
+
+
+
 
 {{ call_dispositions|json_script:"call-disposition-data" }}
 
-
+<div id="connectedFields" class="row g-3" style="display: none;">
                     <div class="col-md-4">
                       <label>Interested/Not Interested:</label>
                       <select class="form-select" name="interest_status">
@@ -936,10 +956,28 @@
 
 
 
-                    <div class="col-md-4">
-                      <label>Buyer Type:</label>
-                      <input type="text" class="form-control" name="buyer_type" value="{{ lead.buyer_type|default_if_none:'' }}">
-                    </div>
+                   <div class="col-md-4">
+                      <label for="buyer_type">Buyer Type:</label>
+                      <select class="form-select" name="buyer_type" id="buyer_type" onchange="toggleConstructionLevel()">
+                        <option value="">-- Select Buyer Type --</option>
+                        <option value="Architect" {% if lead.buyer_type == "Architect" %}selected{% endif %}>Architect</option>
+                        <option value="Carpenter" {% if lead.buyer_type == "Carpenter" %}selected{% endif %}>Carpenter</option>
+                        <option value="Contractor" {% if lead.buyer_type == "Contractor" %}selected{% endif %}>Contractor</option>
+                        <option value="Distributor" {% if lead.buyer_type == "Distributor" %}selected{% endif %}>Distributor</option>
+                        <option value="Engineer" {% if lead.buyer_type == "Engineer" %}selected{% endif %}>Engineer</option>
+                        <option value="Fabricator" {% if lead.buyer_type == "Fabricator" %}selected{% endif %}>Fabricator</option>
+                        <option value="Individual Buyer" {% if lead.buyer_type == "Individual Buyer" %}selected{% endif %}>Individual Buyer</option>
+                        <option value="Industrial" {% if lead.buyer_type == "Industrial" %}selected{% endif %}>Industrial</option>
+                        <option value="Mason" {% if lead.buyer_type == "Mason" %}selected{% endif %}>Mason</option>
+                        <option value="Others" {% if lead.buyer_type == "Others" %}selected{% endif %}>Others</option>
+                        <option value="Painter" {% if lead.buyer_type == "Painter" %}selected{% endif %}>Painter</option>
+                        <option value="Plumber" {% if lead.buyer_type == "Plumber" %}selected{% endif %}>Plumber</option>
+                        <option value="Retailer" {% if lead.buyer_type == "Retailer" %}selected{% endif %}>Retailer</option>
+                        <option value="Wholesaler/Stockist" {% if lead.buyer_type == "Wholesaler/Stockist" %}selected{% endif %}>Wholesaler/Stockist</option>
+                      </select>
+                   </div>
+
+
 
                     <div class="col-md-4">
                       <label>Select BUs:</label>
@@ -1028,10 +1066,11 @@
 
 
 
-                    <div class="col-md-4">
-                      <label>Construction Level:</label>
-                      <input type="text" class="form-control" name="construction_level" value="{{ lead.construction_level|default_if_none:'' }}">
-                    </div>
+                   <div class="col-md-4" id="construction_level_div" style="display: none;">
+                    <label>Construction Level:</label>
+                    <input type="text" class="form-control" name="construction_level" value="{{ lead.construction_level|default_if_none:'' }}">
+                  </div>
+
 
 
                     <div class="col-md-4">
@@ -1616,26 +1655,85 @@
           <h5 class="modal-title">Follow-Up</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+
         <div class="modal-body">
-          <input type="hidden" name="follow_up" id="follow_up_type">
+          <input type="hidden" name="follow_up" id="" value="seller">
+
           <div class="mb-3">
-            <label>Calling Status</label>
-           <select name="status" class="form-select" required>
-            <option value="">-- Select Status --</option>
-            <option value="Connected">Connected</option>
-            <option value="Not Connected">Not Connected</option>
-          </select>
+            <label>Information Status</label>
+            <select id="infoStatusDropdown" class="form-select" name="status">
+  <option value="">-- Select Information Status --</option>
+</select>
+          </div>
+
+          <div class="mb-3">
+            <label>Connection Status</label>
+            <select id="connectionStatusDropdown" class="form-select" name="connection_status">
+  <option value="">-- Select Connection Status --</option>
+</select>
+          </div>
+
+          <div class="mb-3">
+            <label>Sales Person VOC</label>
+            <select id="salesPersonVocDropdown" class="form-select" name="sales_person_voc">
+  <option value="">-- Select Sales Person VOC --</option>
+</select>
+          </div>
+
+<!--          <div class="mb-3">-->
+<!--            <label>Sub Type</label>-->
+<!--            <select class="form-select" name="sub_status">-->
+<!--              <option value="">&#45;&#45; Select Sub Calling Status &#45;&#45;</option>-->
+<!--              <option value="Invalid">Invalid</option>-->
+<!--              <option value="Call Back">Call Back</option>-->
+<!--              <option value="Services">Services</option>-->
+<!--              <option value="Valid">Valid</option>-->
+<!--              <option value="Complaint">Complaint</option>-->
+<!--            </select>-->
+<!--          </div>-->
+
+          <div class="mb-3">
+            <label>Remarks</label>
+            <textarea class="form-control" name="remark"></textarea>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+           <!-- Customer Call Modal -->
+<div class="modal fade" id="customerCallModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" id="customerFollowUpForm">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Customer Follow-Up</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="follow_up"  value="customer">
+          <div class="mb-3">
+            <label>Information Status</label>
+            <select id="customerInfoStatusDropdown" class="form-select" name="status"></select>
           </div>
           <div class="mb-3">
-            <label>Sub Type</label>
-<select class="form-select" name="sub_status">
-                      <option value="">-- Select Sub Calling Status --</option>
-                      <option value="Invalid">Invalid</option>
-                      <option value="Call Back">Call Back</option>
-                      <option value="Services">Services</option>
-                      <option value="Valid">Valid</option>
-                      <option value="Complaint">Complaint</option>
-                    </select>          </div>
+            <label>Connection Status</label>
+            <select id="customerConnectionStatusDropdown" class="form-select" name="connection_status"></select>
+          </div>
+          <div class="mb-3">
+            <label>Sales Person VOC</label>
+            <select id="customerSalesPersonVocDropdown" class="form-select" name="sales_person_voc"></select>
+          </div>
           <div class="mb-3">
             <label>Remarks</label>
             <textarea class="form-control" name="remark"></textarea>
@@ -1648,6 +1746,8 @@
     </form>
   </div>
 </div>
+
+
 
 <!--calling nodel end-->
 
@@ -1822,19 +1922,22 @@
     const connectedFields = document.getElementById('connectedFields');
 
     function toggleConnectedFields() {
-      if (callingSelect.value === 'Connect') {
+      const value = callingSelect.value;
+      if (value === 'Connect' || value === 'Not Connect') {
         connectedFields.style.display = 'flex';
       } else {
         connectedFields.style.display = 'none';
-        // Optional: clear inputs if hidden
-<!--        connectedFields.querySelectorAll('input, select').forEach(input => input.value = '');-->
       }
     }
 
+    // Initial check on load
+    toggleConnectedFields();
+
+    // Run when user changes dropdown
     callingSelect.addEventListener('change', toggleConnectedFields);
-    toggleConnectedFields(); // run on load to sync initial state
   });
 </script>
+
 
 
 
@@ -2010,26 +2113,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     <script>
-  const dispositionData = JSON.parse(document.getElementById('call-disposition-data').textContent);
+  document.addEventListener("DOMContentLoaded", () => {
+    const dispositionData = JSON.parse(document.getElementById('call-disposition-data').textContent);
 
-  const callingStatus = document.getElementById('calling_status_select');
-  const subCallingStatus = document.getElementById('sub_calling_status_select');
-  const subSubCallingStatus = document.getElementById('sub_sub_calling_status_select');
-  const connectedFields = document.getElementById('connectedFields');
+    const callingStatus = document.getElementById('calling_status_select');
+    const subCallingStatus = document.getElementById('sub_calling_status_select');
+    const subSubCallingStatus = document.getElementById('sub_sub_calling_status_select');
+    const connectedFields = document.getElementById('connectedFields');
 
-  function clearAndInit(select, label) {
-    select.innerHTML = `<option value="">--Select ${label}--</option>`;
-  }
+    const leadSub = "{{ lead.sub_calling_status|escapejs }}";
+    const leadSubSub = "{{ lead.sub_sub_calling_status|escapejs }}";
 
-  function populateSubTypes() {
-    clearAndInit(subCallingStatus, "Sub Type");
-    clearAndInit(subSubCallingStatus, "Sub Sub Type");
+    function clearAndInit(select, label) {
+      select.innerHTML = `<option value="">--Select ${label}--</option>`;
+    }
 
-    const selectedType = callingStatus.value;
+    function populateSubTypes() {
+      clearAndInit(subCallingStatus, "Sub Type");
+      clearAndInit(subSubCallingStatus, "Sub Sub Type");
 
-    if (selectedType === "Connect") {
+      const selectedType = callingStatus.value;
+      const filterKey = selectedType === "Connect" ? "Connected" :
+                        selectedType === "Not Connect" ? "Not Connected" : "";
+
+      if (!filterKey) return;
+
       const subTypes = [...new Set(dispositionData
-        .filter(d => d.type === "Connected" && d.sub_type)
+        .filter(d => d.type === filterKey && d.sub_type)
         .map(d => d.sub_type))];
 
       subTypes.forEach(sub => {
@@ -2039,17 +2149,19 @@ document.addEventListener('DOMContentLoaded', function () {
         subCallingStatus.appendChild(option);
       });
     }
-  }
 
-  function populateSubSubTypes() {
-    clearAndInit(subSubCallingStatus, "Sub Sub Type");
+    function populateSubSubTypes() {
+      clearAndInit(subSubCallingStatus, "Sub Sub Type");
 
-    const selectedType = callingStatus.value;
-    const selectedSubType = subCallingStatus.value;
+      const selectedType = callingStatus.value;
+      const selectedSubType = subCallingStatus.value;
+      const filterKey = selectedType === "Connect" ? "Connected" :
+                        selectedType === "Not Connect" ? "Not Connected" : "";
 
-    if (selectedType === "Connect" && selectedSubType) {
+      if (!filterKey || !selectedSubType) return;
+
       const subSubTypes = [...new Set(dispositionData
-        .filter(d => d.type === "Connected" && d.sub_type === selectedSubType && d.sub_sub_type)
+        .filter(d => d.type === filterKey && d.sub_type === selectedSubType && d.sub_sub_type)
         .map(d => d.sub_sub_type))];
 
       subSubTypes.forEach(sub => {
@@ -2059,42 +2171,62 @@ document.addEventListener('DOMContentLoaded', function () {
         subSubCallingStatus.appendChild(option);
       });
     }
-  }
 
-  // On change logic
-  callingStatus.addEventListener('change', () => {
-    if (callingStatus.value === "Connect") {
-      connectedFields.style.display = "flex";
-      populateSubTypes();
-    } else {
-      connectedFields.style.display = "none";
-      clearAndInit(subCallingStatus, "Sub Type");
-      clearAndInit(subSubCallingStatus, "Sub Sub Type");
+<!--    function toggleConnectedFields() {-->
+<!--      const selectedType = callingStatus.value;-->
+<!--      const selectedSub = subCallingStatus.value;-->
+
+<!--      if (selectedType === "Connect" && selectedSub !== "Invalid" && selectedSub !== "Call Back") {-->
+<!--        connectedFields.style.display = "flex";-->
+<!--      } else {-->
+<!--        connectedFields.style.display = "none";-->
+<!--      }-->
+<!--    }-->
+
+    function toggleConnectedFields() {
+      const selectedType = callingStatus.value;
+      const selectedSub = subCallingStatus.value;
+
+      const showConnected = selectedType === "Connect" && selectedSub !== "Invalid" && selectedSub !== "Call Back";
+      const showCallback = selectedSub === "Call Back";
+
+      // Show/hide connected fields (e.g. brand, order, etc.)
+      connectedFields.style.display = showConnected ? "flex" : "none";
+
+      // Show/hide callback time input
+      if (callbackTimeField) {
+        callbackTimeField.style.display = showCallback ? "block" : "none";
+      }
     }
-  });
 
-  subCallingStatus.addEventListener('change', () => {
-    populateSubSubTypes();
-  });
-
-  // Set selected values from lead data on load
-  document.addEventListener("DOMContentLoaded", () => {
-    const leadSub = "{{ lead.sub_calling_status|escapejs }}";
-    const leadSubSub = "{{ lead.sub_sub_calling_status|escapejs }}";
-
-    if (callingStatus.value === "Connect") {
-      connectedFields.style.display = "flex";
+    // On change handlers
+    callingStatus.addEventListener('change', () => {
       populateSubTypes();
-
-      // Wait a bit to ensure sub types are loaded
       setTimeout(() => {
-        if (leadSub) subCallingStatus.value = leadSub;
-        populateSubSubTypes();
-        if (leadSubSub) subSubCallingStatus.value = leadSubSub;
-      }, 100); // small delay to allow dropdown fill
-    }
+        toggleConnectedFields(); // ensure field toggling after dropdown filled
+      }, 50);
+    });
+
+    subCallingStatus.addEventListener('change', () => {
+      populateSubSubTypes();
+      toggleConnectedFields();
+    });
+
+    // Initial Load Logic
+    populateSubTypes();
+
+    setTimeout(() => {
+      if (leadSub) subCallingStatus.value = leadSub;
+      populateSubSubTypes();
+      if (leadSubSub) subSubCallingStatus.value = leadSubSub;
+
+      toggleConnectedFields();
+    }, 100);
   });
 </script>
+
+
+
 
 {{ sales_contacts|json_script:"sales-contact-data" }}
 
@@ -2168,27 +2300,121 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 </script>
 
-<script>
-  function customer_call(number) {
-    alert("Calling: " + number);
+    <script>
+  // Form submission for Customer Follow-Up
+  document.getElementById('customerFollowUpForm').addEventListener('submit', function (e) {
+    e.preventDefault();
 
-    fetch(`/api/make-call/?number=${encodeURIComponent(number)}`, {
-      method: 'GET',
+    const formData = new FormData(this);
+    // Add a follow_up field if needed
+    formData.append('follow_up', 'customer');
+
+    fetch("{% url 'save_follow_up' lead.id %}", {
+      method: 'POST',
+      body: formData,
       headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
+        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
       }
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-      console.log("API Response:", data);
-      // Optionally show success message to user
-    })
-    .catch(error => {
-      console.error("API Error:", error);
+      if (data.status === 'success') {
+        alert('Customer Follow-up saved');
+        location.reload();
+      } else {
+        alert('Error: ' + data.message);
+      }
     });
-  }
+  });
 </script>
+
+
+<script>
+let customerVocRecords = [];
+
+function customer_call(number) {
+    if (!number) return alert("Invalid number");
+
+    fetch('/api/get-customer-voc-options/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                customerVocRecords = data.records;
+
+                // Reset & populate info status dropdown
+                resetDropdown('customerInfoStatusDropdown', '-- Select Information Status --');
+                resetDropdown('customerConnectionStatusDropdown', '-- Select Connection Status --');
+                resetDropdown('customerSalesPersonVocDropdown', '-- Select Sales Person VOC --');
+
+                const infoStatuses = [...new Set(customerVocRecords.map(r => r.information_status))];
+
+                infoStatuses.forEach(status => {
+                    const opt = document.createElement('option');
+                    opt.value = status;
+                    opt.textContent = status;
+                    document.getElementById('customerInfoStatusDropdown').appendChild(opt);
+                });
+
+                const modal = new bootstrap.Modal(document.getElementById('customerCallModal'));
+                modal.show();
+            }
+        })
+        .catch(err => console.error('Customer VOC Load Error:', err));
+}
+
+function resetDropdown(id, placeholder) {
+    const dropdown = document.getElementById(id);
+    dropdown.innerHTML = `<option value="">${placeholder}</option>`;
+}
+
+// Step 1: Info status → connection status
+document.getElementById('customerInfoStatusDropdown').addEventListener('change', function () {
+    const selectedInfo = this.value;
+
+    // Filter all data by selected info status
+    const filtered = customerVocRecords.filter(r => r.information_status === selectedInfo);
+
+    resetDropdown('customerConnectionStatusDropdown', '-- Select Connection Status --');
+    resetDropdown('customerSalesPersonVocDropdown', '-- Select Sales Person VOC --');
+
+    const connectionStatuses = [...new Set(filtered.map(r => r.connection_status))];
+
+    connectionStatuses.forEach(status => {
+        const opt = document.createElement('option');
+        opt.value = status;
+        opt.textContent = status;
+        document.getElementById('customerConnectionStatusDropdown').appendChild(opt);
+    });
+});
+
+// ✅ Step 2: Connection status → Sales Person VOC (filtered by both Info + Connection)
+document.getElementById('customerConnectionStatusDropdown').addEventListener('change', function () {
+    const selectedInfo = document.getElementById('customerInfoStatusDropdown').value;
+    const selectedConnection = this.value;
+
+    const filtered = customerVocRecords.filter(r =>
+        r.information_status === selectedInfo &&
+        r.connection_status === selectedConnection
+    );
+
+    resetDropdown('customerSalesPersonVocDropdown', '-- Select Sales Person VOC --');
+
+    const vocs = [...new Set(filtered.map(r => r.sales_person_voc))];
+
+    vocs.forEach(voc => {
+        const opt = document.createElement('option');
+        opt.value = voc;
+        opt.textContent = voc;
+        document.getElementById('customerSalesPersonVocDropdown').appendChild(opt);
+    });
+});
+</script>
+
+
+
+
+
+
 <script>
   function copySecureUrl() {
     const input = document.getElementById('secureUrlInput');
@@ -2200,30 +2426,119 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
     <script>
-<!--      seller call-->
+let vocRecords = [];  // Holds the full dataset from API
 
-      function seller_call() {
-          const number = document.getElementById("mob_num_id").textContent.trim();
-          fetch(`/api/make-call/?number=${encodeURIComponent(number)}`, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-              }
-            })
-            .then(response => response.json())
-            .then(data => {
-              console.log("API Response:", data);
-              // Optionally show success message to user
-            })
-            .catch(error => {
-              console.error("API Error:", error);
-            });
+function seller_call() {
+  const number = document.getElementById("mob_num_id").textContent.trim();
 
+  fetch('/api/get-voc-options/')
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "success") {
+        vocRecords = data.records;
 
+        // Reset all dropdowns
+        resetDropdown('infoStatusDropdown', '-- Select Information Status --');
+        resetDropdown('connectionStatusDropdown', '-- Select Connection Status --');
+        resetDropdown('salesPersonVocDropdown', '-- Select Sales Person VOC --');
+
+        // Populate unique information statuses
+        const uniqueInfoStatuses = [...new Set(vocRecords.map(r => r.information_status))];
+        const infoDropdown = document.getElementById('infoStatusDropdown');
+
+        uniqueInfoStatuses.forEach(status => {
+          const opt = document.createElement('option');
+          opt.value = status;
+          opt.textContent = status;
+          infoDropdown.appendChild(opt);
+        });
+
+        // Show the modal
+        const modalElement = document.getElementById('callModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
       }
+    })
+    .catch(err => console.error('API Error:', err));
+}
 
-    </script>
+// Step 1: Information Status → Connection Status
+document.getElementById('infoStatusDropdown').addEventListener('change', function () {
+  const selectedInfoStatus = this.value;
+
+  const filtered = vocRecords.filter(r => r.information_status === selectedInfoStatus);
+
+  resetDropdown('connectionStatusDropdown', '-- Select Connection Status --');
+  resetDropdown('salesPersonVocDropdown', '-- Select Sales Person VOC --');
+
+  const uniqueConnections = [...new Set(filtered.map(r => r.connection_status))];
+  const connectionDropdown = document.getElementById('connectionStatusDropdown');
+
+  uniqueConnections.forEach(status => {
+    const opt = document.createElement('option');
+    opt.value = status;
+    opt.textContent = status;
+    connectionDropdown.appendChild(opt);
+  });
+});
+
+// ✅ Step 2: Connection Status → Sales Person VOC
+document.getElementById('connectionStatusDropdown').addEventListener('change', function () {
+  const selectedInfoStatus = document.getElementById('infoStatusDropdown').value;
+  const selectedConnection = this.value;
+
+  const filtered = vocRecords.filter(r =>
+    r.information_status === selectedInfoStatus &&
+    r.connection_status === selectedConnection
+  );
+
+  resetDropdown('salesPersonVocDropdown', '-- Select Sales Person VOC --');
+  const vocDropdown = document.getElementById('salesPersonVocDropdown');
+
+  const uniqueVocs = [...new Set(filtered.map(r => r.sales_person_voc))];
+
+  uniqueVocs.forEach(voc => {
+    const opt = document.createElement('option');
+    opt.value = voc;
+    opt.textContent = voc;
+    vocDropdown.appendChild(opt);
+  });
+});
+
+function resetDropdown(dropdownId, placeholder) {
+  const dropdown = document.getElementById(dropdownId);
+  dropdown.innerHTML = `<option value="">${placeholder}</option>`;
+}
+</script>
+
+
+    <script>
+  function toggleConstructionLevel() {
+    const buyerType = document.getElementById("buyer_type").value;
+    const showTypes = ["Architect", "Engineer", "Individual Buyer", "Industrial", "Others"];
+    const constructionDiv = document.getElementById("construction_level_div");
+
+    if (showTypes.includes(buyerType)) {
+      constructionDiv.style.display = "block";
+    } else {
+      constructionDiv.style.display = "none";
+    }
+  }
+
+  // Run on page load to set visibility if editing
+  document.addEventListener("DOMContentLoaded", toggleConstructionLevel);
+</script>
+
+
+    <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    flatpickr("#flatpickr-datetime", {
+      enableTime: true,
+      dateFormat: "Y-m-d H:i",
+      time_24hr: true // Optional: enables 24hr format
+    });
+  });
+</script>
 
 
 
@@ -2235,5 +2550,6 @@ document.addEventListener('DOMContentLoaded', function () {
     <!-- Page JS -->
     <script src="/assets/js/app-access-roles.js"></script>
     <script src="/assets/js/modal-add-role.js"></script>
+<script src="/assets/vendor/libs/flatpickr/flatpickr.js"></script>
   </body>
 </html>

@@ -168,6 +168,8 @@ class LeadTable(models.Model):
     sub_calling_status = models.CharField(max_length=100, blank=True, null=True)
     sub_sub_calling_status = models.CharField(max_length=100, blank=True, null=True)
 
+    callback_time = models.DateTimeField(blank=True, null=True)
+
     select_bus = models.CharField(max_length=100, blank=True, null=True)
     buyer_type = models.CharField(max_length=50, blank=True, null=True)
     lead_status = models.CharField(max_length=100, blank=True, null=True)
@@ -290,6 +292,8 @@ class HistoryLead(models.Model):
     interested_status = models.CharField(max_length=100, blank=True, null=True)
     sub_calling_status = models.CharField(max_length=100, blank=True, null=True)
     sub_sub_calling_status = models.CharField(max_length=100, blank=True, null=True)
+
+    callback_time = models.DateTimeField(blank=True, null=True)
 
     select_bus = models.CharField(max_length=100, blank=True, null=True)
     buyer_type = models.CharField(max_length=50, blank=True, null=True)
@@ -416,6 +420,7 @@ class TBLFollowUp(models.Model):
     lead_table = models.ForeignKey(LeadTable, on_delete=models.CASCADE, null=True, blank=True, related_name='follow_lead_table')
     status = models.CharField(max_length=100, blank=True, null=True)
     sub_status = models.CharField(max_length=100, blank=True, null=True)
+    sales_voc = models.CharField(max_length=100, blank=True, null=True)
     remark = models.TextField(blank=True, null=True)
     follow_up = models.CharField(max_length=100, blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
@@ -430,3 +435,16 @@ class TBLFollowUp(models.Model):
         db_table = 'tbl_follow_up'
 
 
+
+
+class SalesVOC(models.Model):
+    information_status = models.CharField(max_length=100)
+    connection_status = models.CharField(max_length=100)
+    sales_person_voc = models.TextField()
+    followup_for = models.TextField()
+
+    def __str__(self):
+        return f"{self.information_status} | {self.connection_status} | {self.sales_person_voc[:30]}..."
+
+    class Meta:
+        db_table = 'sales_voc'

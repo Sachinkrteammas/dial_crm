@@ -9,9 +9,10 @@ from django.db.models import Q
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_GET
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
-    SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact, TBLFollowUp
+    SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact, TBLFollowUp, SalesVOC
 from .views import render_menu
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -239,6 +240,7 @@ def lead_detail(request, lead_id):
     except EmptyPage:
         followup_history = paginator_followup.page(paginator_followup.num_pages)
 
+
     return render(request, 'crmapp/lead_detail.html', {
         'lead': lead,
         'menu_html': menu_html,
@@ -299,7 +301,8 @@ def save_follow_up(request, lead_id):
     if request.method == 'POST':
         lead = get_object_or_404(LeadTable, id=lead_id)
         status = request.POST.get('status')
-        sub_status = request.POST.get('sub_status')
+        sub_status = request.POST.get('connection_status')
+        sales_person_voc = request.POST.get('sales_person_voc')
         remark = request.POST.get('remark')
         follow_up_from = request.POST.get('follow_up')  # should be 'customer' or 'seller'
 
@@ -307,6 +310,7 @@ def save_follow_up(request, lead_id):
             lead_table=lead,
             status=status,
             sub_status=sub_status,
+            sales_voc=sales_person_voc,
             remark=remark,
             follow_up=follow_up_from,
             created_by=request.user,
@@ -732,3 +736,28 @@ def reallocate(request):
         'menu_html': menu_html,
     })
 
+
+
+@require_GET
+def get_voc_options_api(request):
+    filtered_qs = SalesVOC.objects.filter(followup_for="sales").values(
+        'information_status', 'connection_status', 'sales_person_voc'
+    )
+
+    # Return the list of records as-is
+    return JsonResponse({
+        'status': 'success',
+        'records': list(filtered_qs)
+    })
+
+
+@require_GET
+def get_customer_voc_options_api(request):
+    filtered_qs = SalesVOC.objects.filter(followup_for="customer").values(
+        'information_status', 'connection_status', 'sales_person_voc'
+    )
+
+    return JsonResponse({
+        'status': 'success',
+        'records': list(filtered_qs)
+    })
