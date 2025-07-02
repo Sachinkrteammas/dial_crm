@@ -709,14 +709,14 @@
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-crown icon-lg"></i>
                           <span class="fw-medium mx-2">Number:</span>
-                          <span>{{ lead.calling_number }}</span>
+                          <span id="mob_customer_id">{{ lead.calling_number }}</span>
 
                           <!-- Button to open modal -->
                           <button type="button"
-                                onclick="customer_call('{{ lead.calling_number }}')"
+                                onclick="customer_call('{{ lead.calling_number }}');"
                                 class="btn btn-sm btn-outline-primary ms-2 call-btn"
                                 data-follow-up="customer">
-                          <i class="ti-phone"></i> Call
+                          <i class="ti-phone"></i> FollowUp
                         </button>
 
                         </li>
@@ -778,8 +778,8 @@
                           <i class="icon-base ti tabler-crown icon-lg"></i><span class="fw-medium mx-2">Number:</span>
                           <span id="mob_num_id"></span>
                           <!-- Button to open modal -->
-                          <button type="button" onclick="seller_call()" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="seller" data-bs-toggle="modal" data-bs-target="#callModal">
-                            <i class="ti-phone"></i> Call
+                          <button type="button" onclick="seller_call();" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="seller" data-bs-toggle="modal" data-bs-target="#callModal">
+                            <i class="ti-phone"></i> FollowUp
                           </button>
                         </li>
                         <li class="d-flex align-items-center mb-4">
@@ -880,7 +880,12 @@
                     </div>
                     <div class="col-md-4">
                       <label>Calling Number:</label>
+                      <button type="button" onclick="log_call_customer();" class="btn btn-sm btn-outline-primary ms-2 call-btn">
+                            <i class="ti-phone"></i> Call
+                          </button>
                       <input type="text" class="form-control" name="calling_number" value="{{ lead.calling_number|default_if_none:'' }}">
+
+
                     </div>
 
                     <div class="col-md-4">
@@ -1652,7 +1657,11 @@
       {% csrf_token %}
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Follow-Up</h5>
+          <h5 class="modal-title">Follow-Up
+          <button type="button" onclick="log_call_seller();" class="btn btn-sm btn-outline-primary ms-2 call-btn">
+                            <i class="ti-phone"></i> Call
+                          </button>
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
@@ -1717,7 +1726,11 @@
       {% csrf_token %}
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Customer Follow-Up</h5>
+          <h5 class="modal-title">Customer Follow-Up
+          <button type="button" onclick="log_call_customer();" class="btn btn-sm btn-outline-primary ms-2 call-btn">
+                            <i class="ti-phone"></i> Call
+                          </button>
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -2540,6 +2553,69 @@ function resetDropdown(dropdownId, placeholder) {
   });
 </script>
 
+    <script>
+      function log_call_customer() {
+      const number = document.getElementById("mob_customer_id").textContent.trim();
+          if (!number) {
+              alert("No number provided");
+              return;
+          }
+
+          fetch(`/api/make-call/?number=${encodeURIComponent(number)}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+              }
+          })
+          .then(response => response.json())
+          .then(data => {
+              console.log("API Response:", data);
+              if (data.status === "success") {
+                  alert("Call initiated successfully!");
+              } else {
+                  alert("Error: " + data.message);
+              }
+          })
+          .catch(error => {
+              console.error("Fetch Error:", error);
+              alert("Failed to connect to call API.");
+          });
+      }
+
+
+      function log_call_seller()
+      {
+          const number = document.getElementById("mob_num_id").textContent.trim();
+          if (!number) {
+              alert("No number provided");
+              return;
+          }
+
+          fetch(`/api/make-call/?number=${encodeURIComponent(number)}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+              }
+          })
+          .then(response => response.json())
+          .then(data => {
+              console.log("API Response:", data);
+              if (data.status === "success") {
+                  alert("Call initiated successfully!");
+              } else {
+                  alert("Error: " + data.message);
+              }
+          })
+          .catch(error => {
+              console.error("Fetch Error:", error);
+              alert("Failed to connect to call API.");
+          });
+
+      }
+
+    </script>
 
 
 
