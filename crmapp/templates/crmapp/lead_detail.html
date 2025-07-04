@@ -2092,7 +2092,8 @@
     button.addEventListener('click', function () {
       const leadId = this.getAttribute('data-id');
 
-      document.getElementById('lead_id').value=leadId;
+<!--      document.getElementById('lead_id').value=leadId;-->
+
       fetch(`/api/lead/${leadId}/`)
         .then(response => response.json())
         .then(result => {
