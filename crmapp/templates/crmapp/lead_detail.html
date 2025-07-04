@@ -874,7 +874,7 @@
                 <h3 class="mb-4">Lead Form</h3>
                 <form method="POST" id="leadFormModel" action="{% url 'update_lead' %}">
                   {% csrf_token %}
-                  <input type="hidden" name="lead_id" id="lead_id" value="{{ lead.id }}">
+                  <input type="hidden" name="lead_id" id="lead_id1" value="{{ lead.id }}">
                   <!-- Hidden input field in your HTML -->
                   <input type="hidden" name="secure_link" id="secure_link" value="{{ secure_url }}">
                   <input type="hidden" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">
