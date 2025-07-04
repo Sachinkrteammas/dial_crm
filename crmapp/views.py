@@ -575,6 +575,7 @@ def lead_table(request):
     query = request.GET.get('query')
     # leads = LeadTable.objects.all().order_by('-created_at')
     leads = LeadTable.objects.filter(created_by=request.user).order_by('-created_at')
+    leads_search = LeadTable.objects.all().order_by('-created_at')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
@@ -585,7 +586,7 @@ def lead_table(request):
         leads = leads.filter(lead_date__lte=parse_date(end_date))
 
     if query:
-        leads = leads.filter(
+        leads = leads_search.filter(
             Q(customer_name__icontains=query) |
             Q(calling_number__icontains=query) |
             Q(enquiry_type__icontains=query) |
@@ -709,6 +710,8 @@ def get_lead_data(request, lead_id):
             "seller_email": lead.seller_email_id,
             "seller_phone": lead.seller_phone_no,
             "secure_url": secure_url,
+            "Date_display": lead.callback_time.strftime("%d %B %Y, %I:%M %p") if lead.callback_time else "",
+
         }
         return JsonResponse({"status": "success", "data": data})
     except LeadTable.DoesNotExist:

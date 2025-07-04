@@ -421,6 +421,9 @@ class TBLFollowUp(models.Model):
     status = models.CharField(max_length=100, blank=True, null=True)
     sub_status = models.CharField(max_length=100, blank=True, null=True)
     sales_voc = models.CharField(max_length=100, blank=True, null=True)
+    followup_time = models.DateTimeField(blank=True, null=True)
+    followup_status = models.CharField(max_length=100, blank=True, default='1')
+
     remark = models.TextField(blank=True, null=True)
     follow_up = models.CharField(max_length=100, blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,

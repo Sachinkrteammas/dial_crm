@@ -161,7 +161,7 @@ def update_sales_info(request):
 
     return redirect('dashboard')
 
-
+from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 @login_required
 def lead_detail(request, lead_id):
@@ -173,10 +173,10 @@ def lead_detail(request, lead_id):
         menu_tree.setdefault(parent_id, []).append(item)
     menu_html = render_menu(None, menu_tree)
 
-    enquiry_sources = [
-        "ChatBot", "Exhibition", "GetDistributor", "Inbound", "IndiaMart", "Mail", "Meta",
-        "Plantix", "TradeIndia", "WebScraping", "WebSite", "Other"
-    ]
+    # enquiry_sources = [
+    #     "ChatBot", "Exhibition", "GetDistributor", "Inbound", "IndiaMart", "Mail", "Meta",
+    #     "Plantix", "TradeIndia", "WebScraping", "WebSite", "Other"
+    # ]
 
     lead = get_object_or_404(LeadTable, id=lead_id)
     payload = {'uid': lead.id, 'email': lead.seller_email_id}
@@ -240,11 +240,30 @@ def lead_detail(request, lead_id):
     except EmptyPage:
         followup_history = paginator_followup.page(paginator_followup.num_pages)
 
+    now = timezone.now()
+
+    enquiry_source_mapping = {
+        "ChatBot": ["WhatsApp"],
+        "Exhibition": ["Exhibition", "MPSO Exhibition", "Poultry Expo", "Rachana Visitors", "Sthapatya Exhibition"],
+        "GetDistributor": ["BuyLeads", "Direct Leads"],
+        "Inbound": ["Banner", "BTL", "Coupon", "Facebook", "birlanu.com", "IndiaMart SMS", "Info Mail", "Instagram",
+                    "SMS", "Word of Mouth", "YouTube"],
+        "IndiaMart": ["BuyLeads", "Direct Leads", "IndiaMart Mail"],
+        "Mail": ["info@hil.in"],
+        "Plantix": ["Direct Leads"],
+        "Social": ["Facebook", "Instagram"],
+        "TradeIndia": ["Direct Leads"],
+        "WebScraping": ["Walling Project"],
+        "Website": ["Contact", "Pop-up"],
+        "Other": []
+    }
 
     return render(request, 'crmapp/lead_detail.html', {
         'lead': lead,
         'menu_html': menu_html,
-        'enquiry_sources': enquiry_sources,
+        "enquiry_sources": list(enquiry_source_mapping.keys()),
+        "enquiry_source_mapping": enquiry_source_mapping,
+
         'secure_url': secure_url,
         'lead_history': lead_history,
         'sales_info': sales_info,
@@ -254,6 +273,7 @@ def lead_detail(request, lead_id):
         'call_dispositions': call_dispositions,
         'sales_contacts': sales_contacts,
         'followup_history': followup_history,
+        'current_time': now,
     })
 
 
@@ -304,6 +324,8 @@ def save_follow_up(request, lead_id):
         sub_status = request.POST.get('connection_status')
         sales_person_voc = request.POST.get('sales_person_voc')
         remark = request.POST.get('remark')
+        followup_time = request.POST.get('FollowUp_time')
+        followup_status= "0" if followup_time else "1"
         follow_up_from = request.POST.get('follow_up')  # should be 'customer' or 'seller'
 
         TBLFollowUp.objects.create(
@@ -312,6 +334,8 @@ def save_follow_up(request, lead_id):
             sub_status=sub_status,
             sales_voc=sales_person_voc,
             remark=remark,
+            followup_time=followup_time if followup_time else None,
+            followup_status=followup_status,
             follow_up=follow_up_from,
             created_by=request.user,
             updated_by=request.user,

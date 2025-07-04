@@ -1,5 +1,5 @@
 <!doctype html>
-
+{% load tz %}
 <html
   lang="en"
   class="layout-navbar-fixed layout-menu-fixed layout-compact"
@@ -39,6 +39,18 @@
 
     <link rel="stylesheet" href="/assets/vendor/css/core.css" />
     <link rel="stylesheet" href="/assets/css/demo.css" />
+
+    <style>
+      /* Ensure datepicker appears above modal */
+      .flatpickr-calendar {
+        z-index: 2000 !important;
+      }
+
+      .highlight-followup {
+          background-color: #fff3cd;  /* light yellow */
+        }
+
+    </style>
 
     <!-- Vendors CSS -->
 
@@ -768,7 +780,7 @@
                       <ul class="list-unstyled my-3 py-1">
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-user icon-lg"></i
-                          ><span class="fw-medium mx-2">Seller Name:</span> <span id="seller_name"> </span>
+                          ><span class="fw-medium mx-2">Sales Person:</span> <span id="seller_name"> </span>
                         </li>
 <!--                        <li class="d-flex align-items-center mb-4">-->
 <!--                          <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">Customer Type:</span>-->
@@ -905,8 +917,9 @@
 
                     <div class="col-md-4">
                       <label>Sub Enquiry Source:</label>
-                   <input type="text" class="form-control" name="sub_enquiry_source" value="{{ lead.sub_enquiry_source|default_if_none:'' }}">
-
+                      <select class="form-select" name="sub_enquiry_source" id="sub_enquiry_source_select">
+                        <option value="">-- Select Sub Enquiry Source --</option>
+                      </select>
                     </div>
 
                     <div class="col-md-4">
@@ -951,7 +964,8 @@
 {{ call_dispositions|json_script:"call-disposition-data" }}
 
 <div id="connectedFields" class="row g-3" style="display: none;">
-                    <div class="col-md-4">
+
+                    <div class="col-md-4" id="interest_status_block" style="display: none;">
                       <label>Interested/Not Interested:</label>
                       <select class="form-select" name="interest_status">
                         <option value="Interested" {% if lead.interested_status == 'Interested' %}selected{% endif %}>Interested</option>
@@ -985,9 +999,17 @@
 
 
                     <div class="col-md-4">
-                      <label>Select BUs:</label>
-                      <input type="text" class="form-control" name="category" value="{{ lead.select_bus|default_if_none:'' }}">
-                    </div>
+                        <label>Select BUs:</label>
+                        <select class="form-select" name="category">
+                          <option value="">-- Select BU --</option>
+                          <option value="Flooring" {% if lead.select_bus == "Flooring" %}selected{% endif %}>Flooring</option>
+                          <option value="Pipes and Fittings" {% if lead.select_bus == "Pipes and Fittings" %}selected{% endif %}>Pipes and Fittings</option>
+                          <option value="Putty and CC" {% if lead.select_bus == "Putty and CC" %}selected{% endif %}>Putty and CC</option>
+                          <option value="Roofing" {% if lead.select_bus == "Roofing" %}selected{% endif %}>Roofing</option>
+                          <option value="Walling" {% if lead.select_bus == "Walling" %}selected{% endif %}>Walling</option>
+                        </select>
+                      </div>
+
 
                     <div class="col-md-4">
                         <label>Brand Name:</label>
@@ -1016,13 +1038,13 @@
 
 
 
-                    <div class="col-md-4">
+                    <div class="col-md-4" id="lead_status_block" style="display: none;">
                       <label>Lead Status:</label>
                       <select class="form-select" name="lead_status" id="lead_status_select">
                         <option value="">--Select Lead Status--</option>
-                        <option value="Hot" {% if lead.lead_status == 'Hot' %}selected{% endif %}>Hot</option>
-                        <option value="Warm" {% if lead.lead_status == 'Warm' %}selected{% endif %}>Warm</option>
-                        <option value="Cold" {% if lead.lead_status == 'Cold' %}selected{% endif %}>Cold</option>
+                        <option value="Hot" {% if lead.lead_status == 'Hot' %}selected{% endif %}>Hot (7-15 days)</option>
+                        <option value="Warm" {% if lead.lead_status == 'Warm' %}selected{% endif %}>Warm (15-30 days)</option>
+                        <option value="Cold" {% if lead.lead_status == 'Cold' %}selected{% endif %}>Cold (More than 30 days)</option>
                       </select>
                     </div>
 
@@ -1080,13 +1102,53 @@
 
                     <div class="col-md-4">
                       <label>Customer Type:</label>
-                      <input type="text" class="form-control" name="customer_type_select" value="{{ lead.customer_type_select|default_if_none:'' }}">
+                      <select class="form-select" name="customer_type_select">
+                        <option value="">Select Customer Type</option>
+                        <option value="New" {% if lead.customer_type_select == "New" %}selected{% endif %}>New</option>
+                        <option value="Existing" {% if lead.customer_type_select == "Existing" %}selected{% endif %}>Existing</option>
+                      </select>
                     </div>
+
 
                     <div class="col-md-4">
                       <label>Registration Status:</label>
-                      <input type="text" class="form-control" name="registration_status" value="{{ lead.registration_status|default_if_none:'' }}">
+                      <select class="form-select" name="registration_status">
+                        <option value="">-- Select Registration Status --</option>
+                        <option value="Wants to be associated with BiralNu"
+                          {% if lead.registration_status == "Wants to be associated with BiralNu" %}selected{% endif %}>
+                          Wants to be associated with BiralNu
+                        </option>
+                        <option value="Doesn't want to be associated with BiralNu"
+                          {% if lead.registration_status == "Doesn't want to be associated with BiralNu" %}selected{% endif %}>
+                          Doesn't want to be associated with BiralNu
+                        </option>
+                        <option value="Associated with BiralNu – Same Number"
+                          {% if lead.registration_status == "Associated with BiralNu – Same Number" %}selected{% endif %}>
+                          Associated with BiralNu – Same Number
+                        </option>
+                        <option value="Associated with BiralNu – Other Number"
+                          {% if lead.registration_status == "Associated with BiralNu – Other Number" %}selected{% endif %}>
+                          Associated with BiralNu – Other Number
+                        </option>
+                        <option value="Loyalty Program – Wants to be enrolled"
+                          {% if lead.registration_status == "Loyalty Program – Wants to be enrolled" %}selected{% endif %}>
+                          Loyalty Program – Wants to be enrolled
+                        </option>
+                        <option value="Loyalty Program – Doesn't want to be enrolled"
+                          {% if lead.registration_status == "Loyalty Program – Doesn't want to be enrolled" %}selected{% endif %}>
+                          Loyalty Program – Doesn't want to be enrolled
+                        </option>
+                        <option value="Loyalty Program – Enrolled with same number"
+                          {% if lead.registration_status == "Loyalty Program – Enrolled with same number" %}selected{% endif %}>
+                          Loyalty Program – Enrolled with same number
+                        </option>
+                        <option value="Loyalty Program – Enrolled with other number"
+                          {% if lead.registration_status == "Loyalty Program – Enrolled with other number" %}selected{% endif %}>
+                          Loyalty Program – Enrolled with other number
+                        </option>
+                      </select>
                     </div>
+
 
                     <div class="col-md-4">
                       <label>Remark:</label>
@@ -1106,7 +1168,7 @@
                     </div>
 
                     <div class="col-md-4">
-  <label>Seller Email ID:</label>
+  <label>Sales Team Email ID:</label>
   <select class="form-select" name="seller_email" id="seller_email_select">
     <option value="">--Select Seller--</option>
     {% for contact in sales_contacts %}
@@ -1119,7 +1181,7 @@
 </div>
 
 <div class="col-md-4">
-  <label>Seller Phone No:</label>
+  <label>Sales Team Phone No:</label>
 <input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no|default_if_none:'' }}" readonly>
 </div>
 
@@ -1169,21 +1231,28 @@
         </tr>
       </thead>
       <tbody>
-        {% for followup in followup_history %}
-          <tr>
-            <td>{{ followup.status }}</td>
-            <td>{{ followup.sub_status }}</td>
-            <td>{{ followup.remark }}</td>
-            <td>{{ followup.follow_up }}</td>
-            <td>{{ followup.created_at|date:"Y-m-d H:i" }}</td>
-            <td>{{ followup.created_by.username }}</td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6" class="text-center">No follow up history found.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
+  {% for followup in followup_history %}
+    {% if followup.followup_status == "0" and followup.followup_time and followup.followup_time < current_time %}
+      <tr class="table-warning">
+    {% else %}
+      <tr>
+    {% endif %}
+        <td>{{ followup.status }}</td>
+        <td>{{ followup.sub_status }}</td>
+        <td>{{ followup.remark }}</td>
+        <td>{{ followup.follow_up }}</td>
+        <td>{{ followup.created_at|date:"Y-m-d H:i" }}</td>
+        <td>{{ followup.created_by.username }}</td>
+      </tr>
+  {% empty %}
+    <tr>
+      <td colspan="6" class="text-center">No follow up history found.</td>
+    </tr>
+  {% endfor %}
+</tbody>
+
+
+
     </table>
 
     <!-- Pagination for Follow Up History -->
@@ -1226,6 +1295,7 @@
                             <th>Email</th>
                             <th>Date</th>
                             <th>Remarks</th>
+                            <th>Created By</th>
                             <th>Action</th>
                           </tr>
                         </thead>
@@ -1238,6 +1308,7 @@
                               <td>{{ history.email_id }}</td>
                               <td>{{ history.lead_date }}</td>
                               <td>{{ history.remark }}</td>
+                              <td>{{ history.created_by.username }}</td>
                              <td>
                               <a href="javascript:void(0);" class="open-lead-modal btn btn-sm btn-primary" data-id="{{ history.id }}">
                                 View
@@ -1337,73 +1408,238 @@
 <!--           MODEL START-->
            <div class="modal fade" id="leadFormModal" tabindex="-1" aria-labelledby="leadFormModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl">
-    <div class="modal-content rounded-4" style="margin-left:45px">
+    <div class="modal-content rounded-4" style="margin-left: 315px;width: 582px;">
       <div class="modal-header">
-        <h5 class="modal-title" id="leadFormModalLabel">Lead Form</h5>
+        <h5 class="modal-title" id="leadFormModalLabel"></h5>
+
+
 
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form method="POST" id="leadFormModel">
-          <input  type="hidden" name="lead_id" id="lead_id" value="">
+<!--        <form method="POST" id="leadFormModel">-->
+<!--          <input  type="hidden" name="lead_id" id="lead_id" value="">-->
           <div class="row g-3">
 
             <!-- Row 1 -->
-            <div class="col-md-4">
-              <label>Customer Name:</label>
-              <input type="text" class="form-control" placeholder="Customer Name" name="customer_name">
-            </div>
-            <div class="col-md-4">
-              <label>Customer Type:</label>
-              <input type="text" class="form-control" placeholder="Customer Type" name="customer_type">
-            </div>
-            <div class="col-md-4">
-              <label>Calling Number:</label>
-              <input type="text" class="form-control" placeholder="Calling Number" name="calling_number">
+
+
+
+
+            <div class="col-md-12">
+              <p style="font-size:18px;">Dear Sir,</p>
+              <p>Please find below the details of a validated lead from your region:</p>
+              <p style="font-size:18px;">Lead Details:</p>
+
+              <label>Customer Name: <span id="customer_name_display"></span></label>
             </div>
 
+            <div class="col-md-4">
+              <label>Customer Type:<span id="customer_type_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Mobile: <span id="calling_number_display"></span></label>
+<!--              <input type="text" class="form-control" placeholder="Calling Number" name="calling_number">-->
+            </div>
+
+            <div class="col-md-12">
+              <label>Address:  <span id="address_display"></span></label>
+<!--              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>-->
+            </div>
+
+            <div class="col-md-12">
+              <label>City:  <span id="city_display"></span></label>
+<!--              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>-->
+            </div>
+
+            <div class="col-md-12">
+              <label>State:  <span id="State_display"></span></label>
+<!--              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>-->
+            </div>
+
+            <div class="col-md-12">
+              <label>Brand:  <span id="Brand_display"></span></label>
+<!--              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>-->
+            </div>
+
+            <div class="col-md-12">
+              <label>Query Type:  <span id="Query_display"></span></label>
+<!--              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>-->
+            </div>
+
+            <div class="col-md-12">
+              <label>Date and Time:  <span id="Date_display"></span></label>
+<!--              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>-->
+            </div>
+
+            <div class="col-md-12">
+              <label>Remarks:  <span id="Remarks_display"></span></label>
+<!--              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>-->
+            </div>
+
+
+            <div class="col-md-12">
+              <label>Email ID: <span id="email_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Alternative Number: <span id="alt_number_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Landmark: <span id="landmark_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Zone: <span id="zone_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Pin Code: <span id="pin_code_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Product: <span id="product_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Sub Product: <span id="sub_product_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Lead Status: <span id="lead_status_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Construction Level: <span id="construction_level_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Seller Email ID: <span id="seller_email_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Seller Phone No: <span id="seller_phone_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Registration Status: <span id="registration_status_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Order Qty: <span id="order_qty_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Order Description: <span id="order_description_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Order Value: <span id="order_value_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Category (BU): <span id="category_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Interested Status: <span id="interest_status_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Calling Status: <span id="calling_status_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Buyer Type: <span id="buyer_type_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Sub Calling Status: <span id="sub_calling_status_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Enquiry Type: <span id="enquiry_type_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Enquiry Source: <span id="enquiry_source_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Sub Enquiry Source: <span id="sub_enquiry_source_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Customer Type Select: <span id="customer_type_select_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+              <label>Name: <span id="name_display"></span></label>
+            </div>
+
+            <div class="col-md-12">
+            <label>Link:</label>
+            <div class="d-flex align-items-center flex-wrap" style="max-width: 100%;">
+                            <input type="text"
+
+                                   class="form-control form-control-sm me-2"
+                                   style="max-width: 350px;"
+                                   readonly
+                                   value="{{ lead.secure_url|default_if_none:'' }}" />
+
+                           
+                          </div>
+          </div>
+
+
+
+
+
+
             <!-- Row 2 -->
-            <div class="col-md-4">
-              <label>Enquiry Type:</label>
-              <select class="form-select" name="enquiry_type">
-                <option value="">-- Select Enquiry Type --</option>
-                <option value="Purchase">Purchase</option>
-                <option value="Tech Query">Tech Query</option>
-                <option value="General Query">General Query</option>
-                <option value="Dealership">Dealership</option>
-                <option value="Complaint">Complaint</option>
-                <option value="Project">Project</option>
-                <option value="Distributor">Distributor</option>
-                <option value="Job">Job</option>
-                <option value="MicroLead">MicroLead</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label>Enquiry Source:</label>
-              <select class="form-select" name="enquiry_source">
-                <option value="">-- Select Enquiry Source --</option>
-                <option value="ChatBot">ChatBot</option>
-                <option value="Exhibition">Exhibition</option>
-                <option value="GetDistributor">GetDistributor</option>
-                <option value="Inbound">Inbound</option>
-                <option value="IndiaMart">IndiaMart</option>
-                <option value="Mail">Mail</option>
-                <option value="Meta">Meta</option>
-                <option value="Plantix">Plantix</option>
-                <option value="TradeIndia">TradeIndia</option>
-                <option value="WebScraping">WebScraping</option>
-                <option value="WebSite">WebSite</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label>Sub Enquiry Source:</label>
-              <select class="form-select" name="sub_enquiry_source">
-                <option value="">-- Select Sub Enquiry Source --</option>
-                <option value="Form Lead">Form Lead</option>
-                <option value="Call Lead">Call Lead</option>
-              </select>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Enquiry Type:</label>-->
+<!--              <select class="form-select" name="enquiry_type">-->
+<!--                <option value="">&#45;&#45; Select Enquiry Type &#45;&#45;</option>-->
+<!--                <option value="Purchase">Purchase</option>-->
+<!--                <option value="Tech Query">Tech Query</option>-->
+<!--                <option value="General Query">General Query</option>-->
+<!--                <option value="Dealership">Dealership</option>-->
+<!--                <option value="Complaint">Complaint</option>-->
+<!--                <option value="Project">Project</option>-->
+<!--                <option value="Distributor">Distributor</option>-->
+<!--                <option value="Job">Job</option>-->
+<!--                <option value="MicroLead">MicroLead</option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Enquiry Source:</label>-->
+<!--              <select class="form-select" name="enquiry_source">-->
+<!--                <option value="">&#45;&#45; Select Enquiry Source &#45;&#45;</option>-->
+<!--                <option value="ChatBot">ChatBot</option>-->
+<!--                <option value="Exhibition">Exhibition</option>-->
+<!--                <option value="GetDistributor">GetDistributor</option>-->
+<!--                <option value="Inbound">Inbound</option>-->
+<!--                <option value="IndiaMart">IndiaMart</option>-->
+<!--                <option value="Mail">Mail</option>-->
+<!--                <option value="Meta">Meta</option>-->
+<!--                <option value="Plantix">Plantix</option>-->
+<!--                <option value="TradeIndia">TradeIndia</option>-->
+<!--                <option value="WebScraping">WebScraping</option>-->
+<!--                <option value="WebSite">WebSite</option>-->
+<!--                <option value="Other">Other</option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Sub Enquiry Source:</label>-->
+<!--              <select class="form-select" name="sub_enquiry_source">-->
+<!--                <option value="">&#45;&#45; Select Sub Enquiry Source &#45;&#45;</option>-->
+<!--                <option value="Form Lead">Form Lead</option>-->
+<!--                <option value="Call Lead">Call Lead</option>-->
+<!--              </select>-->
+<!--            </div>-->
 
             <!-- Row 3 -->
 <!--            <div class="col-md-4">-->
@@ -1423,226 +1659,226 @@
 <!--            </div>-->
 
             <!-- Row 4 -->
-            <div class="col-md-4">
-              <label>Calling Status:</label>
-              <select class="form-select" name="calling_status">
-                <option value="">-- Select Calling Status --</option>
-                <option value="Connect">Connect</option>
-                <option value="Not Connect">Not Connect</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label>Interested/Not Interested:</label>
-              <select class="form-select" name="interest_status">
-                <option value="">-- Select Interested/Not Interested --</option>
-                <option value="Interested">Interested</option>
-                <option value="Not Interested">Not Interested</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label>Sub Calling Status:</label>
-              <select class="form-select" name="sub_calling_status">
-                <option value="">-- Select Sub Calling Status --</option>
-                <option value="Invalid">Invalid</option>
-                <option value="Call Back">Call Back</option>
-                <option value="Services">Services</option>
-                <option value="Valid">Valid</option>
-                <option value="Complaint">Complaint</option>
-              </select>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Calling Status:</label>-->
+<!--              <select class="form-select" name="calling_status">-->
+<!--                <option value="">&#45;&#45; Select Calling Status &#45;&#45;</option>-->
+<!--                <option value="Connect">Connect</option>-->
+<!--                <option value="Not Connect">Not Connect</option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Interested/Not Interested:</label>-->
+<!--              <select class="form-select" name="interest_status">-->
+<!--                <option value="">&#45;&#45; Select Interested/Not Interested &#45;&#45;</option>-->
+<!--                <option value="Interested">Interested</option>-->
+<!--                <option value="Not Interested">Not Interested</option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Sub Calling Status:</label>-->
+<!--              <select class="form-select" name="sub_calling_status">-->
+<!--                <option value="">&#45;&#45; Select Sub Calling Status &#45;&#45;</option>-->
+<!--                <option value="Invalid">Invalid</option>-->
+<!--                <option value="Call Back">Call Back</option>-->
+<!--                <option value="Services">Services</option>-->
+<!--                <option value="Valid">Valid</option>-->
+<!--                <option value="Complaint">Complaint</option>-->
+<!--              </select>-->
+<!--            </div>-->
 
             <!-- Row 5 -->
-            <div class="col-md-4">
-              <label>Select BUs:</label>
-              <select class="form-select" name="category">
-                <option value="">-- Select Category --</option>
-                <option value="Walls">Walls</option>
-                <option value="Construction Chemicals">Construction Chemicals</option>
-                <option value="Roofs">Roofs</option>
-                <option value="Pipes">Pipes</option>
-                <option value="Putty">Putty</option>
-                <option value="Floors">Floors</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label>Buyer Type:</label>
-              <select class="form-select" name="buyer_type">
-                <option value="">-- Select Buyer Type --</option>
-                <option value="Architect">Architect</option>
-                <option value="Carpenter">Carpenter</option>
-                <option value="Contractor">Contractor</option>
-                <option value="Distributor">Distributor</option>
-                <option value="Engineer">Engineer</option>
-                <option value="Fabricator">Fabricator</option>
-                <option value="Individual Buyer">Individual Buyer</option>
-                <option value="Industrial">Industrial</option>
-                <option value="Mason">Mason</option>
-                <option value="Others">Others</option>
-                <option value="Painter">Painter</option>
-                <option value="Plumber">Plumber</option>
-                <option value="Retailer">Retailer</option>
-                <option value="Wholesaler/stockist">Wholesaler/stockist</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label>Sub Sub Calling Status:</label>
-              <select class="form-select" name="sub_sub_calling_status">
-                <option value="">-- Select Sub Sub Calling Status --</option>
-              </select>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Select BUs:</label>-->
+<!--              <select class="form-select" name="category">-->
+<!--                <option value="">&#45;&#45; Select Category &#45;&#45;</option>-->
+<!--                <option value="Walls">Walls</option>-->
+<!--                <option value="Construction Chemicals">Construction Chemicals</option>-->
+<!--                <option value="Roofs">Roofs</option>-->
+<!--                <option value="Pipes">Pipes</option>-->
+<!--                <option value="Putty">Putty</option>-->
+<!--                <option value="Floors">Floors</option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Buyer Type:</label>-->
+<!--              <select class="form-select" name="buyer_type">-->
+<!--                <option value="">&#45;&#45; Select Buyer Type &#45;&#45;</option>-->
+<!--                <option value="Architect">Architect</option>-->
+<!--                <option value="Carpenter">Carpenter</option>-->
+<!--                <option value="Contractor">Contractor</option>-->
+<!--                <option value="Distributor">Distributor</option>-->
+<!--                <option value="Engineer">Engineer</option>-->
+<!--                <option value="Fabricator">Fabricator</option>-->
+<!--                <option value="Individual Buyer">Individual Buyer</option>-->
+<!--                <option value="Industrial">Industrial</option>-->
+<!--                <option value="Mason">Mason</option>-->
+<!--                <option value="Others">Others</option>-->
+<!--                <option value="Painter">Painter</option>-->
+<!--                <option value="Plumber">Plumber</option>-->
+<!--                <option value="Retailer">Retailer</option>-->
+<!--                <option value="Wholesaler/stockist">Wholesaler/stockist</option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Sub Sub Calling Status:</label>-->
+<!--              <select class="form-select" name="sub_sub_calling_status">-->
+<!--                <option value="">&#45;&#45; Select Sub Sub Calling Status &#45;&#45;</option>-->
+<!--              </select>-->
+<!--            </div>-->
 
             <!-- Row 6 -->
-            <div class="col-md-4">
-              <label>Lead Status:</label>
-              <input type="text" class="form-control" placeholder="Lead Status" name="lead_status">
-            </div>
-            <div class="col-md-4">
-              <label>Construction Level:</label>
-              <input type="text" class="form-control" placeholder="Construction Level" name="construction_level">
-            </div>
-            <div class="col-md-4">
-              <label>Name:</label>
-              <input type="text" class="form-control" placeholder="Name" name="name">
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Lead Status:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Lead Status" name="lead_status">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Construction Level:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Construction Level" name="construction_level">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Name:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Name" name="name">-->
+<!--            </div>-->
 
             <!-- Row 7 -->
-            <div class="col-md-4">
-              <label>Alternative Number:</label>
-              <input type="text" class="form-control" placeholder="Alternative Number" name="alternative_number">
-            </div>
-            <div class="col-md-4">
-              <label>Email ID:</label>
-              <input type="email" class="form-control" placeholder="Email ID" name="email_id">
-            </div>
-            <div class="col-md-4">
-              <label>Brand Name:</label>
-              <select class="form-select" name="brand_name">
-                <option value="">-- Select Brand Name --</option>
-                <option value="BirlaNu Charminar">BirlaNu Charminar</option>
-                <option value="BirlaNu Aerocon">BirlaNu Aerocon</option>
-                <option value="BirlaNu Leakproof Pipes">BirlaNu Leakproof Pipes</option>
-                <option value="BirlaNu Construction Chemical">BirlaNu Construction Chemical</option>
-                <option value="BirlaNu Putty">BirlaNu Putty</option>
-              </select>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Alternative Number:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Alternative Number" name="alternative_number">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Email ID:</label>-->
+<!--              <input type="email" class="form-control" placeholder="Email ID" name="email_id">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Brand Name:</label>-->
+<!--              <select class="form-select" name="brand_name">-->
+<!--                <option value="">&#45;&#45; Select Brand Name &#45;&#45;</option>-->
+<!--                <option value="BirlaNu Charminar">BirlaNu Charminar</option>-->
+<!--                <option value="BirlaNu Aerocon">BirlaNu Aerocon</option>-->
+<!--                <option value="BirlaNu Leakproof Pipes">BirlaNu Leakproof Pipes</option>-->
+<!--                <option value="BirlaNu Construction Chemical">BirlaNu Construction Chemical</option>-->
+<!--                <option value="BirlaNu Putty">BirlaNu Putty</option>-->
+<!--              </select>-->
+<!--            </div>-->
 
             <!-- Row 8 -->
-            <div class="col-md-4">
-              <label>Product:</label>
-              <select class="form-select" name="product">
-                <option value="">-- Select Product --</option>
-                <option value="Fibre Cement Roofs">Fibre Cement Roofs</option>
-                <option value="Fortune Fiber Cement Roofs">Fortune Fiber Cement Roofs</option>
-                <option value="Ultracool Fiber Cement Roofs">Ultracool Fiber Cement Roofs</option>
-                <option value="Coloured Steel Roofs">Coloured Steel Roofs</option>
-                <option value="Cement & Steel Roof Accessories">Cement & Steel Roof Accessories</option>
-                <option value="Others (Need Remark)">Others (Need Remark)</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label>Sub Product:</label>
-              <select class="form-select" name="sub_product">
-                <option value="">-- Select Sub Product --</option>
-              </select>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Product:</label>-->
+<!--              <select class="form-select" name="product">-->
+<!--                <option value="">&#45;&#45; Select Product &#45;&#45;</option>-->
+<!--                <option value="Fibre Cement Roofs">Fibre Cement Roofs</option>-->
+<!--                <option value="Fortune Fiber Cement Roofs">Fortune Fiber Cement Roofs</option>-->
+<!--                <option value="Ultracool Fiber Cement Roofs">Ultracool Fiber Cement Roofs</option>-->
+<!--                <option value="Coloured Steel Roofs">Coloured Steel Roofs</option>-->
+<!--                <option value="Cement & Steel Roof Accessories">Cement & Steel Roof Accessories</option>-->
+<!--                <option value="Others (Need Remark)">Others (Need Remark)</option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Sub Product:</label>-->
+<!--              <select class="form-select" name="sub_product">-->
+<!--                <option value="">&#45;&#45; Select Sub Product &#45;&#45;</option>-->
+<!--              </select>-->
+<!--            </div>-->
 
 
             <!-- Row 9 -->
-            <div class="col-md-4">
-              <label>District:</label>
-              <input type="text" class="form-control" placeholder="District" name="district">
-            </div>
-            <div class="col-md-4">
-              <label>Pin Code:</label>
-              <input type="text" class="form-control" placeholder="Pin Code" name="pin_code">
-            </div>
-            <div class="col-md-4">
-              <label>Zone:</label>
-              <select name="zone" id="zoneDropdown" class="form-select" required>
-                <option value="">-- Select Zone --</option>
-                {% for zone in zones %}
-                <option value="{{ zone }}">{{ zone }}</option>
-                {% endfor %}
-              </select>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>District:</label>-->
+<!--              <input type="text" class="form-control" placeholder="District" name="district">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Pin Code:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Pin Code" name="pin_code">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Zone:</label>-->
+<!--              <select name="zone" id="zoneDropdown" class="form-select" required>-->
+<!--                <option value="">&#45;&#45; Select Zone &#45;&#45;</option>-->
+<!--                {% for zone in zones %}-->
+<!--                <option value="{{ zone }}">{{ zone }}</option>-->
+<!--                {% endfor %}-->
+<!--              </select>-->
+<!--            </div>-->
 
-            <div class="col-md-4">
-              <label>State:</label>
-              <select name="state" id="stateDropdown" class="form-select" required>
-                <option value="">-- Select State --</option>
-              </select>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>State:</label>-->
+<!--              <select name="state" id="stateDropdown" class="form-select" required>-->
+<!--                <option value="">&#45;&#45; Select State &#45;&#45;</option>-->
+<!--              </select>-->
+<!--            </div>-->
 
             <!-- Row 10 -->
 <!--            <div class="col-md-4">-->
 <!--              <label>Agent Name:</label>-->
 <!--              <input type="text" class="form-control" placeholder="Agent Name" name="agent_name">-->
 <!--            </div>-->
-            <div class="col-md-4">
-              <label>Order Qty:</label>
-              <input type="text" class="form-control" placeholder="Order Qty" name="order_qty">
-            </div>
-            <div class="col-md-4">
-              <label>Order Description:</label>
-              <input type="text" class="form-control" placeholder="Order Description" name="order_description">
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Order Qty:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Order Qty" name="order_qty">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Order Description:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Order Description" name="order_description">-->
+<!--            </div>-->
 
-            <!-- Row 11 -->
-            <div class="col-md-4">
-              <label>Order Value:</label>
-              <input type="text" class="form-control" placeholder="Order Value" name="order_value">
-            </div>
-            <div class="col-md-4">
-              <label>Customer Type:</label>
-              <select class="form-select" name="customer_type_select">
-                <option value="">-- Select Customer Type --</option>
-                <option value="New">New</option>
-                <option value="Existing">Existing</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label>Registration Status:</label>
-              <select class="form-select" name="registration_status">
-                <option value="">-- Select Registration Status --</option>
-              </select>
-            </div>
+<!--            &lt;!&ndash; Row 11 &ndash;&gt;-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Order Value:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Order Value" name="order_value">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Customer Type:</label>-->
+<!--              <select class="form-select" name="customer_type_select">-->
+<!--                <option value="">&#45;&#45; Select Customer Type &#45;&#45;</option>-->
+<!--                <option value="New">New</option>-->
+<!--                <option value="Existing">Existing</option>-->
+<!--              </select>-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Registration Status:</label>-->
+<!--              <select class="form-select" name="registration_status">-->
+<!--                <option value="">&#45;&#45; Select Registration Status &#45;&#45;</option>-->
+<!--              </select>-->
+<!--            </div>-->
 
             <!-- Row 12 -->
-            <div class="col-md-4">
-              <label>Remark:</label>
-              <input type="text" class="form-control" placeholder="Remark" name="remark">
-            </div>
-            <div class="col-md-4">
-              <label>Seller Email ID:</label>
-              <select class="form-select" id="seller_email" name="seller_email">
-                <option value="">-- Select Email --</option>
-              </select>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Remark:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Remark" name="remark">-->
+<!--            </div>-->
+<!--            <div class="col-md-4">-->
+<!--              <label>Seller Email ID:</label>-->
+<!--              <select class="form-select" id="seller_email" name="seller_email">-->
+<!--                <option value="">&#45;&#45; Select Email &#45;&#45;</option>-->
+<!--              </select>-->
+<!--            </div>-->
 
-            <div class="col-md-4">
-              <label>Seller Phone No:</label>
-              <input type="text" class="form-control" id="seller_phone" name="seller_phone" readonly>
-            </div>
+<!--            <div class="col-md-4">-->
+<!--              <label>Seller Phone No:</label>-->
+<!--              <input type="text" class="form-control" id="seller_phone" name="seller_phone" readonly>-->
+<!--            </div>-->
 
 
-            <!-- Row 13 -->
-            <div class="col-md-6">
-              <label>Address:</label>
-              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>
-            </div>
-            <div class="col-md-6">
-              <label>Landmark:</label>
-              <input type="text" class="form-control" placeholder="Landmark" name="landmark">
-            </div>
+<!--            &lt;!&ndash; Row 13 &ndash;&gt;-->
+<!--            <div class="col-md-6">-->
+<!--              <label>Address:</label>-->
+<!--              <textarea class="form-control" placeholder="Enter address here..." name="address"></textarea>-->
+<!--            </div>-->
+<!--            <div class="col-md-6">-->
+<!--              <label>Landmark:</label>-->
+<!--              <input type="text" class="form-control" placeholder="Landmark" name="landmark">-->
+<!--            </div>-->
 
-            <!-- Submit Buttons -->
-            <div class="col-12 text-end mt-3">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="submit" class="btn btn-success">Submit</button>
-            </div>
+<!--            &lt;!&ndash; Submit Buttons &ndash;&gt;-->
+<!--            <div class="col-12 text-end mt-3">-->
+<!--              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>-->
+<!--              <button type="submit" class="btn btn-success">Submit</button>-->
+<!--            </div>-->
 
           </div>
-        </form>
+<!--        </form>-->
       </div>
     </div>
   </div>
@@ -1666,13 +1902,13 @@
         </div>
 
         <div class="modal-body">
-          <input type="hidden" name="follow_up" id="" value="seller">
+          <input type="hidden" name="follow_up" id="" value="Sales Person">
 
           <div class="mb-3">
             <label>Information Status</label>
             <select id="infoStatusDropdown" class="form-select" name="status">
-  <option value="">-- Select Information Status --</option>
-</select>
+              <option value="">-- Select Information Status --</option>
+            </select>
           </div>
 
           <div class="mb-3">
@@ -1700,6 +1936,17 @@
 <!--              <option value="Complaint">Complaint</option>-->
 <!--            </select>-->
 <!--          </div>-->
+
+           <div class="mb-3">
+            <label>FollowUp Time</label>
+            <input
+              type="text"
+              class="form-control"
+              name="FollowUp_time"
+              id="followup_time_seller"
+              placeholder="YYYY-MM-DD HH:MM"
+           />
+          </div>
 
           <div class="mb-3">
             <label>Remarks</label>
@@ -1748,9 +1995,21 @@
             <select id="customerSalesPersonVocDropdown" class="form-select" name="sales_person_voc"></select>
           </div>
           <div class="mb-3">
+            <label>FollowUp Time</label>
+            <input
+              type="text"
+              class="form-control"
+              name="FollowUp_time"
+              id="followup_time"
+              placeholder="YYYY-MM-DD HH:MM"
+           />
+          </div>
+          <div class="mb-3">
             <label>Remarks</label>
             <textarea class="form-control" name="remark"></textarea>
           </div>
+
+
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">Save</button>
@@ -1842,10 +2101,46 @@
 
             const modal = document.getElementById('leadFormModal');
 
-            modal.querySelector('[name="customer_name"]').value = data.customer_name || '';
-            modal.querySelector('[name="customer_type"]').value = data.customer_type || '';
-            modal.querySelector('[name="calling_number"]').value = data.calling_number || '';
-            modal.querySelector('[name="enquiry_type"]').value = data.enquiry_type || '';
+            modal.querySelector('#customer_name_display').textContent = data.customer_name || '';
+            modal.querySelector('#customer_type_display').textContent = data.customer_type || '';
+          modal.querySelector('#calling_number_display').textContent = data.calling_number || '';
+          modal.querySelector('#address_display').textContent = data.address || '';
+          modal.querySelector('#city_display').textContent = data.district || '';
+          modal.querySelector('#State_display').textContent = data.state || '';
+          modal.querySelector('#Brand_display').textContent = data.brand_name || '';
+          modal.querySelector('#Query_display').textContent = data.sub_sub_calling_status || '';
+          modal.querySelector('#Date_display').textContent = data.Date_display || '';
+          modal.querySelector('#Remarks_display').textContent = data.remark || '';
+          modal.querySelector('#email_display').textContent = data.email_id || '';
+          modal.querySelector('#alt_number_display').textContent = data.alternative_number || '';
+          modal.querySelector('#landmark_display').textContent = data.landmark || '';
+          modal.querySelector('#zone_display').textContent = data.zone || '';
+          modal.querySelector('#pin_code_display').textContent = data.pin_code || '';
+          modal.querySelector('#product_display').textContent = data.product || '';
+          modal.querySelector('#sub_product_display').textContent = data.sub_product || '';
+          modal.querySelector('#lead_status_display').textContent = data.lead_status || '';
+          modal.querySelector('#construction_level_display').textContent = data.construction_level || '';
+          modal.querySelector('#seller_email_display').textContent = data.seller_email || '';
+          modal.querySelector('#seller_phone_display').textContent = data.seller_phone || '';
+          modal.querySelector('#registration_status_display').textContent = data.registration_status || '';
+          modal.querySelector('#order_qty_display').textContent = data.order_qty || '';
+          modal.querySelector('#order_description_display').textContent = data.order_description || '';
+          modal.querySelector('#order_value_display').textContent = data.order_value || '';
+          modal.querySelector('#category_display').textContent = data.category || '';
+          modal.querySelector('#interest_status_display').textContent = data.interest_status || '';
+          modal.querySelector('#calling_status_display').textContent = data.calling_status || '';
+          modal.querySelector('#buyer_type_display').textContent = data.buyer_type || '';
+          modal.querySelector('#sub_calling_status_display').textContent = data.sub_calling_status || '';
+          modal.querySelector('#enquiry_type_display').textContent = data.enquiry_type || '';
+          modal.querySelector('#enquiry_source_display').textContent = data.enquiry_source || '';
+          modal.querySelector('#sub_enquiry_source_display').textContent = data.sub_enquiry_source || '';
+          modal.querySelector('#customer_type_select_display').textContent = data.customer_type_select || '';
+          modal.querySelector('#name_display').textContent = data.name || '';
+<!--          modal.querySelector('#link_display').value = data.secure_url || '';-->
+
+
+
+          modal.querySelector('[name="enquiry_type"]').value = data.enquiry_type || '';
             modal.querySelector('[name="enquiry_source"]').value = data.enquiry_source || '';
             modal.querySelector('[name="sub_enquiry_source"]').value = data.sub_enquiry_source || '';
             modal.querySelector('[name="lead_date"]').value = data.lead_date || '';
@@ -1904,6 +2199,7 @@
             modal.querySelector('[name="seller_phone"]').value = data.seller_phone || '';
             modal.querySelector('[name="address"]').value = data.address || '';
             modal.querySelector('[name="landmark"]').value = data.landmark || '';
+
 
             // Show modal
             const leadModal = new bootstrap.Modal(modal);
@@ -2203,6 +2499,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const showConnected = selectedType === "Connect" && selectedSub !== "Invalid" && selectedSub !== "Call Back";
       const showCallback = selectedSub === "Call Back";
 
+      const showInterestBlock = selectedSub === "Valid";
+
       // Show/hide connected fields (e.g. brand, order, etc.)
       connectedFields.style.display = showConnected ? "flex" : "none";
 
@@ -2210,6 +2508,19 @@ document.addEventListener('DOMContentLoaded', function () {
       if (callbackTimeField) {
         callbackTimeField.style.display = showCallback ? "block" : "none";
       }
+
+      // Show/hide Interested/Not Interested dropdown
+        const interestStatusBlock = document.getElementById("interest_status_block");
+        if (interestStatusBlock) {
+          interestStatusBlock.style.display = showInterestBlock ? "block" : "none";
+        }
+
+        const lead_status_block = document.getElementById("lead_status_block");
+        if (lead_status_block) {
+          lead_status_block.style.display = showInterestBlock ? "block" : "none";
+        }
+
+
     }
 
     // On change handlers
@@ -2553,6 +2864,47 @@ function resetDropdown(dropdownId, placeholder) {
   });
 </script>
 
+
+
+
+    <script>
+  // For customerCallModal
+  var followupPickerCustomer;
+
+  var customerModalEl = document.getElementById('customerCallModal');
+  customerModalEl.addEventListener('shown.bs.modal', function () {
+    if (!followupPickerCustomer) {
+      followupPickerCustomer = flatpickr("#followup_time", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        enableSeconds: false,
+      });
+    }
+    document.getElementById('followup_time').focus();
+  });
+
+  // For callModal
+  var followupPickerSeller;
+
+  var sellerModalEl = document.getElementById('callModal');
+  sellerModalEl.addEventListener('shown.bs.modal', function () {
+    if (!followupPickerSeller) {
+      followupPickerSeller = flatpickr("#followup_time_seller", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        enableSeconds: false,
+      });
+    }
+    document.getElementById('followup_time_seller').focus();
+  });
+</script>
+
+
+
+
+
     <script>
       function log_call_customer() {
       const number = document.getElementById("mob_customer_id").textContent.trim();
@@ -2616,6 +2968,46 @@ function resetDropdown(dropdownId, placeholder) {
       }
 
     </script>
+
+
+<!--    Enquery sourse set data-->
+
+    <script>
+  const enquirySourceMapping = {{ enquiry_source_mapping|safe }};
+  const selectedSubSource = "{{ lead.sub_enquiry_source|default_if_none:'' }}";
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sourceSelect = document.querySelector('[name="enquiry_source"]');
+    const subsourceSelect = document.getElementById("sub_enquiry_source_select");
+
+    function populateSubsources(selectedSource) {
+      subsourceSelect.innerHTML = '<option value="">-- Select Sub Enquiry Source --</option>';
+
+      if (selectedSource && enquirySourceMapping[selectedSource]) {
+        enquirySourceMapping[selectedSource].forEach(sub => {
+          const option = document.createElement("option");
+          option.value = sub;
+          option.textContent = sub;
+          if (sub === selectedSubSource) {
+            option.selected = true;
+          }
+          subsourceSelect.appendChild(option);
+        });
+      }
+    }
+
+    // On page load
+    populateSubsources(sourceSelect.value);
+
+    // On change
+    sourceSelect.addEventListener("change", function () {
+      populateSubsources(this.value);
+    });
+  });
+</script>
+
+
 
 
 

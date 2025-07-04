@@ -1188,7 +1188,7 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Lead Date</label>
               <input type="date" name="lead_date" class="form-control"
-                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);" id="lead_date_input">
             </div>
 
           </div>
@@ -1268,6 +1268,14 @@
     <script src="/assets/js/modal-add-role.js"></script>
 
 
+<!--    lead date auto set-->
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.getElementById('lead_date_input');
+    const today = new Date().toISOString().split('T')[0];  // format yyyy-mm-dd
+    dateInput.value = today;
+  });
+</script>
 
   <script>
   document.addEventListener('DOMContentLoaded', function () {
