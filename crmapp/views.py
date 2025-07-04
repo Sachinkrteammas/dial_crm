@@ -579,6 +579,16 @@ def lead_table(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
+    calling_status = request.GET.get('calling_status')
+    sub_calling_status = request.GET.get('sub_calling_status')
+
+
+    if calling_status:
+        leads = leads.filter(calling_status__iexact=calling_status)
+
+    if sub_calling_status:
+        leads = leads.filter(sub_calling_status__iexact=sub_calling_status)
+
     # Apply date filters
     if start_date:
         leads = leads.filter(lead_date__gte=parse_date(start_date))
@@ -590,7 +600,8 @@ def lead_table(request):
             Q(customer_name__icontains=query) |
             Q(calling_number__icontains=query) |
             Q(enquiry_type__icontains=query) |
-            Q(enquiry_source__icontains=query)
+            Q(enquiry_source__icontains=query)|
+            Q(sub_calling_status__icontains=query)
         )
 
     # Apply pagination
@@ -800,6 +811,7 @@ def update_lead(request):
             lead.remark = data.get('remark', '')
             lead.seller_email_id = data.get('seller_email', '')
             lead.seller_phone_no = data.get('seller_phone', '')
+            lead.lead_closer_status = data.get('lead_closer_status', '')
 
             lead.secure_url = data.get('secure_link', '')
 
@@ -848,6 +860,7 @@ def update_lead(request):
                 seller_email_id=lead.seller_email_id,
                 seller_phone_no=lead.seller_phone_no,
                 callback_time=lead.callback_time,
+                lead_closer_status =lead.lead_closer_status,
                 created_by=lead.created_by,  # or request.user if preferred
                 updated_by=lead.updated_by,
             )

@@ -1185,6 +1185,26 @@
 <input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no|default_if_none:'' }}" readonly>
 </div>
 
+  <div class="col-md-4">
+  <label>Lead Closer Final:</label>
+  <select class="form-select" name="lead_closer_status">
+    <option value="">--Select Status--</option>
+    <option value="closed_with_dealership" {% if lead.lead_closer_status == "closed_with_dealership" %}selected{% endif %}>Closed with Dealership</option>
+    <option value="closed_with_order" {% if lead.lead_closer_status == "closed_with_order" %}selected{% endif %}>Closed with Order</option>
+    <option value="closed_with_solution" {% if lead.lead_closer_status == "closed_with_solution" %}selected{% endif %}>Closed with Solution</option>
+    <option value="closed_without_dealership" {% if lead.lead_closer_status == "closed_without_dealership" %}selected{% endif %}>Closed without Dealership</option>
+    <option value="closed_without_order" {% if lead.lead_closer_status == "closed_without_order" %}selected{% endif %}>Closed without Order</option>
+    <option value="dropped" {% if lead.lead_closer_status == "dropped" %}selected{% endif %}>Dropped</option>
+    <option value="followup" {% if lead.lead_closer_status == "followup" %}selected{% endif %}>Follow-up</option>
+    <option value="no_response" {% if lead.lead_closer_status == "no_response" %}selected{% endif %}>No Response</option>
+    <option value="pending" {% if lead.lead_closer_status == "pending" %}selected{% endif %}>Pending</option>
+    <option value="underprocess" {% if lead.lead_closer_status == "underprocess" %}selected{% endif %}>Under Process</option>
+    <option value="validate" {% if lead.lead_closer_status == "validate" %}selected{% endif %}>Validate</option>
+  </select>
+</div>
+
+
+
 
                     <div class="col-md-6">
                       <label>Address:</label>

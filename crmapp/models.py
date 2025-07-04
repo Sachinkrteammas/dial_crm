@@ -203,6 +203,7 @@ class LeadTable(models.Model):
 
     seller_email_id = models.EmailField(blank=True, null=True)
     seller_phone_no = models.CharField(max_length=15, blank=True, null=True)
+    lead_closer_status = models.CharField(max_length=100, blank=True, null=True)
 
     contact_details = models.ForeignKey(ContactDetails, on_delete=models.CASCADE, null=True, blank=True, related_name='contact_details')
 
@@ -322,12 +323,14 @@ class HistoryLead(models.Model):
     order_value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     customer_type_select = models.CharField(max_length=100, blank=True, null=True)
 
+
     registration_status = models.CharField(max_length=50, blank=True, null=True)
     remark = models.TextField(blank=True, null=True)
     secure_url = models.TextField(blank=True, null=True)
 
     seller_email_id = models.EmailField(blank=True, null=True)
     seller_phone_no = models.CharField(max_length=15, blank=True, null=True)
+    lead_closer_status = models.CharField(max_length=100, blank=True, null=True)
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_leads_history')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_leads_history')

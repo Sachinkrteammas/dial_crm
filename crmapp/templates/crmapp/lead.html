@@ -669,6 +669,7 @@
             <div class="card" style=" width: 95%; margin-left: 25px; margin-top: 32px;">
                 <h5 class="card-header d-flex justify-content-between align-items-center">
                     Leads
+
                     <button
                       data-bs-toggle="modal"
                       data-bs-target="#addLeadModal"
@@ -679,25 +680,59 @@
 
               <!-- 🔍 Search Filter -->
                     <div class="px-4 d-flex justify-content-end" >
-                        <form method="get" class="d-flex align-items-center gap-2">
-                          <label for="query" class="form-label m-0">Search:</label>
-                          <input type="text" name="query" id="query" class="form-control form-control-sm" placeholder="Name, Phone, Enquiry..." value="{{ request.GET.query }}">
+                        <form method="get" class="container-fluid">
+  <div class="row align-items-end g-3">
 
-                          <label for="start_date" class="form-label m-0">Start:</label>
-                          <input type="date" name="start_date" id="start_date" class="form-control form-control-sm"
-                                 value="{{ request.GET.start_date }}">
+    <!-- Calling Status -->
+    <div class="col-md-2">
+                    <label>Calling Status:</label>
+                    <select class="form-select" name="calling_status" id="calling_status_select" style="height:32px;">
+                      <option value="">Select</option>
+                      <option value="Connect">Connect</option>
+                      <option value="Not Connect">Not Connect</option>
+                    </select>
+                  </div>
 
-                          <label for="end_date" class="form-label m-0">End:</label>
-                          <input type="date" name="end_date" id="end_date" class="form-control form-control-sm"
-                                 value="{{ request.GET.end_date }}">
+                  <!-- Sub Calling Status -->
+                  <div class="col-md-2">
+                    <label for="sub_calling_status_select">Sub Status:</label>
+                    <select class="form-select" name="sub_calling_status" id="sub_calling_status_select"  style="height:32px;">
+                      <option value="">Select</option>
+                    </select>
+                  </div>
 
-                          <button type="submit" class="btn btn-sm btn-outline-primary" style="width:120px;">Search</button>
+    <!-- Search Text -->
+    <div class="col-md-2">
+      <label for="query" class="form-label">Search:</label>
+      <input type="text" name="query" id="query" class="form-control form-control-sm"
+             placeholder="Name, Phone, Enquiry..." value="{{ request.GET.query }}">
+    </div>
 
-                          {% if request.GET.start_date or request.GET.end_date or request.GET.query %}
-                            <a href="{% url 'lead_table' %}" class="btn btn-outline-secondary">Clear</a>
-                          {% endif %}
+    <!-- Start Date -->
+    <div class="col-md-2">
+      <label for="start_date" class="form-label">Start:</label>
+      <input type="date" name="start_date" id="start_date" class="form-control form-control-sm"
+             value="{{ request.GET.start_date }}">
+    </div>
 
-                        </form>
+    <!-- End Date -->
+    <div class="col-md-2">
+      <label for="end_date" class="form-label">End:</label>
+      <input type="date" name="end_date" id="end_date" class="form-control form-control-sm"
+             value="{{ request.GET.end_date }}">
+    </div>
+
+    <!-- Search & Clear Buttons -->
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-sm btn-outline-primary w-100">Search</button>
+      {% if request.GET.start_date or request.GET.end_date or request.GET.query or request.GET.calling_status or request.GET.sub_calling_status %}
+        <a href="{% url 'lead_table' %}" class="btn btn-sm btn-outline-secondary w-100">Clear</a>
+      {% endif %}
+    </div>
+
+  </div>
+</form>
+
                       </div>
 
                 <div class="table-responsive text-nowrap">
@@ -733,9 +768,9 @@
                               <i class="icon-base ti tabler-dots-vertical"></i>
                             </button>
                             <div class="dropdown-menu">
-<!--                              <a class="dropdown-item text-success" href="javascript:void(0);" data-id="{{ lead.id }}">-->
-<!--                                <i class="icon-base ti tabler-pencil me-1"></i> Edit-->
-<!--                              </a>-->
+                              <a class="dropdown-item text-success copy-lead" href="javascript:void(0);" data-id="{{ lead.id }}">
+                                  <i class="icon-base ti tabler-pencil me-1"></i> Copy
+                                </a>
 <!--                              <a class="dropdown-item text-danger delete-lead" href="javascript:void(0);" data-id="{{ lead.id }}">-->
 <!--                                <i class="icon-base ti tabler-trash me-1"></i> Delete-->
 <!--                              </a>-->
@@ -1599,8 +1634,79 @@ document.getElementById('zoneDropdown').addEventListener('change', function () {
 
 
 
+
+
+
 </script>
 
+  <script>
+document.querySelectorAll('.copy-lead').forEach(button => {
+    button.addEventListener('click', function() {
+        const leadId = this.getAttribute('data-id');
+
+        fetch(`/api/lead-copy/${leadId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Lead copied successfully!');
+                // Reload or update table dynamically
+                location.reload(); // Or use JS to append new row
+            } else {
+                alert('Error copying lead!');
+            }
+        });
+    });
+});
+
+// CSRF helper
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        document.cookie.split(';').forEach(cookie => {
+            const trimmed = cookie.trim();
+            if (trimmed.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+            }
+        });
+    }
+    return cookieValue;
+}
+</script>
+
+
+  <script>
+const subCallingSelect = document.getElementById('sub_calling_status_select');
+const callingSelect = document.getElementById('calling_status_select');
+
+const optionsMap = {
+  "Connect": [
+    "Invalid", "Call Back", "Services", "Valid", "Complaint"
+  ],
+  "Not Connect": [
+    "Not Reachable", "Number Busy", "Ringing and Not responding", "Swithched off", "Invalid Number"
+  ]
+};
+
+callingSelect.addEventListener('change', function () {
+  const selected = this.value;
+  subCallingSelect.innerHTML = '<option value="">--Select Sub Type--</option>'; // Reset
+
+  if (optionsMap[selected]) {
+    optionsMap[selected].forEach(optionText => {
+      const option = document.createElement('option');
+      option.value = optionText;
+      option.textContent = optionText;
+      subCallingSelect.appendChild(option);
+    });
+  }
+});
+</script>
 
 
 

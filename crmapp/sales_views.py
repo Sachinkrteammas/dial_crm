@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.dateparse import parse_date
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
@@ -401,6 +402,7 @@ def leads_export(request):
         ws.title = "Leads"
 
         ws.append([
+            'ID',
             'Customer Name', 'Customer Type', 'Calling Number', 'Enquiry Type', 'Enquiry Source', 'Sub Enquiry Source',
             'Lead Date', 'Call Date', 'Call Type', 'Calling Status', 'Interested Status',
             'Sub Calling Status', 'Sub Sub Calling Status', 'Select Business', 'Buyer Type',
@@ -408,12 +410,13 @@ def leads_export(request):
             'Address', 'Landmark', 'Brand', 'Product', 'Sub Product',
             'State', 'District', 'Zone', 'Pincode', 'Agent Name',
             'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
-            'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No',
+            'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
             'Created By', 'Updated By', 'Created At', 'Updated At'
         ])
 
-        for lead in leads:
+        for idx, lead in enumerate(leads, start=1):
             ws.append([
+                idx,
                 lead.customer_name,
                 lead.customer_type,
                 lead.calling_number,
@@ -453,6 +456,7 @@ def leads_export(request):
                 lead.secure_url,
                 lead.seller_email_id,
                 lead.seller_phone_no,
+                lead.lead_closer_status,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
@@ -507,6 +511,7 @@ def sales_export(request):
 
         # Header row
         ws.append([
+            'ID',
             'Sale MT', 'Sale INR', 'Sale Team Remarks', 'Lead Status',
             'CC Final Remarks Reformat', 'Lead Category', 'Product',
             'Product Value', 'Status', 'Created By', 'Updated By',
@@ -514,8 +519,9 @@ def sales_export(request):
         ])
 
         # Data rows
-        for lead in leads:
+        for idx, lead in enumerate(leads, start=1):
             ws.append([
+                idx,
                 lead.sale_mt,
                 lead.sale_inr,
                 lead.sale_team_remarks,
@@ -580,13 +586,15 @@ def follow_up(request):
 
         # Header
         ws.append([
+            'ID',
             'Lead ID', 'Status', 'Sub Status', 'Remark', 'Follow Up',
             'Created By', 'Updated By', 'Created At'
         ])
 
         # Data rows
-        for entry in followups:
+        for idx, entry in enumerate(followups, start=1):
             ws.append([
+                idx,
                 entry.lead_table.id if entry.lead_table else '',
                 entry.status,
                 entry.sub_status,
@@ -646,6 +654,7 @@ def main_leads_export(request):
         ws.title = "Leads"
 
         ws.append([
+            'ID',
             'Customer Name', 'Customer Type', 'Calling Number', 'Enquiry Type', 'Enquiry Source', 'Sub Enquiry Source',
             'Lead Date', 'Call Date', 'Call Type', 'Calling Status', 'Interested Status',
             'Sub Calling Status', 'Sub Sub Calling Status', 'Select Business', 'Buyer Type',
@@ -653,12 +662,13 @@ def main_leads_export(request):
             'Address', 'Landmark', 'Brand', 'Product', 'Sub Product',
             'State', 'District', 'Zone', 'Pincode', 'Agent Name',
             'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
-            'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No',
+            'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
             'Created By', 'Updated By', 'Created At', 'Updated At'
         ])
 
-        for lead in leads:
+        for idx, lead in enumerate(leads, start=1):
             ws.append([
+                idx,
                 lead.customer_name,
                 lead.customer_type,
                 lead.calling_number,
@@ -698,6 +708,7 @@ def main_leads_export(request):
                 lead.secure_url,
                 lead.seller_email_id,
                 lead.seller_phone_no,
+                lead.lead_closer_status,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
@@ -785,3 +796,26 @@ def get_customer_voc_options_api(request):
         'status': 'success',
         'records': list(filtered_qs)
     })
+
+
+@csrf_exempt
+def copy_lead(request, lead_id):
+    if request.method == "POST":
+        try:
+            lead = LeadTable.objects.get(id=lead_id)
+
+            # Create a new instance with copied data
+            new_lead = LeadTable.objects.create(
+                customer_name=lead.customer_name,
+                calling_number=lead.calling_number,
+                enquiry_type=lead.enquiry_type,
+                enquiry_source=lead.enquiry_source,
+                lead_date=lead.lead_date,
+                created_by=request.user if request.user.is_authenticated else None
+            )
+
+            return JsonResponse({'status': 'success', 'new_id': new_lead.id})
+        except LeadTable.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Lead not found'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'})

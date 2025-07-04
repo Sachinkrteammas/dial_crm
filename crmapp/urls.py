@@ -53,7 +53,7 @@ urlpatterns = [
     path('main_leads_export/',sales_views.main_leads_export,name="main_leads_export"),
     path('reallocate/',sales_views.reallocate,name="reallocate"),
     path('api/get-voc-options/',sales_views.get_voc_options_api, name='get_voc_options_api'),
-    path('api/get-customer-voc-options/', sales_views.get_customer_voc_options_api, name='get_customer_voc_options_api')
-
+    path('api/get-customer-voc-options/', sales_views.get_customer_voc_options_api, name='get_customer_voc_options_api'),
+    path('api/lead-copy/<int:lead_id>/', sales_views.copy_lead, name='copy_lead'),
 
 ]
