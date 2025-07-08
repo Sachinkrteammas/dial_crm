@@ -819,3 +819,92 @@ def copy_lead(request, lead_id):
             return JsonResponse({'status': 'error', 'message': 'Lead not found'})
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+
+def bulk_upload(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    return render(request, 'crmapp/bulk_upload.html', {
+        'menu_html': menu_html,
+    })
+
+import pandas as pd
+@csrf_exempt
+def upload_leads_excel(request):
+    if request.method == 'POST' and request.FILES.get('file'):
+        excel_file = request.FILES['file']
+
+        try:
+            df = pd.read_excel(excel_file)
+
+            success_count = 0
+            failed_entries = []
+
+            for _, row in df.iterrows():
+                try:
+                    customer_name = str(row.get('customer_name', '')).strip()
+                    calling_number = str(row.get('calling_number', '')).strip()
+                    enquiry_type = str(row.get('enquiry_type', '')).strip()
+                    enquiry_source = str(row.get('enquiry_source', '')).strip()
+                    lead_date_str = row.get('lead_date', None)
+
+                    lead_date = (
+                        pd.to_datetime(lead_date_str).date()
+                        if not pd.isna(lead_date_str)
+                        else None
+                    )
+
+                    # Check duplicates and block
+                    matching_leads = LeadTable.objects.filter(calling_number=calling_number)
+
+                    block = False
+                    for lead in matching_leads:
+                        sales_qs = SalesInfoTable.objects.filter(lead_table=lead)
+                        if sales_qs.exists():
+                            if not sales_qs.filter(status__iexact='closed').exists():
+                                block = True
+                                break
+                        else:
+                            block = True
+                            break
+
+                    if block:
+                        failed_entries.append({
+                            'calling_number': calling_number,
+                            'reason': 'Lead already exists and is not closed'
+                        })
+                        continue
+
+                    # Create lead
+                    LeadTable.objects.create(
+                        customer_name=customer_name,
+                        calling_number=calling_number,
+                        enquiry_type=enquiry_type,
+                        enquiry_source=enquiry_source,
+                        lead_date=lead_date,
+                        created_by=request.user if request.user.is_authenticated else None
+                    )
+                    success_count += 1
+
+                except Exception as e:
+                    failed_entries.append({
+                        'calling_number': row.get('calling_number'),
+                        'reason': str(e)
+                    })
+
+            return JsonResponse({
+                'status': 'completed',
+                'success_count': success_count,
+                'failed_entries': failed_entries
+            })
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'fail', 'message': 'Invalid request'}, status=400)
