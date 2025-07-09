@@ -153,7 +153,7 @@ def user_list(request):
 
 def user_list_api(request):
     users = UserList.objects.all().order_by('id').values(
-        'id', 'full_name', 'user_role', 'email_id', 'company', 'contact_no', 'is_deactivated'
+        'id', 'full_name','username', 'user_role', 'email_id', 'company', 'contact_no', 'is_deactivated'
     )
     return JsonResponse({'data': list(users)})
 
@@ -170,10 +170,11 @@ def save_user(request):
         company = request.POST.get('companyName')
         role = request.POST.get('userRole')
         action = request.POST.get('userAction')
+        username = request.POST.get('username')
 
         # Validate
-        if not full_name or not email:
-            messages.error(request, "Full name and email are required.")
+        if not full_name or not email or not username:
+            messages.error(request, "Full name and username and email are required.")
             return redirect('user_list')
 
         try:
@@ -212,6 +213,7 @@ def save_user(request):
 
             # Update UserList
             user_list_entry.full_name = full_name
+            user_list_entry.username = username
             user_list_entry.email_id = email
             user_list_entry.contact_no = contact
             user_list_entry.company = company
@@ -240,6 +242,7 @@ def save_user(request):
             UserList.objects.create(
                 user=user,
                 full_name=full_name,
+                username=username,
                 email_id=email,
                 password=password,
                 contact_no=contact,

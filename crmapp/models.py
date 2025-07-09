@@ -19,6 +19,7 @@ class Customer(models.Model):
 class UserList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     full_name = models.CharField(max_length=100)
+    username = models.CharField(max_length=150, default="unknown")
     email_id = models.EmailField(max_length=100, unique=True)
     password = models.CharField(max_length=100)
     contact_no = models.CharField(max_length=25)

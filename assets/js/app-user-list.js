@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
 
 //    { data: 'id',visible: false },
     { data: 'full_name' },
+    { data: 'username' },
     { data: 'user_role' },
     { data: 'email_id' },
     { data: 'company' },
@@ -90,26 +91,32 @@ document.addEventListener('DOMContentLoaded', function (e) {
         }
       },
       {
-        targets: 2,
+        targets: 2, // username
+        render: function (data, type, full) {
+          return `<span class="text-heading">${full['username'] || ''}</span>`;
+        }
+      },
+      {
+        targets: 3,
         render: function (data, type, full) {
           const role = full['user_role'] || 'N/A';
           return `<span class="text-heading">${role}</span>`;
         }
       },
       {
-        targets: 3,
+        targets: 4,
         render: function (data, type, full) {
           return `<span class="text-heading">${full['email_id'] || ''}</span>`;
         }
       },
       {
-        targets: 4,
+        targets: 5,
         render: function (data, type, full) {
           return `<span class="text-heading">${full['company'] || ''}</span>`;
         }
       },
       {
-        targets: 5,
+        targets: 6,
         render: function (data, type, full) {
           return `<span class="text-heading">${full['contact_no'] || ''}</span>`;
         }
@@ -644,6 +651,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
   if (!table) return;
 
   const rowData = table.rows().data().toArray().find(row => String(row.id) === String(id));
+
   if (!rowData) {
     console.error('User not found');
     return;
@@ -654,6 +662,8 @@ document.addEventListener('DOMContentLoaded', function (e) {
   document.getElementById('add-user-contact').value = rowData.contact_no || '';
   document.getElementById('add-user-company').value = rowData.company || '';
   document.getElementById('user-role').value = rowData.user_role || '';
+  document.getElementById('add-user-username').value = rowData.username || '';
+
 
    document.getElementById('edit-user-id').value = rowData.id;
 
@@ -709,4 +719,22 @@ function getCookie(name) {
   }
   return cookieValue;
 }
+
+
+
+
+
+  const usernameInput = document.getElementById('add-user-username');
+
+  // Remove spaces on input
+  usernameInput.addEventListener('input', function () {
+    this.value = this.value.replace(/\s+/g, '');
+  });
+
+  // Remove spaces on paste
+  usernameInput.addEventListener('paste', function (e) {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    this.value += pasted.replace(/\s+/g, '');
+  });
 

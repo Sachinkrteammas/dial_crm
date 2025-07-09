@@ -346,16 +346,24 @@ def save_follow_up(request, lead_id):
 
 import requests
 def make_call_api(request):
+    user = request.user
+    try:
+        user_list_entry = UserList.objects.get(user=user)
+        username = user_list_entry.username
+    except UserList.DoesNotExist:
+        return JsonResponse({'error': 'UserList entry not found for current user.'}, status=404)
+
     number = request.GET.get('number')
+
 
     if not number:
         return JsonResponse({'status': 'error', 'message': 'Number is required'})
 
     # Prepare API parameters
-    api_url = "https://api.teammas.co.in/C2Capi/api.php"
+    api_url = "http://192.168.11.6/C2Capi/api_birla.php"
     params = {
         "customer_number": number,
-        "agent_user": "6666",
+        "agent_user": username,
         "token": "VHJoc2xkZ2dkXjc1MzYzNVVVR2hzZ3M2",
     }
 
