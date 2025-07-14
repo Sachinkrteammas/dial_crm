@@ -672,7 +672,13 @@
 
               <div class="col-12" style="width: 95%; margin-left: 23px; margin-top: 40px;">
                   <div class="card">
-                    <h5 class="card-header">Upload Leads via Excel</h5>
+                    <h5 class="card-header">Upload Leads via Excel
+
+                      <span style="margin-left:600px"><a href="{% url 'download_excel_template' %}" class="btn btn-outline-success">
+                        Download Excel Template
+                      </a>
+                      </span>
+                    </h5>
                     <div class="card-body">
                       <!-- Message box -->
                       <div id="upload-message" class="alert d-none" role="alert"></div>

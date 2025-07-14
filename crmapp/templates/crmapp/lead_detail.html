@@ -977,7 +977,7 @@
 
                    <div class="col-md-4">
                       <label for="buyer_type">Buyer Type:</label>
-                      <select class="form-select" name="buyer_type" id="buyer_type" onchange="toggleConstructionLevel()">
+                      <select class="form-select" name="buyer_type" id="buyer_type" onchange="toggleConstructionLevel(); updateRegistrationOptions();">
                         <option value="">-- Select Buyer Type --</option>
                         <option value="Architect" {% if lead.buyer_type == "Architect" %}selected{% endif %}>Architect</option>
                         <option value="Carpenter" {% if lead.buyer_type == "Carpenter" %}selected{% endif %}>Carpenter</option>
@@ -1094,60 +1094,36 @@
 
 
                    <div class="col-md-4" id="construction_level_div" style="display: none;">
-                    <label>Construction Level:</label>
-                    <input type="text" class="form-control" name="construction_level" value="{{ lead.construction_level|default_if_none:'' }}">
+                    <label>Construction Type:</label>
+                    <select class="form-select" name="construction_level">
+                      <option value="">-- Select Construction Type --</option>
+                      <option value="Pre-Construction" {% if lead.construction_level == "Pre-Construction" %}selected{% endif %}>Pre-Construction</option>
+                      <option value="Under Construction" {% if lead.construction_level == "Under Construction" %}selected{% endif %}>Under Construction</option>
+                      <option value="Post-Construction" {% if lead.construction_level == "Post-Construction" %}selected{% endif %}>Post-Construction</option>
+                    </select>
                   </div>
 
 
 
-                    <div class="col-md-4">
+
+                    <div class="col-md-4" id="Customer_level_div" style="display: none;">
                       <label>Customer Type:</label>
-                      <select class="form-select" name="customer_type_select">
+                      <select class="form-select" name="customer_type_select" id="customer_type_select" onchange="updateRegistrationOptions()">
                         <option value="">Select Customer Type</option>
                         <option value="New" {% if lead.customer_type_select == "New" %}selected{% endif %}>New</option>
                         <option value="Existing" {% if lead.customer_type_select == "Existing" %}selected{% endif %}>Existing</option>
                       </select>
                     </div>
 
-
-                    <div class="col-md-4">
+                    <div class="col-md-4" id="Registration_level_div" style="display: none;">
                       <label>Registration Status:</label>
-                      <select class="form-select" name="registration_status">
+                      <input type="hidden" id="saved_registration_status" value="{{ lead.registration_status }}">
+                      <select class="form-select" name="registration_status" id="registration_status">
                         <option value="">-- Select Registration Status --</option>
-                        <option value="Wants to be associated with BiralNu"
-                          {% if lead.registration_status == "Wants to be associated with BiralNu" %}selected{% endif %}>
-                          Wants to be associated with BiralNu
-                        </option>
-                        <option value="Doesn't want to be associated with BiralNu"
-                          {% if lead.registration_status == "Doesn't want to be associated with BiralNu" %}selected{% endif %}>
-                          Doesn't want to be associated with BiralNu
-                        </option>
-                        <option value="Associated with BiralNu – Same Number"
-                          {% if lead.registration_status == "Associated with BiralNu – Same Number" %}selected{% endif %}>
-                          Associated with BiralNu – Same Number
-                        </option>
-                        <option value="Associated with BiralNu – Other Number"
-                          {% if lead.registration_status == "Associated with BiralNu – Other Number" %}selected{% endif %}>
-                          Associated with BiralNu – Other Number
-                        </option>
-                        <option value="Loyalty Program – Wants to be enrolled"
-                          {% if lead.registration_status == "Loyalty Program – Wants to be enrolled" %}selected{% endif %}>
-                          Loyalty Program – Wants to be enrolled
-                        </option>
-                        <option value="Loyalty Program – Doesn't want to be enrolled"
-                          {% if lead.registration_status == "Loyalty Program – Doesn't want to be enrolled" %}selected{% endif %}>
-                          Loyalty Program – Doesn't want to be enrolled
-                        </option>
-                        <option value="Loyalty Program – Enrolled with same number"
-                          {% if lead.registration_status == "Loyalty Program – Enrolled with same number" %}selected{% endif %}>
-                          Loyalty Program – Enrolled with same number
-                        </option>
-                        <option value="Loyalty Program – Enrolled with other number"
-                          {% if lead.registration_status == "Loyalty Program – Enrolled with other number" %}selected{% endif %}>
-                          Loyalty Program – Enrolled with other number
-                        </option>
+                        {% comment %} We'll update these dynamically using JS {% endcomment %}
                       </select>
                     </div>
+
 
 
                     <div class="col-md-4">
@@ -2861,12 +2837,23 @@ function resetDropdown(dropdownId, placeholder) {
   function toggleConstructionLevel() {
     const buyerType = document.getElementById("buyer_type").value;
     const showTypes = ["Architect", "Engineer", "Individual Buyer", "Industrial", "Others"];
+    const showTypesCustomer = ["Architect", "Carpenter", "Contractor", "Engineer", "Individual Buyer", "Industrial","Others"];
     const constructionDiv = document.getElementById("construction_level_div");
+    const Customer_level_div = document.getElementById("Customer_level_div");
+    const Registration_level_div = document.getElementById("Registration_level_div");
 
     if (showTypes.includes(buyerType)) {
       constructionDiv.style.display = "block";
     } else {
       constructionDiv.style.display = "none";
+    }
+
+    if (showTypesCustomer.includes(buyerType)) {
+      Customer_level_div.style.display = "none";
+      Registration_level_div.style.display = "none";
+    } else {
+      Customer_level_div.style.display = "block";
+      Registration_level_div.style.display = "block";
     }
   }
 
@@ -3027,6 +3014,117 @@ function resetDropdown(dropdownId, placeholder) {
     });
   });
 </script>
+
+
+    <script>
+function updateRegistrationOptions() {
+  const buyerType = document.getElementById("buyer_type").value;
+  const customerType = document.getElementById("customer_type_select").value;
+  const regSelect = document.getElementById("registration_status");
+  const savedValue = document.getElementById("saved_registration_status")?.value;
+
+  // Clear existing options
+  regSelect.innerHTML = '<option value="">-- Select Registration Status --</option>';
+
+  // Options Map
+  const optionsMap = {
+  "Retailer": {
+    "New": [
+      "Wants to be associated with BiralNu",
+      "Doesn't want to be associated with BiralNu"
+    ],
+    "Existing": [
+      "Associated with BiralNu – Same Number",
+      "Associated with BiralNu – Other Number"
+    ]
+  },
+  "Wholesaler/Stockist": {
+    "New": [
+      "Wants to be associated with BiralNu",
+      "Doesn't want to be associated with BiralNu"
+    ],
+    "Existing": [
+      "Associated with BiralNu – Same Number",
+      "Associated with BiralNu – Other Number"
+    ]
+  },
+  "Mason": {
+    "New": [
+      "Loyalty Program – Wants to be enrolled",
+      "Loyalty Program – Doesn't want to be enrolled"
+    ],
+    "Existing": [
+      "Loyalty Program – Enrolled with same number",
+      "Loyalty Program – Enrolled with other number"
+    ]
+  },
+  "Painter": {
+    "New": [
+      "Loyalty Program – Wants to be enrolled",
+      "Loyalty Program – Doesn't want to be enrolled"
+    ],
+    "Existing": [
+      "Loyalty Program – Enrolled with same number",
+      "Loyalty Program – Enrolled with other number"
+    ]
+  },
+  "Plumber": {
+    "New": [
+      "Loyalty Program – Wants to be enrolled",
+      "Loyalty Program – Doesn't want to be enrolled"
+    ],
+    "Existing": [
+      "Loyalty Program – Enrolled with same number",
+      "Loyalty Program – Enrolled with other number"
+    ]
+  },
+  "Distributor": {
+    "New": [
+      "Loyalty Program – Wants to be enrolled",
+      "Loyalty Program – Doesn't want to be enrolled"
+    ],
+    "Existing": [
+      "Loyalty Program – Enrolled with same number",
+      "Loyalty Program – Enrolled with other number"
+    ]
+  },
+  "Fabricator": {
+    "New": [
+      "Loyalty Program – Wants to be enrolled",
+      "Loyalty Program – Doesn't want to be enrolled"
+    ],
+    "Existing": [
+      "Loyalty Program – Enrolled with same number",
+      "Loyalty Program – Enrolled with other number"
+    ]
+  }
+};
+
+
+  const matchedOptions = optionsMap[buyerType]?.[customerType] || optionsMap[buyerType]?.[""] || [];
+
+  matchedOptions.forEach((label) => {
+    const option = document.createElement("option");
+    option.value = label;
+    option.textContent = label;
+
+    // Select the saved value
+    if (label === savedValue) {
+      option.selected = true;
+    }
+
+    regSelect.appendChild(option);
+  });
+}
+
+// Call when Buyer Type or Customer Type changes
+document.getElementById("buyer_type")?.addEventListener("change", updateRegistrationOptions);
+document.getElementById("customer_type_select")?.addEventListener("change", updateRegistrationOptions);
+
+// Trigger on page load
+document.addEventListener("DOMContentLoaded", updateRegistrationOptions);
+</script>
+
 
 
 

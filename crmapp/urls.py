@@ -59,5 +59,8 @@ urlpatterns = [
     #lead bulk upload data save
     path('bulk_upload/', sales_views.bulk_upload, name='bulk_upload'),
     path('api/upload-leads/', sales_views.upload_leads_excel, name='upload_leads_excel'),
+    path('download-template/', sales_views.download_excel_template, name='download_excel_template'),
+    path('call_back_lead/', sales_views.call_back_lead, name='call_back_lead'),
+    path('follow_up_data/', sales_views.follow_up_data, name='follow_up_data'),
 
 ]

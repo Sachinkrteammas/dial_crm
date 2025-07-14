@@ -5,7 +5,7 @@ from django.contrib.sites import requests
 from django.core import signing
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.signing import Signer
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Exists
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.dateparse import parse_date
@@ -17,6 +17,7 @@ from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem,
 from .views import render_menu
 from django.contrib.auth.models import User
 from django.contrib import messages
+
 
 
 @login_required
@@ -856,6 +857,7 @@ def upload_leads_excel(request):
 
             for _, row in df.iterrows():
                 try:
+                    lead_id = str(row.get('lead_id', '')).strip()  # Expected to be User ID
                     customer_name = str(row.get('customer_name', '')).strip()
                     calling_number = str(row.get('calling_number', '')).strip()
                     enquiry_type = str(row.get('enquiry_type', '')).strip()
@@ -868,7 +870,17 @@ def upload_leads_excel(request):
                         else None
                     )
 
-                    # Check duplicates and block
+                    # Try to get User from lead_id
+                    try:
+                        user = User.objects.get(id=int(lead_id))
+                    except (User.DoesNotExist, ValueError):
+                        failed_entries.append({
+                            'calling_number': calling_number,
+                            'reason': f'User with ID {lead_id} does not exist'
+                        })
+                        continue
+
+                    # Check for duplicates and block if necessary
                     matching_leads = LeadTable.objects.filter(calling_number=calling_number)
 
                     block = False
@@ -889,14 +901,14 @@ def upload_leads_excel(request):
                         })
                         continue
 
-                    # Create lead
+                    # Create Lead
                     LeadTable.objects.create(
                         customer_name=customer_name,
                         calling_number=calling_number,
                         enquiry_type=enquiry_type,
                         enquiry_source=enquiry_source,
                         lead_date=lead_date,
-                        created_by=request.user if request.user.is_authenticated else None
+                        created_by=user
                     )
                     success_count += 1
 
@@ -916,3 +928,152 @@ def upload_leads_excel(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'fail', 'message': 'Invalid request'}, status=400)
+
+def download_excel_template(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Leads Template"
+
+    # Add headers
+    headers = ['lead_id', 'customer_name', 'calling_number', 'enquiry_type', 'enquiry_source', 'lead_date']
+    ws.append(headers)
+
+    ws.append(['15', 'Sachin kr', '9876543210', 'Product Inquiry', 'Website', '2025-07-14'])
+
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)
+
+    response = HttpResponse(
+        excel_file.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="lead_template.xlsx"'
+    return response
+
+
+@login_required
+def call_back_lead(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    # Base leads for current user
+    leads = LeadTable.objects.filter(created_by=request.user).order_by('-created_at')
+
+    # Get filters
+    query = request.GET.get('query')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    calling_status = request.GET.get('calling_status')
+    sub_calling_status = request.GET.get('sub_calling_status')
+
+    # Apply filters
+    if calling_status:
+        leads = leads.filter(calling_status__iexact=calling_status)
+
+    if sub_calling_status:
+        leads = leads.filter(sub_calling_status__iexact=sub_calling_status)
+    else:
+        leads = leads.filter(sub_calling_status__iexact='Call Back')  # default
+
+    if start_date:
+        leads = leads.filter(lead_date__gte=parse_date(start_date))
+
+    if end_date:
+        leads = leads.filter(lead_date__lte=parse_date(end_date))
+
+    if query:
+        leads = leads.filter(
+            Q(customer_name__icontains=query) |
+            Q(calling_number__icontains=query) |
+            Q(enquiry_type__icontains=query) |
+            Q(enquiry_source__icontains=query) |
+            Q(sub_calling_status__icontains=query)
+        )
+
+    # Pagination
+    paginator = Paginator(leads, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Zones list (optional)
+    zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
+
+    return render(request, 'crmapp/call_back_lead.html', {
+        'menu_html': menu_html,
+        'leads': page_obj,
+        'zones': zones,
+        'paginator': paginator,
+        'page_obj': page_obj,
+    })
+
+
+
+@login_required
+def follow_up_data(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    followup_with_time = TBLFollowUp.objects.filter(
+        lead_table=OuterRef('pk'),
+        followup_time__isnull=False
+    )
+
+    leads = LeadTable.objects.filter(
+        created_by=request.user
+    ).annotate(
+        has_followup_time=Exists(followup_with_time)
+    ).filter(
+        has_followup_time=True
+    ).order_by('-created_at')
+
+    # Filters
+    query = request.GET.get('query')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    calling_status = request.GET.get('calling_status')
+    sub_calling_status = request.GET.get('sub_calling_status')
+
+    if calling_status:
+        leads = leads.filter(calling_status__iexact=calling_status)
+
+    if sub_calling_status:
+        leads = leads.filter(sub_calling_status__iexact=sub_calling_status)
+
+    if start_date:
+        leads = leads.filter(lead_date__gte=parse_date(start_date))
+
+    if end_date:
+        leads = leads.filter(lead_date__lte=parse_date(end_date))
+
+    if query:
+        leads = leads.filter(
+            Q(customer_name__icontains=query) |
+            Q(calling_number__icontains=query) |
+            Q(enquiry_type__icontains=query) |
+            Q(enquiry_source__icontains=query) |
+            Q(sub_calling_status__icontains=query)
+        )
+
+    # Pagination
+    paginator = Paginator(leads, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
+
+    return render(request, 'crmapp/follow_up_data.html', {
+        'menu_html': menu_html,
+        'leads': page_obj,
+        'zones': zones,
+        'paginator': paginator,
+        'page_obj': page_obj,
+    })
