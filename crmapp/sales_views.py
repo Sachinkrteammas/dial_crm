@@ -672,10 +672,17 @@ def main_leads_export(request):
             'State', 'District', 'Zone', 'Pincode', 'Agent Name',
             'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
             'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
-            'Created By', 'Updated By', 'Created At', 'Updated At'
+            'Created By', 'Updated By', 'Created At', 'Updated At',
+
+            # --- Sales Info ---
+            'Sale MT', 'Sale INR', 'Sale Team Remarks',
+            'Sale Lead Status', 'CC Final Remarks',
+            'Sale Lead Category', 'Sale Product',
+            'Sale Product Value', 'Sale Status'
         ])
 
         for idx, lead in enumerate(leads, start=1):
+            sales = SalesInfoTable.objects.filter(lead_table=lead).first()
             ws.append([
                 idx,
                 lead.customer_name,
@@ -721,7 +728,17 @@ def main_leads_export(request):
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
-                lead.updated_at.strftime('%Y-%m-%d %H:%M:%S') if lead.updated_at else ''
+                lead.updated_at.strftime('%Y-%m-%d %H:%M:%S') if lead.updated_at else '',
+
+                sales.sale_mt if sales else '',
+                sales.sale_inr if sales else '',
+                sales.sale_team_remarks if sales else '',
+                sales.lead_status if sales else '',
+                sales.cc_final_remarks_reformat if sales else '',
+                sales.lead_category if sales else '',
+                sales.product if sales else '',
+                sales.product_value if sales else '',
+                sales.status if sales else '',
             ])
 
         file_stream = BytesIO()
