@@ -1145,20 +1145,23 @@
 
                     <div class="col-md-4">
   <label>Sales Team Email ID:</label>
-  <select class="form-select" name="seller_email" id="seller_email_select">
-    <option value="">--Select Seller--</option>
-    {% for contact in sales_contacts %}
-      <option value="{{ contact.l1_mail }}"
-        {% if lead.seller_email_id == contact.l1_mail %}selected{% endif %}>
-        City: {{ contact.city_custom }} | Name: {{ contact.l1_name }} | Email: {{ contact.l1_mail }}
-      </option>
-    {% endfor %}
-  </select>
+  <input type="text" class="form-control" name="seller_email" id="seller_email" value="{{ lead.seller_email_id|default_if_none:'' }}">
+
+<!--  <select class="form-select" name="seller_email" id="seller_email_select">-->
+<!--    <option value="">&#45;&#45;Select Seller&#45;&#45;</option>-->
+<!--    {% for contact in sales_contacts %}-->
+<!--      <option value="{{ contact.l1_mail }}"-->
+<!--        {% if lead.seller_email_id == contact.l1_mail %}selected{% endif %}>-->
+<!--        City: {{ contact.city_custom }} | Name: {{ contact.l1_name }} | Email: {{ contact.l1_mail }}-->
+<!--      </option>-->
+<!--    {% endfor %}-->
+<!--  </select>-->
+
 </div>
 
 <div class="col-md-4">
   <label>Sales Team Phone No:</label>
-<input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no|default_if_none:'' }}" readonly>
+<input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no|default_if_none:'' }}">
 </div>
 
   <div class="col-md-4">
