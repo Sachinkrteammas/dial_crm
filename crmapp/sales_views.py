@@ -752,31 +752,46 @@ def reallocate(request):
     menu_html = render_menu(None, menu_tree)
 
     users = User.objects.all()
+    leads = LeadTable.objects.all()
 
     if request.method == 'POST':
         from_user_id = request.POST.get('from_user')
         to_user_id = request.POST.get('to_user')
+        lead_id = request.POST.get('lead_id')
 
         try:
             from_user = User.objects.get(id=from_user_id)
             to_user = User.objects.get(id=to_user_id)
 
-            # ✅ Transfer all leads regardless of current logged-in user
-            updated_count = LeadTable.objects.filter(created_by=from_user).update(created_by=to_user)
+            if lead_id:
+                # Transfer specific lead
+                lead = get_object_or_404(LeadTable, id=lead_id, created_by=from_user)
+                lead.created_by = to_user
+                lead.save()
+                messages.success(
+                    request,
+                    f" Lead {lead.id} successfully reallocated from {from_user.email} to {to_user.email}."
+                )
+            else:
+                # Transfer all leads from from_user to to_user
+                updated_count = LeadTable.objects.filter(created_by=from_user).update(created_by=to_user)
+                messages.success(
+                    request,
+                    f" {updated_count} leads successfully transferred from {from_user.email} to {to_user.email}."
+                )
 
-            messages.success(
-                request,
-                f"✅ {updated_count} leads successfully transferred from {from_user.email} to {to_user.email}."
-            )
         except User.DoesNotExist:
-            messages.error(request, "❌ One or both users not found.")
+            messages.error(request, " One or both users not found.")
+        except LeadTable.DoesNotExist:
+            messages.error(request, " Lead not found or does not belong to selected From User.")
         except Exception as e:
-            messages.error(request, f"❌ Error: {str(e)}")
+            messages.error(request, f" Error: {str(e)}")
 
         return redirect('reallocate')
 
     return render(request, 'crmapp/reallocate.html', {
         'users': users,
+        'leads': leads,
         'menu_html': menu_html,
     })
 
@@ -1077,3 +1092,9 @@ def follow_up_data(request):
         'paginator': paginator,
         'page_obj': page_obj,
     })
+
+
+@login_required
+def get_leads_by_user(request, user_id):
+    leads = LeadTable.objects.filter(created_by_id=user_id).values('id', 'customer_name')
+    return JsonResponse(list(leads), safe=False)

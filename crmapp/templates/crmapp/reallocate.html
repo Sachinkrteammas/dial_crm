@@ -663,45 +663,44 @@
 
 
           <div class="col-12 mb-4" style="margin-left:20px">
-  <form method="POST">
-  {% csrf_token %}
-  <div class="card">
-    <h5 class="card-header">Admin Lead Reallocation</h5>
-    <div class="card-body">
-      <div class="row">
+    <form method="POST">
+    {% csrf_token %}
+    <div class="card">
+      <h5 class="card-header">Admin Lead Reallocation</h5>
+      <div class="card-body">
+        <div class="row">
 
-        <!-- From User -->
-        <div class="col-md-6 mb-3">
-          <label class="form-label">From User</label>
-        <select class="form-select" name="from_user" required>
-          <option value="">-- Select From User --</option>
-          {% for user in users %}
-            <option value="{{ user.id }}">{{ user.email }}</option>
-          {% endfor %}
-        </select>
+          <!-- From User -->
+          <div class="col-md-4 mb-3">
+            <label class="form-label">From User</label>
+          <select class="form-select" name="from_user" required>
+            <option value="">-- Select From User --</option>
+            {% for user in users %}
+              <option value="{{ user.id }}">{{ user.email }}</option>
+            {% endfor %}
+          </select>
+            </div>
+          <!-- To User -->
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Reallocate User</label>
+          <select class="form-select" name="to_user" required>
+            <option value="">-- Select To User --</option>
+            {% for user in users %}
+              <option value="{{ user.id }}">{{ user.email }}</option>
+            {% endfor %}
+          </select>
           </div>
-        <!-- To User -->
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Reallocate User</label>
-        <select class="form-select" name="to_user" required>
-          <option value="">-- Select To User --</option>
-          {% for user in users %}
-            <option value="{{ user.id }}">{{ user.email }}</option>
-          {% endfor %}
-        </select>
+
+
+
+          <!-- Optional Lead -->
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Select Specific Lead (Optional)</label>
+          <select class="form-select" name="lead_id" id="lead-select">
+            <option value="">-- All Leads --</option>
+          </select>
         </div>
 
-
-        <!-- Lead (optional) -->
-<!--        <div class="col-md-4 mb-3">-->
-<!--          <label class="form-label">Select Lead (optional)</label>-->
-<!--          <select class="form-select" name="lead_id">-->
-<!--            <option value="">&#45;&#45; All Leads &#45;&#45;</option>-->
-<!--            {% for lead in leads %}-->
-<!--              <option value="{{ lead.id }}">{{ lead.customer_name }} ({{ lead.id }})</option>-->
-<!--            {% endfor %}-->
-<!--          </select>-->
-<!--        </div>-->
 
         <!-- Submit -->
         <div class="col-12 text-center mt-3">
@@ -792,6 +791,34 @@
     }
   });
 </script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const fromUserSelect = document.querySelector('select[name="from_user"]');
+    const leadSelect = document.getElementById('lead-select');
+
+    fromUserSelect.addEventListener('change', function () {
+      const userId = this.value;
+      leadSelect.innerHTML = '<option value="">-- All Leads --</option>'; // Clear previous leads
+
+      if (userId) {
+        fetch(`/get-leads-by-user/${userId}/`)
+          .then(response => response.json())
+          .then(data => {
+            data.forEach(lead => {
+              const option = document.createElement('option');
+              option.value = lead.id;
+              option.textContent = `${lead.customer_name} (ID: ${lead.id})`;
+              leadSelect.appendChild(option);
+            });
+          })
+          .catch(err => {
+            console.error("Failed to load leads", err);
+          });
+      }
+    });
+  });
+  </script>
 
 
 
