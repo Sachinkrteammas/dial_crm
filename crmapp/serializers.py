@@ -12,6 +12,11 @@ class WebhookLeadSerializer(serializers.Serializer):
     Date = serializers.DateTimeField()
 
     def create(self, validated_data):
+        user = self.context.get('user')  # Adviser user passed from view
+
+        if not user:
+            raise serializers.ValidationError("No adviser user assigned.")
+
         return LeadTable.objects.create(
             customer_name=validated_data["Name"],
             calling_number=validated_data["Phone"],
@@ -23,4 +28,6 @@ class WebhookLeadSerializer(serializers.Serializer):
             call_date=validated_data["Date"],
             email_id=validated_data["Email"],
             name=validated_data["Name"],
+            created_by=user
         )
+
