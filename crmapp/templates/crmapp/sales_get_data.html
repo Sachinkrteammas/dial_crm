@@ -50,28 +50,15 @@
     <link rel="stylesheet" href="/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/@form-validation/form-validation.css" />
 
+
+
     <style>
-          .col-md-4 {
-        flex: 0 0 auto;
-        width: 24.333333%;
-    }
-      .px-4 {
-            padding-inline-end: 9rem !important;
-      }
-      .text-muted{
-          color: #59888d;
-      }
-
-    .col-md-12
-     {
-        width: 100%;
-     }
-      .col-md-6
-      {
-        width: 25%;
-      }
-
+        .row div {
+          padding: 8px 12px;
+          border-radius: 4px;
+        }
     </style>
+
 
     <!-- Page CSS -->
 
@@ -119,44 +106,44 @@
 
   <div class="">
   <h2 class="text-primary text-center mb-4">Lead Details</h2>
-  <div class="row g-3">
+  <div class="row g-2">
 
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Customer Name : </strong><div class="fw-semibold">{{ lead.customer_name }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Customer Type : </strong><div class="fw-semibold">{{ lead.customer_type }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Calling Number : </strong><div class="fw-semibold">{{ lead.calling_number }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Enquiry Type : </strong><div class="fw-semibold">{{ lead.enquiry_type }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Enquiry Source : </strong><div class="fw-semibold">{{ lead.enquiry_source }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Sub Enquiry Source : </strong><div class="fw-semibold">{{ lead.sub_enquiry_source }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Lead Date : </strong><div class="fw-semibold">{{ lead.lead_date }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Calling Status : </strong><div class="fw-semibold">{{ lead.calling_status }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Interested Status : </strong><div class="fw-semibold">{{ lead.interested_status }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Sub Calling Status : </strong><div class="fw-semibold">{{ lead.sub_calling_status }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Sub Sub Calling Status : </strong><div class="fw-semibold">{{ lead.sub_sub_calling_status }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Select BUs : </strong><div class="fw-semibold">{{ lead.select_bus }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Buyer Type : </strong><div class="fw-semibold">{{ lead.buyer_type }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Lead Status : </strong><div class="fw-semibold">{{ lead.lead_status }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Construction Level : </strong><div class="fw-semibold">{{ lead.construction_level }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Name : </strong><div class="fw-semibold">{{ lead.name }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Alternative Number : </strong><div class="fw-semibold">{{ lead.alternative_number }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Email ID : </strong><div class="fw-semibold">{{ lead.email_id }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Address : </strong><div class="fw-semibold">{{ lead.address }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Landmark : </strong><div class="fw-semibold">{{ lead.landmark }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Brand : </strong><div class="fw-semibold">{{ lead.brand }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Product : </strong><div class="fw-semibold">{{ lead.product }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Sub Product : </strong><div class="fw-semibold">{{ lead.sub_product }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">State : </strong><div class="fw-semibold">{{ lead.state }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">District : </strong><div class="fw-semibold">{{ lead.district }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Zone : </strong><div class="fw-semibold">{{ lead.zone }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Pin Code : </strong><div class="fw-semibold">{{ lead.pin_code }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Agent Name : </strong><div class="fw-semibold">{{ lead.agent_name }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Order Qty : </strong><div class="fw-semibold">{{ lead.order_qty }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Order Description : </strong><div class="fw-semibold">{{ lead.order_description }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Order Value : </strong><div class="fw-semibold">{{ lead.order_value }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Customer Type Select : </strong><div class="fw-semibold">{{ lead.customer_type_select }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Registration Status : </strong><div class="fw-semibold">{{ lead.registration_status }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Remark : </strong><div class="fw-semibold">{{ lead.remark }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Seller Email ID : </strong><div class="fw-semibold">{{ lead.seller_email_id }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3 shadow-sm border-0"><strong class="text-muted">Seller Phone No : </strong><div class="fw-semibold">{{ lead.seller_phone_no }}</div></div></div>
+  <div class="col-12"><strong>Customer Name:</strong> {{ lead.customer_name }}</div>
+  <div class="col-12"><strong>Customer Type:</strong> {{ lead.customer_type }}</div>
+  <div class="col-12"><strong>Enquiry Type:</strong> {{ lead.enquiry_type }}</div>
+  <div class="col-12"><strong>Enquiry Source:</strong> {{ lead.enquiry_source }}</div>
+  <div class="col-12"><strong>Lead Date:</strong> {{ lead.lead_date }}</div>
+  <div class="col-12"><strong>Calling Number:</strong> {{ lead.calling_number }}</div>
+  <div class="col-12"><strong>Sub Enquiry Source:</strong> {{ lead.sub_enquiry_source }}</div>
+  <div class="col-12"><strong>Calling Status:</strong> {{ lead.calling_status }}</div>
+  <div class="col-12"><strong>Interested Status:</strong> {{ lead.interested_status }}</div>
+  <div class="col-12"><strong>Sub Calling Status:</strong> {{ lead.sub_calling_status }}</div>
+  <div class="col-12"><strong>Sub Sub Calling Status:</strong> {{ lead.sub_sub_calling_status }}</div>
+  <div class="col-12"><strong>Select BUs:</strong> {{ lead.select_bus }}</div>
+  <div class="col-12"><strong>Buyer Type:</strong> {{ lead.buyer_type }}</div>
+  <div class="col-12"><strong>Lead Status:</strong> {{ lead.lead_status }}</div>
+  <div class="col-12"><strong>Construction Level:</strong> {{ lead.construction_level }}</div>
+  <div class="col-12"><strong>Name:</strong> {{ lead.name }}</div>
+  <div class="col-12"><strong>Alternative Number:</strong> {{ lead.alternative_number }}</div>
+  <div class="col-12"><strong>Email ID:</strong> {{ lead.email_id }}</div>
+  <div class="col-12"><strong>Address:</strong> {{ lead.address }}</div>
+  <div class="col-12"><strong>Landmark:</strong> {{ lead.landmark }}</div>
+  <div class="col-12"><strong>Brand:</strong> {{ lead.brand }}</div>
+  <div class="col-12"><strong>Product:</strong> {{ lead.product }}</div>
+  <div class="col-12"><strong>Sub Product:</strong> {{ lead.sub_product }}</div>
+  <div class="col-12"><strong>State:</strong> {{ lead.state }}</div>
+  <div class="col-12"><strong>District:</strong> {{ lead.district }}</div>
+  <div class="col-12"><strong>Zone:</strong> {{ lead.zone }}</div>
+  <div class="col-12"><strong>Pin Code:</strong> {{ lead.pin_code }}</div>
+  <div class="col-12"><strong>Agent Name:</strong> {{ lead.agent_name }}</div>
+  <div class="col-12"><strong>Order Qty:</strong> {{ lead.order_qty }}</div>
+  <div class="col-12"><strong>Order Description:</strong> {{ lead.order_description }}</div>
+  <div class="col-12"><strong>Order Value:</strong> {{ lead.order_value }}</div>
+  <div class="col-12"><strong>Customer Type Select:</strong> {{ lead.customer_type_select }}</div>
+  <div class="col-12"><strong>Registration Status:</strong> {{ lead.registration_status }}</div>
+  <div class="col-12"><strong>Remark:</strong> {{ lead.remark }}</div>
+  <div class="col-12"><strong>Seller Email ID:</strong> {{ lead.seller_email_id }}</div>
+  <div class="col-12"><strong>Seller Phone No:</strong> {{ lead.seller_phone_no }}</div>
 
   </div>
 </div>
