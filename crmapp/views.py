@@ -814,6 +814,10 @@ def update_lead(request):
             lead.remark = data.get('remark', '')
             lead.seller_email_id = data.get('seller_email', '')
             lead.seller_phone_no = data.get('seller_phone', '')
+
+            lead.seller_email_id_L2 = data.get('seller_email_L2', '')
+            lead.seller_phone_no_L2 = data.get('seller_phone_L2', '')
+
             lead.lead_closer_status = data.get('lead_closer_status', '')
 
             lead.secure_url = data.get('secure_link', '')
@@ -862,6 +866,9 @@ def update_lead(request):
                 secure_url=lead.secure_url,
                 seller_email_id=lead.seller_email_id,
                 seller_phone_no=lead.seller_phone_no,
+
+                seller_email_id_L2=lead.seller_email_id_L2,
+                seller_phone_no_L2=lead.seller_phone_no_L2,
                 callback_time=lead.callback_time,
                 lead_closer_status =lead.lead_closer_status,
                 created_by=lead.created_by,  # or request.user if preferred

@@ -780,7 +780,7 @@
                       <ul class="list-unstyled my-3 py-1">
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-user icon-lg"></i
-                          ><span class="fw-medium mx-2">Sales Person:</span> <span id="seller_name"> </span>
+                          ><span class="fw-medium mx-2">Sales Person:</span> <span id="seller_name">{{lead.name}} </span>
                         </li>
 <!--                        <li class="d-flex align-items-center mb-4">-->
 <!--                          <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">Customer Type:</span>-->
@@ -788,7 +788,7 @@
 <!--                        </li>-->
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-crown icon-lg"></i><span class="fw-medium mx-2">Number:</span>
-                          <span id="mob_num_id"></span>
+                          <span id="mob_num_id">{{lead.seller_phone_no}}</span>
                           <!-- Button to open modal -->
                           <button type="button" onclick="seller_call();" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="seller" data-bs-toggle="modal" data-bs-target="#callModal">
                             <i class="ti-phone"></i> FollowUp
@@ -796,12 +796,12 @@
                         </li>
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">City:</span>
-                          <span id="city_id"></span>
+                          <span id="city_id">{{lead.district}}</span>
                         </li>
 
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-flag icon-lg"></i><span class="fw-medium mx-2">Email:</span>
-                          <span id="email_id"></span>
+                          <span id="email_id">{{lead.seller_email_id}}</span>
                         </li>
 
                         <li class="d-flex align-items-center mb-4">
@@ -1144,7 +1144,7 @@
                     </div>
 
                     <div class="col-md-4">
-  <label>Sales Team Email ID:</label>
+  <label>Sales Team Email ID L1:</label>
   <input type="text" class="form-control" name="seller_email" id="seller_email" value="{{ lead.seller_email_id|default_if_none:'' }}">
 
 <!--  <select class="form-select" name="seller_email" id="seller_email_select">-->
@@ -1160,8 +1160,30 @@
 </div>
 
 <div class="col-md-4">
-  <label>Sales Team Phone No:</label>
+  <label>Sales Team Phone No L1:</label>
 <input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no|default_if_none:'' }}">
+</div>
+
+
+  <div class="col-md-4">
+  <label>Sales Team Email ID L2:</label>
+  <input type="text" class="form-control" name="seller_email_L2" id="seller_email_L2" value="{{ lead.seller_email_id_L2|default_if_none:'' }}">
+
+<!--  <select class="form-select" name="seller_email" id="seller_email_select">-->
+<!--    <option value="">&#45;&#45;Select Seller&#45;&#45;</option>-->
+<!--    {% for contact in sales_contacts %}-->
+<!--      <option value="{{ contact.l1_mail }}"-->
+<!--        {% if lead.seller_email_id == contact.l1_mail %}selected{% endif %}>-->
+<!--        City: {{ contact.city_custom }} | Name: {{ contact.l1_name }} | Email: {{ contact.l1_mail }}-->
+<!--      </option>-->
+<!--    {% endfor %}-->
+<!--  </select>-->
+
+</div>
+
+<div class="col-md-4">
+  <label>Sales Team Phone No L2:</label>
+<input type="text" class="form-control" name="seller_phone_L2" id="seller_phone_L2" value="{{ lead.seller_phone_no_L2|default_if_none:'' }}">
 </div>
 
   <div class="col-md-4">

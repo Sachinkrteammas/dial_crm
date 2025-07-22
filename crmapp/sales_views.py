@@ -1143,14 +1143,15 @@ def send_lead_email(request, lead_id):
         # Email details
         subject = "Validated Lead Information"
         from_email = settings.EMAIL_HOST_USER
-        to = [lead.seller_email_id]  # Or use [lead.seller_email_id]
+        to = [lead.seller_email_id]
+        cc = [lead.seller_email_id_L2]  # <-- Add your CC email(s) here
 
-        # Send the email
-        msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+        # Send the email with CC
+        msg = EmailMultiAlternatives(subject, text_content, from_email, to, cc=cc)
         msg.attach_alternative(html_content, "text/html")
         msg.send()
 
         return HttpResponse("Lead email sent successfully.")
 
-    except HistoryLead.DoesNotExist:
+    except LeadTable.DoesNotExist:
         return HttpResponse("Lead not found.", status=404)

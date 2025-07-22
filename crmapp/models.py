@@ -204,6 +204,10 @@ class LeadTable(models.Model):
 
     seller_email_id = models.EmailField(blank=True, null=True)
     seller_phone_no = models.CharField(max_length=15, blank=True, null=True)
+
+    seller_email_id_L2 = models.EmailField(blank=True, null=True)
+    seller_phone_no_L2 = models.CharField(max_length=15, blank=True, null=True)
+
     lead_closer_status = models.CharField(max_length=100, blank=True, null=True)
 
     contact_details = models.ForeignKey(ContactDetails, on_delete=models.CASCADE, null=True, blank=True, related_name='contact_details')
@@ -331,6 +335,10 @@ class HistoryLead(models.Model):
 
     seller_email_id = models.EmailField(blank=True, null=True)
     seller_phone_no = models.CharField(max_length=15, blank=True, null=True)
+
+    seller_email_id_L2 = models.EmailField(blank=True, null=True)
+    seller_phone_no_L2 = models.CharField(max_length=15, blank=True, null=True)
+
     lead_closer_status = models.CharField(max_length=100, blank=True, null=True)
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_leads_history')
