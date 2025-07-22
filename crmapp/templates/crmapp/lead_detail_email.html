@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+        }
+        span {
+            color: #000;
+        }
+        .section {
+            margin-bottom: 12px;
+        }
+        .container {
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <p style="font-size:18px;">Dear Sir,</p>
+    <p>Please find below the details of a validated lead from your region:</p>
+    <p style="font-size:18px;">Lead Details:</p>
+
+    <div class="section"><label>Customer Name:</label> <span>{{ lead.customer_name }}</span></div>
+    <div class="section"><label>Customer Type:</label> <span>{{ lead.customer_type }}</span></div>
+    <div class="section"><label>Mobile:</label> <span>{{ lead.calling_number }}</span></div>
+    <div class="section"><label>Alternative Number:</label> <span>{{ lead.alt_number }}</span></div>
+    <div class="section"><label>Email ID:</label> <span>{{ lead.email_id }}</span></div>
+    <div class="section"><label>Address:</label> <span>{{ lead.address }}</span></div>
+    <div class="section"><label>Landmark:</label> <span>{{ lead.landmark }}</span></div>
+    <div class="section"><label>City:</label> <span>{{ lead.district }}</span></div>
+    <div class="section"><label>State:</label> <span>{{ lead.state }}</span></div>
+    <div class="section"><label>Pin Code:</label> <span>{{ lead.pin_code }}</span></div>
+    <div class="section"><label>Zone:</label> <span>{{ lead.zone }}</span></div>
+    <div class="section"><label>Brand:</label> <span>{{ lead.brand }}</span></div>
+    <div class="section"><label>Product:</label> <span>{{ lead.product }}</span></div>
+    <div class="section"><label>Sub Product:</label> <span>{{ lead.sub_product }}</span></div>
+<!--    <div class="section"><label>Query Type:</label> <span>{{ lead.query_type }}</span></div>-->
+    <div class="section"><label>Enquiry Type:</label> <span>{{ lead.enquiry_type }}</span></div>
+    <div class="section"><label>Enquiry Source:</label> <span>{{ lead.enquiry_source }}</span></div>
+    <div class="section"><label>Sub Enquiry Source:</label> <span>{{ lead.sub_enquiry_source }}</span></div>
+    <div class="section"><label>Date and Time:</label> <span>{{ formatted_date }}</span></div>
+    <div class="section"><label>Remarks:</label> <span>{{ lead.remark }}</span></div>
+    <div class="section"><label>Lead Status:</label> <span>{{ lead.lead_status }}</span></div>
+    <div class="section"><label>Construction Level:</label> <span>{{ lead.construction_level }}</span></div>
+    <div class="section"><label>Category (BU):</label> <span>{{ lead.category }}</span></div>
+    <div class="section"><label>Interested Status:</label> <span>{{ lead.interest_status }}</span></div>
+    <div class="section"><label>Calling Status:</label> <span>{{ lead.calling_status }}</span></div>
+    <div class="section"><label>Sub Calling Status:</label> <span>{{ lead.sub_calling_status }}</span></div>
+    <div class="section"><label>Customer Type Select:</label> <span>{{ lead.customer_type_select }}</span></div>
+    <div class="section"><label>Buyer Type:</label> <span>{{ lead.buyer_type }}</span></div>
+    <div class="section"><label>Seller Email ID:</label> <span>{{ lead.seller_email_id }}</span></div>
+    <div class="section"><label>Seller Phone No:</label> <span>{{ lead.seller_phone_no }}</span></div>
+    <div class="section"><label>Registration Status:</label> <span>{{ lead.registration_status }}</span></div>
+    <div class="section"><label>Order Qty:</label> <span>{{ lead.order_qty }}</span></div>
+    <div class="section"><label>Order Description:</label> <span>{{ lead.order_description }}</span></div>
+    <div class="section"><label>Order Value:</label> <span>{{ lead.order_value }}</span></div>
+
+    <div class="section">
+        <label>Secure Link:</label>
+        <a href="{{ secure_url }}" target="_blank">{{ secure_url }}</a>
+    </div>
+
+    <p>Regards,<br>Team</p>
+</div>
+</body>
+</html>

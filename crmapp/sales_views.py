@@ -17,8 +17,8 @@ from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem,
 from .views import render_menu
 from django.contrib.auth.models import User
 from django.contrib import messages
-
-
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
 
 @login_required
 def sales_user(request):
@@ -1115,3 +1115,42 @@ def follow_up_data(request):
 def get_leads_by_user(request, user_id):
     leads = LeadTable.objects.filter(created_by_id=user_id).values('id', 'customer_name')
     return JsonResponse(list(leads), safe=False)
+
+
+from django.template.loader import render_to_string
+def send_lead_email(request, lead_id):
+    try:
+        # Fetch the lead
+        lead = LeadTable.objects.get(id=lead_id)
+
+        # Use the existing secure_url from the DB
+        if not lead.secure_url:
+            return HttpResponse("Secure URL not available for this lead.", status=400)
+
+        secure_url = request.build_absolute_uri(lead.secure_url)
+
+        # Prepare context for the email template
+        context = {
+            "lead": lead,
+            "secure_url": secure_url,
+            "formatted_date": lead.callback_time.strftime("%d %B %Y, %I:%M %p") if lead.callback_time else "",
+        }
+
+        # Render email content
+        html_content = render_to_string("crmapp/lead_detail_email.html", context)
+        text_content = "Lead Details - Please open in an HTML-supported email viewer."
+
+        # Email details
+        subject = "Validated Lead Information"
+        from_email = settings.EMAIL_HOST_USER
+        to = [lead.seller_email_id]  # Or use [lead.seller_email_id]
+
+        # Send the email
+        msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+        msg.attach_alternative(html_content, "text/html")
+        msg.send()
+
+        return HttpResponse("Lead email sent successfully.")
+
+    except HistoryLead.DoesNotExist:
+        return HttpResponse("Lead not found.", status=404)

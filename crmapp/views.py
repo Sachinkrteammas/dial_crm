@@ -868,6 +868,10 @@ def update_lead(request):
                 updated_by=lead.updated_by,
             )
 
+            # Call the email function
+            from .sales_views import send_lead_email
+            send_lead_email(request, lead_id)
+
 
             # return JsonResponse({'status': 'success'})
             messages.success(request, 'Lead updated successfully!')
