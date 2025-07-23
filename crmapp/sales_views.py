@@ -112,14 +112,13 @@ def sales_get_data(request):
 
     return render(request, 'crmapp/sales_get_data.html', {'lead': lead, 'sales': sales})
 
-
+@csrf_exempt
 def update_sales_info(request):
     if request.method == 'POST':
         lead_id = request.POST.get('lead_id')
         lead = get_object_or_404(LeadTable, id=lead_id)
 
         sales_info, created = SalesInfoTable.objects.get_or_create(lead_table=lead)
-
 
         sales_info.sale_mt = request.POST.get('sale_mt')
         sales_info.sale_inr = request.POST.get('sale_inr')
@@ -131,13 +130,15 @@ def update_sales_info(request):
         sales_info.product_value = request.POST.get('product_value')
         sales_info.status = request.POST.get('status')
 
-        if created:
+        # ✅ Only assign user if authenticated
+        if created and request.user.is_authenticated:
             sales_info.created_by = request.user
-        sales_info.updated_by = request.user
+        if request.user.is_authenticated:
+            sales_info.updated_by = request.user
 
         sales_info.save()
 
-
+        # Save to history table (optional: add created_by if needed)
         HistorySalesInfo.objects.create(
             lead_table=sales_info,
             sale_mt=sales_info.sale_mt,
@@ -149,8 +150,6 @@ def update_sales_info(request):
             product=sales_info.product,
             product_value=sales_info.product_value,
             status=sales_info.status,
-            created_by=request.user,
-            updated_by=request.user,
         )
 
         # ✅ Encrypt and redirect
