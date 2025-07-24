@@ -463,3 +463,11 @@ class SalesVOC(models.Model):
 
     class Meta:
         db_table = 'sales_voc'
+
+class AdviserAssignmentTracker(models.Model):
+    key = models.CharField(max_length=100, unique=True)
+    last_index = models.IntegerField(default=0)
+
+
+    class Meta:
+        db_table = 'adviser_assignment_tracker'

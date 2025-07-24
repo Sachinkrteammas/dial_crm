@@ -780,7 +780,7 @@
                       <ul class="list-unstyled my-3 py-1">
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-user icon-lg"></i
-                          ><span class="fw-medium mx-2">Sales Person:</span> <span id="seller_name">{{lead.name}} </span>
+                          ><span class="fw-medium mx-2">Sales Person:</span> <span id="seller_name">{{lead.name |default_if_none:''}} </span>
                         </li>
 <!--                        <li class="d-flex align-items-center mb-4">-->
 <!--                          <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">Customer Type:</span>-->
@@ -788,7 +788,7 @@
 <!--                        </li>-->
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-crown icon-lg"></i><span class="fw-medium mx-2">Number:</span>
-                          <span id="mob_num_id">{{lead.seller_phone_no}}</span>
+                          <span id="mob_num_id">{{lead.seller_phone_no |default_if_none:''}}</span>
                           <!-- Button to open modal -->
                           <button type="button" onclick="seller_call();" class="btn btn-sm btn-outline-primary ms-2 call-btn" data-follow-up="seller" data-bs-toggle="modal" data-bs-target="#callModal">
                             <i class="ti-phone"></i> FollowUp
@@ -796,12 +796,24 @@
                         </li>
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">City:</span>
-                          <span id="city_id">{{lead.district}}</span>
+                          <span id="city_id">{{lead.district |default_if_none:''}}</span>
                         </li>
 
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-flag icon-lg"></i><span class="fw-medium mx-2">Email:</span>
-                          <span id="email_id">{{lead.seller_email_id}}</span>
+                          <span id="email_id">{{lead.seller_email_id |default_if_none:''}}</span>
+                        </li>
+
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-flag icon-lg"></i><span class="fw-medium mx-2">Email L2:</span>
+                          <span id="email_id_L2">{{lead.seller_email_id_L2 |default_if_none:''}}</span>
+                        </li>
+
+                        <li class="d-flex align-items-center mb-4">
+                          <i class="icon-base ti tabler-crown icon-lg"></i><span class="fw-medium mx-2">Number L2:</span>
+                          <span id="mob_num_id_L2">{{lead.seller_phone_no_L2 |default_if_none:''}}</span>
+                          <!-- Button to open modal -->
+
                         </li>
 
                         <li class="d-flex align-items-center mb-4">
