@@ -19,6 +19,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from datetime import datetime
 
 @login_required
 def sales_user(request):
@@ -108,9 +109,10 @@ def sales_get_data(request):
         message = "No matching lead found for the given ID and email."
         return render(request, 'crmapp/sales_get_data.html', {'message': message})
 
-    sales, created = SalesInfoTable.objects.get_or_create(lead_table=lead)
+    sales_info = SalesInfoTable.objects.filter(lead_table=lead).first()
 
-    return render(request, 'crmapp/sales_get_data.html', {'lead': lead, 'sales': sales})
+
+    return render(request, 'crmapp/sales_get_data.html', {'lead': lead, 'sales': sales_info})
 
 @csrf_exempt
 def update_sales_info(request):
@@ -131,10 +133,10 @@ def update_sales_info(request):
         sales_info.status = request.POST.get('status')
 
         # ✅ Only assign user if authenticated
-        if created and request.user.is_authenticated:
-            sales_info.created_by = request.user
-        if request.user.is_authenticated:
-            sales_info.updated_by = request.user
+        # if created and request.user.is_authenticated:
+        #     sales_info.created_by = request.user
+        # if request.user.is_authenticated:
+        #     sales_info.updated_by = request.user
 
         sales_info.save()
 
@@ -508,9 +510,11 @@ def sales_export(request):
                 "menu_html": menu_html,
                 "error": "Invalid date format."
             })
+        from_datetime = datetime.combine(from_date, datetime.min.time())
+        to_datetime = datetime.combine(to_date, datetime.max.time())
 
         leads = HistorySalesInfo.objects.filter(
-            created_at__date__range=(from_date, to_date)
+            created_at__range=(from_datetime, to_datetime)
         )
 
         wb = openpyxl.Workbook()
@@ -584,8 +588,12 @@ def follow_up(request):
                 "error": "Invalid date format."
             })
 
-        # ✅ Use created_at for date filtering
-        followups = TBLFollowUp.objects.filter(created_at__date__range=(from_date, to_date))
+        from_datetime = datetime.combine(from_date, datetime.min.time())
+        to_datetime = datetime.combine(to_date, datetime.max.time())
+
+        followups = TBLFollowUp.objects.filter(
+            created_at__range=(from_datetime, to_datetime)
+        )
 
         # Create workbook
         wb = openpyxl.Workbook()
