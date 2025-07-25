@@ -63,5 +63,7 @@ urlpatterns = [
     path('download-template/', sales_views.download_excel_template, name='download_excel_template'),
     path('call_back_lead/', sales_views.call_back_lead, name='call_back_lead'),
     path('follow_up_data/', sales_views.follow_up_data, name='follow_up_data'),
+    path('not_connected_lead/', sales_views.not_connected_lead, name='not_connected_lead'),
+    path('new_lead/', sales_views.new_lead, name='new_lead'),
 
 ]

@@ -1162,3 +1162,123 @@ def send_lead_email(request, lead_id):
 
     except LeadTable.DoesNotExist:
         return HttpResponse("Lead not found.", status=404)
+
+
+
+@login_required
+def not_connected_lead(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    # Base leads for current user
+    leads = LeadTable.objects.filter(created_by=request.user).order_by('-created_at')
+
+    # Get filters
+    query = request.GET.get('query')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    calling_status = request.GET.get('calling_status')
+    sub_calling_status = request.GET.get('sub_calling_status')
+
+    # Apply filters
+    if calling_status:
+        leads = leads.filter(calling_status__iexact=calling_status)
+    else:
+        leads = leads.filter(calling_status__iexact='Not Connect')
+
+    if sub_calling_status:
+        leads = leads.filter(sub_calling_status__iexact=sub_calling_status)
+
+    if start_date:
+        leads = leads.filter(lead_date__gte=parse_date(start_date))
+
+    if end_date:
+        leads = leads.filter(lead_date__lte=parse_date(end_date))
+
+    if query:
+        leads = leads.filter(
+            Q(customer_name__icontains=query) |
+            Q(calling_number__icontains=query) |
+            Q(enquiry_type__icontains=query) |
+            Q(enquiry_source__icontains=query) |
+            Q(sub_calling_status__icontains=query)
+        )
+
+    # Pagination
+    paginator = Paginator(leads, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Zones list (optional)
+    zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
+
+    return render(request, 'crmapp/not_connect_lead.html', {
+        'menu_html': menu_html,
+        'leads': page_obj,
+        'zones': zones,
+        'paginator': paginator,
+        'page_obj': page_obj,
+    })
+
+
+@login_required
+def new_lead(request):
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    # Base leads for current user
+    leads = LeadTable.objects.filter(created_by=request.user).order_by('-created_at')
+
+    # Get filters
+    query = request.GET.get('query')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    calling_status = request.GET.get('calling_status')
+    sub_calling_status = request.GET.get('sub_calling_status')
+
+    # Apply filters
+    if calling_status:
+        leads = leads.filter(calling_status__iexact=calling_status)
+
+    if sub_calling_status:
+        leads = leads.filter(sub_calling_status__iexact=sub_calling_status)
+
+    if start_date:
+        leads = leads.filter(lead_date__gte=parse_date(start_date))
+
+    if end_date:
+        leads = leads.filter(lead_date__lte=parse_date(end_date))
+
+    if query:
+        leads = leads.filter(
+            Q(customer_name__icontains=query) |
+            Q(calling_number__icontains=query) |
+            Q(enquiry_type__icontains=query) |
+            Q(enquiry_source__icontains=query) |
+            Q(sub_calling_status__icontains=query)
+        )
+    leads = leads.filter(Q(secure_url__isnull=True) | Q(secure_url__exact='')).order_by('-created_at')
+
+    # Pagination
+    paginator = Paginator(leads, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Zones list (optional)
+    zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
+
+    return render(request, 'crmapp/new_lead.html', {
+        'menu_html': menu_html,
+        'leads': page_obj,
+        'zones': zones,
+        'paginator': paginator,
+        'page_obj': page_obj,
+    })

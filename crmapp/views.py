@@ -731,6 +731,13 @@ def get_lead_data(request, lead_id):
     except LeadTable.DoesNotExist:
         return JsonResponse({"status": "error", "message": "Lead not found"}, status=404)
 
+import re
+
+def sanitize_text(text):
+    if text is None:
+        return ''
+    return re.sub(r'[^\w\s.,\-@()]', '', text)
+
 
 
 from datetime import datetime
@@ -773,7 +780,7 @@ def update_lead(request):
             lead.enquiry_source = data.get('enquiry_source', '')
             lead.sub_enquiry_source = data.get('sub_enquiry_source', '')
             lead.lead_date = parse_date(data.get('lead_date', None))
-            # lead.call_date = parse_date(data.get('call_date', None))
+            lead.call_date = parse_date(data.get('call_date', None))
             # lead.call_type = data.get('call_direction', '')
             lead.calling_status = data.get('calling_status', '')
             lead.interested_status = data.get('interest_status', '')
@@ -783,11 +790,11 @@ def update_lead(request):
             lead.buyer_type = data.get('buyer_type', '')
             lead.lead_status = data.get('lead_status', '')
             lead.construction_level = data.get('construction_level', '')
-            lead.name = data.get('name', '')
+            lead.name = sanitize_text(data.get('name', ''))
             lead.alternative_number = data.get('alternative_number', '')
             lead.email_id = data.get('email_id', '')
-            lead.address = data.get('address', '')
-            lead.landmark = data.get('landmark', '')
+            lead.address = sanitize_text(data.get('address', ''))
+            lead.landmark = sanitize_text(data.get('landmark', ''))
             lead.brand = data.get('brand_name', '')
             lead.product = data.get('product', '')
             lead.sub_product = data.get('sub_product', '')
@@ -800,7 +807,7 @@ def update_lead(request):
             order_qty = data.get('order_qty')
             lead.order_qty = int(order_qty) if order_qty not in (None, '', 'null') else None
 
-            lead.order_description = data.get('order_description', '')
+            lead.order_description = sanitize_text(data.get('order_description', ''))
 
             order_value = data.get('order_value')
             try:
@@ -811,7 +818,7 @@ def update_lead(request):
             lead.customer_type_select = data.get('customer_type_select', '')
 
             lead.registration_status = data.get('registration_status', '')
-            lead.remark = data.get('remark', '')
+            lead.remark = sanitize_text(data.get('remark', ''))
             lead.seller_email_id = data.get('seller_email', '')
             lead.seller_phone_no = data.get('seller_phone', '')
 

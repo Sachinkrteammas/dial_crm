@@ -712,16 +712,16 @@
                       <ul class="list-unstyled my-3 py-1">
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-user icon-lg"></i
-                          ><span class="fw-medium mx-2">Full Name:</span> <span>{{ lead.customer_name }}</span>
+                          ><span class="fw-medium mx-2">Full Name:</span> <span>{{ lead.customer_name |default_if_none:'' }}</span>
                         </li>
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-check icon-lg"></i><span class="fw-medium mx-2">Customer Type:</span>
-                          <span>{{ lead.customer_type }}</span>
+                          <span>{{ lead.customer_type |default_if_none:'' }}</span>
                         </li>
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-crown icon-lg"></i>
                           <span class="fw-medium mx-2">Number:</span>
-                          <span id="mob_customer_id">{{ lead.calling_number }}</span>
+                          <span id="mob_customer_id">{{ lead.calling_number |default_if_none:'' }}</span>
 
                           <!-- Button to open modal -->
                           <button type="button"
@@ -738,7 +738,7 @@
 
                         <li class="d-flex align-items-center mb-4">
                           <i class="icon-base ti tabler-flag icon-lg"></i><span class="fw-medium mx-2">Email:</span>
-                          <span>{{ lead.email_id }}</span>
+                          <span>{{ lead.email_id |default_if_none:'' }}</span>
                         </li>
 <!--                        <li class="d-flex align-items-center mb-2">-->
 <!--                          <i class="icon-base ti tabler-language icon-lg"></i-->
@@ -887,6 +887,7 @@
                 <form method="POST" id="leadFormModel" action="{% url 'update_lead' %}">
                   {% csrf_token %}
                   <input type="hidden" name="lead_id" id="lead_id" value="{{ lead.id }}">
+                  <input type="hidden" id="call_date_field" name="call_date" value="{{ lead.call_date|date:'Y-m-d' }}">
                   <!-- Hidden input field in your HTML -->
                   <input type="hidden" name="secure_link" id="secure_link" value="{{ secure_url }}">
                   <input type="hidden" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">
@@ -1326,9 +1327,10 @@
                             <th>Customer Type</th>
                             <th>Number</th>
                             <th>Email</th>
-                            <th>Date</th>
+<!--                            <th>Date</th>-->
                             <th>Remarks</th>
                             <th>Created By</th>
+                            <th>Updated Date</th>
                             <th>Action</th>
                           </tr>
                         </thead>
@@ -1339,9 +1341,10 @@
                               <td>{{ history.customer_type }}</td>
                               <td>{{ history.calling_number }}</td>
                               <td>{{ history.email_id }}</td>
-                              <td>{{ history.lead_date }}</td>
+<!--                              <td>{{ history.lead_date }}</td>-->
                               <td>{{ history.remark }}</td>
                               <td>{{ history.created_by.username }}</td>
+                              <td>{{ history.updated_at|date:"Y-m-d" }}</td>
                              <td>
                               <a href="javascript:void(0);" class="open-lead-modal btn btn-sm btn-primary" data-id="{{ history.id }}">
                                 View
@@ -2957,6 +2960,11 @@ function resetDropdown(dropdownId, placeholder) {
               alert("No number provided");
               return;
           }
+
+          // Set today's date (YYYY-MM-DD) in hidden input
+
+          const today = new Date().toISOString().split('T')[0];  // "YYYY-MM-DD"
+          document.getElementById('call_date_field').value = today;
 
           fetch(`/api/make-call/?number=${encodeURIComponent(number)}`, {
               method: 'GET',
