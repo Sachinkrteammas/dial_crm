@@ -405,7 +405,10 @@ def leads_export(request):
                 "error": "Invalid date format."
             })
 
-        leads = HistoryLead.objects.filter(lead_date__range=(from_date, to_date))
+        from_datetime = datetime.combine(from_date, datetime.min.time())
+        to_datetime = datetime.combine(to_date, datetime.max.time())
+
+        leads = HistoryLead.objects.filter(created_at__range=(from_datetime, to_datetime))
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -663,7 +666,10 @@ def main_leads_export(request):
                 "error": "Invalid date format."
             })
 
-        leads = LeadTable.objects.filter(lead_date__range=(from_date, to_date))
+        from_datetime = datetime.combine(from_date, datetime.min.time())
+        to_datetime = datetime.combine(to_date, datetime.max.time())
+
+        leads = LeadTable.objects.filter(created_at__range=(from_datetime, to_datetime))
 
         wb = openpyxl.Workbook()
         ws = wb.active
