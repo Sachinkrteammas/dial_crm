@@ -883,8 +883,8 @@ def update_lead(request):
             )
 
             # Call the email function
-            from .sales_views import send_lead_email
-            send_lead_email(request, lead_id)
+            # from .sales_views import send_lead_email
+            # send_lead_email(request, lead_id)
 
 
             # return JsonResponse({'status': 'success'})
