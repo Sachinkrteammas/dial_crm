@@ -1300,6 +1300,7 @@ def send_whatsapp_message(request):
             data = json.loads(request.body)
 
             phone = data.get("phone")
+            template_id = data.get("templateId", "purchase_query")
 
 
             payload = {
@@ -1309,7 +1310,7 @@ def send_whatsapp_message(request):
                         "preview_url": False,
                         "type": "TEMPLATE",
                         "template": {
-                            "templateId": "purchase_query",
+                            "templateId": template_id,
                             "parameterValues": {}  # Use if template needs dynamic values
                         },
                         "shorten_url": True

@@ -1201,7 +1201,7 @@
 
   <div class="col-md-4">
   <label>Lead Closer Final:</label>
-  <select class="form-select" name="lead_closer_status">
+  <select class="form-select" name="lead_closer_status" id="lead_closer_status">
     <option value="">--Select Status--</option>
     <option value="closed_with_dealership" {% if lead.lead_closer_status == "closed_with_dealership" %}selected{% endif %}>Closed with Dealership</option>
     <option value="closed_with_order" {% if lead.lead_closer_status == "closed_with_order" %}selected{% endif %}>Closed with Order</option>
@@ -3178,20 +3178,72 @@ document.addEventListener("DOMContentLoaded", updateRegistrationOptions);
 document.addEventListener("DOMContentLoaded", function () {
     const subCallingStatusSelect = document.getElementById("sub_calling_status_select");
     const buyerTypeSelect = document.getElementById("buyer_type");
+    const subSubCallingStatusSelect  = document.getElementById("sub_sub_calling_status_select")
+    const leadCloserStatusSelect  = document.getElementById("lead_closer_status")
 
     function checkAndSendMessage() {
         const subStatus = subCallingStatusSelect.value;
         const buyerType = buyerTypeSelect.value;
+        const subSubStatus = subSubCallingStatusSelect.value;
+        const leadCloserStatus = leadCloserStatusSelect.value;
 
         const excludedTypes = ["Distributor", "Retailer", "Wholesaler/Stockist"];
 
-        // Send message if sub status is Valid and buyer type is not excluded
+        const closerTypes = [
+          "closed_with_dealership",
+          "closed_with_order",
+          "closed_with_solution",
+          "closed_without_dealership",
+          "closed_without_order"
+        ]
+
+        // 1 Send message if sub status is Valid and buyer type is not excluded
         if (subStatus === "Valid" && !excludedTypes.includes(buyerType)) {
             sendWhatsAppMessage();
         }
+
+        // 2 Send message if sub status is Valid and buyer type is excluded
+        else if (subStatus === "Valid" && excludedTypes.includes(buyerType)) {
+            sendWhatsAppMessage("dealership_distribution_query");
+        }
+
+
+        //3 Send message if sub status complaint and Services + closing condition
+        else if (
+            subStatus === "Complaint" || subStatus === "Services" &&
+            closerTypes.includes(leadCloserStatus)
+        ) {
+            sendWhatsAppMessage("general_query_is_resolved");
+        }
+
+        //4 Send message if sub status complaint and Services + not closing condition
+        else if (
+            subStatus === "Complaint" || subStatus === "Services" &&
+            !closerTypes.includes(leadCloserStatus)
+        ) {
+            sendWhatsAppMessage("general_query_isnot_resolved");
+        }
+
+        //5 Send message if sub status complaint with Coupons issue + closing condition
+        else if (
+            subStatus === "Complaint" &&
+            subSubStatus === "Coupons/Loyalty Related Issues" &&
+            closerTypes.includes(leadCloserStatus)
+        ) {
+            sendWhatsAppMessage("rewardsprogram_queryifresolved");
+        }
+
+        //6 Send message if sub status complaint with Coupons issue + Not closing condition
+        else if (
+            subStatus === "Complaint" &&
+            subSubStatus === "Coupons/Loyalty Related Issues" &&
+            !closerTypes.includes(leadCloserStatus)
+        ) {
+            sendWhatsAppMessage("rewardqueryifresolved_to_almondteam");
+        }
     }
 
-    function sendWhatsAppMessage() {
+    function sendWhatsAppMessage(templateId = "purchase_query") {
     const number = document.getElementById("mob_customer_id").textContent.trim();
 
         fetch("/api/send-whatsapp/", {
@@ -3200,7 +3252,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                phone: number
+                phone: number,
+                templateId: templateId
             })
         })
         .then(response => response.json())
@@ -3215,6 +3268,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Trigger on dropdown changes
 <!--    subCallingStatusSelect.addEventListener("change", checkAndSendMessage);-->
     buyerTypeSelect.addEventListener("change", checkAndSendMessage);
+    leadCloserStatusSelect.addEventListener("change", checkAndSendMessage);
 });
 </script>
 
