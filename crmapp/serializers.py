@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from .models import LeadTable
 
@@ -11,10 +12,23 @@ class WebhookLeadSerializer(serializers.Serializer):
     Source = serializers.CharField()
     Date = serializers.DateTimeField()
 
+    def validate_Phone(self, value):
+        # Extract only digits
+        digits = re.sub(r'\D', '', value)
+
+        # Take last 10 digits (Indian mobile number)
+        if len(digits) >= 10:
+            digits = digits[-10:]
+        else:
+            raise serializers.ValidationError("Phone number must contain at least 10 digits.")
+
+        if not re.fullmatch(r'\d{10}', digits):
+            raise serializers.ValidationError("Phone number must be exactly 10 digits.")
+
+        return digits
+
     def to_internal_value(self, data):
-        # Detect if the payload is IndiaMART format and map accordingly
         if "SENDER_NAME" in data:
-            # Map IndiaMART fields to internal fields
             data = {
                 "Name": data.get("SENDER_NAME"),
                 "Email": data.get("SENDER_EMAIL"),

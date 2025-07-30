@@ -1,3 +1,4 @@
+import json
 from io import BytesIO
 
 from django.contrib.auth.decorators import login_required
@@ -1288,3 +1289,64 @@ def new_lead(request):
         'paginator': paginator,
         'page_obj': page_obj,
     })
+
+
+########## whatsapp view api  ##########
+
+@csrf_exempt
+def send_whatsapp_message(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            phone = data.get("phone")
+
+
+            payload = {
+                "message": {
+                    "channel": "WABA",
+                    "content": {
+                        "preview_url": False,
+                        "type": "TEMPLATE",
+                        "template": {
+                            "templateId": "purchase_query",
+                            "parameterValues": {}  # Use if template needs dynamic values
+                        },
+                        "shorten_url": True
+                    },
+                    "recipient": {
+                        "to": phone,
+                        "recipient_type": "individual",
+                        "reference": {
+                            "cust_ref": "Some Customer Ref",
+                            "messageTag1": "Message Tag Val1",
+                            "conversationId": "Some Optional Conversation ID"
+                        }
+                    },
+                    "sender": {
+                        "from": "918977754652"
+                    },
+                    "preferences": {
+                        "webHookDNId": "1001"
+                    }
+                },
+                "metaData": {
+                    "version": "v1.0.9"
+                }
+            }
+
+            headers = {
+                "Authentication": "Bearer KqHuXlEn8rg1wOv5slUhuA==",
+                "Content-Type": "application/json"
+            }
+
+            response = requests.post(
+                "https://rcmapi.instaalerts.zone/services/rcm/sendMessage",
+                headers=headers,
+                json=payload
+            )
+
+            return JsonResponse(response.json(), status=response.status_code)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)

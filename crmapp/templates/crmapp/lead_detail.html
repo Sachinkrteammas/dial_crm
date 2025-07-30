@@ -3172,6 +3172,56 @@ document.addEventListener("DOMContentLoaded", updateRegistrationOptions);
 
 
 
+<!--    whatsapp calling script start-->
+
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const subCallingStatusSelect = document.getElementById("sub_calling_status_select");
+    const buyerTypeSelect = document.getElementById("buyer_type");
+
+    function checkAndSendMessage() {
+        const subStatus = subCallingStatusSelect.value;
+        const buyerType = buyerTypeSelect.value;
+
+        const excludedTypes = ["Distributor", "Retailer", "Wholesaler/Stockist"];
+
+        // Send message if sub status is Valid and buyer type is not excluded
+        if (subStatus === "Valid" && !excludedTypes.includes(buyerType)) {
+            sendWhatsAppMessage();
+        }
+    }
+
+    function sendWhatsAppMessage() {
+    const number = document.getElementById("mob_customer_id").textContent.trim();
+
+        fetch("/api/send-whatsapp/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                phone: number
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Message sent successfully:", data);
+        })
+        .catch(error => {
+            console.error("Error sending message:", error);
+        });
+    }
+
+    // Trigger on dropdown changes
+<!--    subCallingStatusSelect.addEventListener("change", checkAndSendMessage);-->
+    buyerTypeSelect.addEventListener("change", checkAndSendMessage);
+});
+</script>
+
+
+
+<!--    whatsapp calling script End-->
+
 
 
 
