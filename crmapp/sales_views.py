@@ -262,6 +262,16 @@ def lead_detail(request, lead_id):
         "Other": []
     }
 
+    followup_count = lead.follow_lead_table.count()
+
+    if followup_count == 0:
+        lead.lead_closer_status = "pending"
+    elif 1 <= followup_count <= 4:
+        lead.lead_closer_status = f"attempted_{followup_count}"
+    else:
+        # 5 or more follow-ups with no response
+        lead.lead_closer_status = "no_response"
+
     return render(request, 'crmapp/lead_detail.html', {
         'lead': lead,
         'menu_html': menu_html,
@@ -278,6 +288,7 @@ def lead_detail(request, lead_id):
         'sales_contacts': sales_contacts,
         'followup_history': followup_history,
         'current_time': now,
+        'followup_count': followup_count,
     })
 
 
@@ -1158,9 +1169,11 @@ def send_lead_email(request, lead_id):
         subject = "Validated Lead Information"
         from_email = settings.EMAIL_HOST_USER
         to = [lead.seller_email_id]
-        cc = [lead.seller_email_id_L2]  # <-- Add your CC email(s) here
 
-        # Send the email with CC
+        # Ensure cc is a list or empty list
+        cc = [lead.seller_email_id_L2] if lead.seller_email_id_L2 else []
+
+        # Create and send the email
         msg = EmailMultiAlternatives(subject, text_content, from_email, to, cc=cc)
         msg.attach_alternative(html_content, "text/html")
         msg.send()

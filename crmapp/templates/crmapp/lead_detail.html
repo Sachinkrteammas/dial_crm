@@ -887,10 +887,10 @@
                 <form method="POST" id="leadFormModel" action="{% url 'update_lead' %}">
                   {% csrf_token %}
                   <input type="hidden" name="lead_id" id="lead_id" value="{{ lead.id }}">
-                  <input type="hidden" id="call_date_field" name="call_date" value="{{ lead.call_date|date:'Y-m-d' }}">
+<!--                  <input type="hidden" id="call_date_field" name="call_date" value="{{ lead.call_date|date:'Y-m-d' }}">-->
                   <!-- Hidden input field in your HTML -->
                   <input type="hidden" name="secure_link" id="secure_link" value="{{ secure_url }}">
-                  <input type="hidden" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">
+<!--                  <input type="hidden" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">-->
 
 
                   <div class="row g-3">
@@ -969,6 +969,27 @@
     id="flatpickr-datetime"
     value="{{ lead.callback_time|default_if_none:''|date:'Y-m-d H:i' }}"
  />
+</div>
+
+ <div class="col-md-4" id="lead_close_id" style="display: none;">
+  <label>Lead Closer Final:</label>
+  <select class="form-select" name="lead_closer_status" id="lead_closer_status">
+  <option value="">--Select Status--</option>
+  <option value="pending" {% if lead.lead_closer_status == "pending" %}selected{% endif %}>Pending</option>
+
+  <option value="attempted_1" {% if lead.lead_closer_status == "attempted_1" %}selected{% endif %}>Attempted 1</option>
+  <option value="attempted_2" {% if lead.lead_closer_status == "attempted_2" %}selected{% endif %}>Attempted 2</option>
+  <option value="attempted_3" {% if lead.lead_closer_status == "attempted_3" %}selected{% endif %}>Attempted 3</option>
+  <option value="attempted_4" {% if lead.lead_closer_status == "attempted_4" %}selected{% endif %}>Attempted 4</option>
+
+  <option value="no_response" {% if lead.lead_closer_status == "no_response" %}selected{% endif %}>No Response</option>
+</select>
+
+</div>
+
+<div class="col-md-4" id="remarks_id" style="display: none;">
+  <label>Remark:</label>
+  <input type="text" class="form-control" name="remark" value="{{ lead.remark|default_if_none:'' }}">
 </div>
 
 
@@ -1065,6 +1086,16 @@
                     <div class="col-md-4">
                       <label>Name:</label>
                       <input type="text" class="form-control" name="name" value="{{ lead.name|default_if_none:'' }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Lead Date:</label>
+                      <input type="date" class="form-control" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label>Call Date:</label>
+                      <input type="date" class="form-control" id="call_date_field" name="call_date" value="{{ lead.call_date|date:'Y-m-d' }}">
                     </div>
 
                     <div class="col-md-4">
@@ -1210,7 +1241,9 @@
     <option value="closed_without_order" {% if lead.lead_closer_status == "closed_without_order" %}selected{% endif %}>Closed without Order</option>
     <option value="dropped" {% if lead.lead_closer_status == "dropped" %}selected{% endif %}>Dropped</option>
     <option value="followup" {% if lead.lead_closer_status == "followup" %}selected{% endif %}>Follow-up</option>
-    <option value="no_response" {% if lead.lead_closer_status == "no_response" %}selected{% endif %}>No Response</option>
+  <option value="no_response_from_sales_team" {% if lead.lead_closer_status == "no_response_from_sales_team" %}selected{% endif %}>No Response From Sales Team</option>
+    <option value="no_response_from_customer" {% if lead.lead_closer_status == "no_response_from_customer" %}selected{% endif %}>No Response From Customer</option>
+
     <option value="pending" {% if lead.lead_closer_status == "pending" %}selected{% endif %}>Pending</option>
     <option value="underprocess" {% if lead.lead_closer_status == "underprocess" %}selected{% endif %}>Under Process</option>
     <option value="validate" {% if lead.lead_closer_status == "validate" %}selected{% endif %}>Validate</option>
@@ -1327,7 +1360,7 @@
                             <th>Customer Type</th>
                             <th>Number</th>
                             <th>Email</th>
-<!--                            <th>Date</th>-->
+                            <th>Call Date</th>
                             <th>Remarks</th>
                             <th>Created By</th>
                             <th>Updated Date</th>
@@ -1341,7 +1374,7 @@
                               <td>{{ history.customer_type }}</td>
                               <td>{{ history.calling_number }}</td>
                               <td>{{ history.email_id }}</td>
-<!--                              <td>{{ history.lead_date }}</td>-->
+                              <td>{{ history.call_date|date:'Y-m-d' }}</td>
                               <td>{{ history.remark }}</td>
                               <td>{{ history.created_by.username }}</td>
                               <td>{{ history.updated_at|date:"Y-m-d" }}</td>
@@ -2538,6 +2571,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const showInterestBlock = selectedSub === "Valid";
 
+      const shownotconnectedBlock = selectedType === "Not Connect"
+
+      const showConnected_invalid = selectedType === "Connect" && selectedSub === "Invalid";
+
       // Show/hide connected fields (e.g. brand, order, etc.)
       connectedFields.style.display = showConnected ? "flex" : "none";
 
@@ -2555,6 +2592,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const lead_status_block = document.getElementById("lead_status_block");
         if (lead_status_block) {
           lead_status_block.style.display = showInterestBlock ? "block" : "none";
+        }
+
+        const lead_close_id = document.getElementById("lead_close_id");
+        const remarks_id = document.getElementById("remarks_id");
+        if (lead_close_id && remarks_id) {
+          const shouldShow = shownotconnectedBlock || showConnected_invalid;
+
+          lead_close_id.style.display = shouldShow ? "block" : "none";
+          remarks_id.style.display = shouldShow ? "block" : "none";
         }
 
 
