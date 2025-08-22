@@ -165,7 +165,7 @@
 
       <div class="col-md-6">
         <label class="form-label">Sale in INR</label>
-        <input type="text" name="sale_inr" value="{{ sales.sale_inr|default:'' }}" class="form-control">
+        <input type="text" name="sale_inr" value="{{ sales.sale_inr|default:'' }}" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
       </div>
 
 

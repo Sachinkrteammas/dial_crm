@@ -739,6 +739,7 @@
                   <table class="table table-sm">
                     <thead>
                       <tr>
+                        <th>Unique Id</th>
                         <th>Customer Name</th>
                         <th>Calling Number</th>
                         <th>Enquiry Type</th>
@@ -751,6 +752,7 @@
                     <tbody class="table-border-bottom-0">
                       {% for lead in leads %}
                       <tr>
+                        <td><span class="fw-medium">BN{{ lead.id }}</span></td>
                         <td><span class="fw-medium">{{ lead.customer_name }}</span></td>
 
                         <td>

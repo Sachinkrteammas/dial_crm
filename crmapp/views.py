@@ -599,13 +599,20 @@ def lead_table(request):
         leads = leads.filter(lead_date__lte=parse_date(end_date))
 
     if query:
-        leads = leads_search.filter(
-            Q(customer_name__icontains=query) |
-            Q(calling_number__icontains=query) |
-            Q(enquiry_type__icontains=query) |
-            Q(enquiry_source__icontains=query)|
-            Q(sub_calling_status__icontains=query)
-        )
+        if query.upper().startswith("BN"):
+            try:
+                query_id = int(query[2:])  # take after "BN"
+                leads = leads_search.filter(pk=query_id)
+            except ValueError:
+                leads = leads_search.none()  # invalid format like BNxx (non-numeric)
+        else:
+            leads = leads_search.filter(
+                Q(customer_name__icontains=query) |
+                Q(calling_number__icontains=query) |
+                Q(enquiry_type__icontains=query) |
+                Q(enquiry_source__icontains=query) |
+                Q(sub_calling_status__icontains=query)
+            )
 
     # Apply pagination
     paginator = Paginator(leads, 10)  # 10 leads per page
@@ -826,6 +833,10 @@ def update_lead(request):
             lead.seller_phone_no_L2 = data.get('seller_phone_L2', '')
 
             lead.lead_closer_status = data.get('lead_closer_status', '')
+            lead.lead_closer_status_new = data.get('lead_closer_status_new', '')
+
+            if (lead.lead_closer_status or lead.lead_closer_status_new.lower().startswith("closed")):
+                lead.lead_close_date = timezone.now().date()
 
             lead.secure_url = data.get('secure_link', '')
 
@@ -878,6 +889,9 @@ def update_lead(request):
                 seller_phone_no_L2=lead.seller_phone_no_L2,
                 callback_time=lead.callback_time,
                 lead_closer_status =lead.lead_closer_status,
+                lead_closer_status_new =lead.lead_closer_status_new,
+                lead_close_date=lead.lead_close_date,
+
                 created_by=lead.created_by,  # or request.user if preferred
                 updated_by=lead.updated_by,
             )

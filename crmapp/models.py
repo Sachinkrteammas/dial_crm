@@ -210,6 +210,9 @@ class LeadTable(models.Model):
 
     lead_closer_status = models.CharField(max_length=100, blank=True, null=True)
 
+    lead_closer_status_new = models.CharField(max_length=100, blank=True, null=True)
+    lead_close_date = models.DateField(blank=True, null=True)
+
     contact_details = models.ForeignKey(ContactDetails, on_delete=models.CASCADE, null=True, blank=True, related_name='contact_details')
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_leads')
@@ -340,6 +343,8 @@ class HistoryLead(models.Model):
     seller_phone_no_L2 = models.CharField(max_length=15, blank=True, null=True)
 
     lead_closer_status = models.CharField(max_length=100, blank=True, null=True)
+    lead_closer_status_new = models.CharField(max_length=100, blank=True, null=True)
+    lead_close_date = models.DateField(blank=True, null=True)
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_leads_history')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_leads_history')

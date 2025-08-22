@@ -50,6 +50,9 @@ urlpatterns = [
     path('leads_export/',sales_views.leads_export,name="leads_export"),
     path('sales_export/',sales_views.sales_export,name="sales_export"),
     path('follow_up/',sales_views.follow_up,name="follow_up"),
+    path('call_date/',sales_views.call_date,name="call_date"),
+
+
     path('main_leads_export/',sales_views.main_leads_export,name="main_leads_export"),
     path('reallocate/',sales_views.reallocate,name="reallocate"),
     path('get-leads-by-user/<int:user_id>/', sales_views.get_leads_by_user, name='get_leads_by_user'),
