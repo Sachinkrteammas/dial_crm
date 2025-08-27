@@ -436,6 +436,7 @@ def leads_export(request):
             'State', 'District', 'Zone', 'Pincode', 'Agent Name',
             'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
             'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
+            'Lead Closer Status New',
             'Created By', 'Updated By', 'Created At', 'Updated At'
         ])
 
@@ -482,6 +483,7 @@ def leads_export(request):
                 lead.seller_email_id,
                 lead.seller_phone_no,
                 lead.lead_closer_status,
+                lead.lead_closer_status_new,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
@@ -698,6 +700,7 @@ def main_leads_export(request):
             'State', 'District', 'Zone', 'Pincode', 'Agent Name',
             'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
             'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
+            'Lead Closer Status New',
             'Lead Close Date',
             'Created By', 'Updated By', 'Created At', 'Updated At',
 
@@ -753,6 +756,7 @@ def main_leads_export(request):
                 lead.seller_email_id,
                 lead.seller_phone_no,
                 lead.lead_closer_status,
+                lead.lead_closer_status_new,
                 lead.lead_close_date,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
@@ -1414,6 +1418,7 @@ def call_date(request):
             'State', 'District', 'Zone', 'Pincode', 'Agent Name',
             'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
             'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
+            'Lead Closer Status New',
             'Lead Close Date',
             'Created By', 'Updated By', 'Created At', 'Updated At',
 
@@ -1469,6 +1474,7 @@ def call_date(request):
                 lead.seller_email_id,
                 lead.seller_phone_no,
                 lead.lead_closer_status,
+                lead.lead_closer_status_new,
                 lead.lead_close_date,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
