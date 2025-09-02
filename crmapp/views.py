@@ -635,6 +635,7 @@ def lead_table(request):
 def save_lead(request):
     if request.method == "POST":
         customer_name = request.POST.get('customer_name')
+        customer_type = request.POST.get('customer_type')
         calling_number = request.POST.get('calling_number')
         enquiry_type = request.POST.get('enquiry_type')
         enquiry_source = request.POST.get('enquiry_source')
@@ -668,6 +669,7 @@ def save_lead(request):
         # Step 3: If no blocking lead found → allow new registration
         lead = LeadTable.objects.create(
             customer_name=customer_name,
+            customer_type=customer_type,
             calling_number=calling_number,
             enquiry_type=enquiry_type,
             enquiry_source=enquiry_source,
@@ -788,7 +790,7 @@ def update_lead(request):
             lead.sub_enquiry_source = data.get('sub_enquiry_source', '')
             lead.lead_date = parse_date(data.get('lead_date', None))
             lead.call_date = parse_date(data.get('call_date', None))
-            # lead.call_type = data.get('call_direction', '')
+            lead.call_type = data.get('call_type', '')
             lead.calling_status = data.get('calling_status', '')
             lead.interested_status = data.get('interest_status', '')
             lead.sub_calling_status = data.get('sub_calling_status', '')
@@ -837,6 +839,8 @@ def update_lead(request):
 
             if (lead.lead_closer_status or lead.lead_closer_status_new.lower().startswith("closed")):
                 lead.lead_close_date = timezone.now().date()
+
+            lead.final_lead_close_date = parse_date(data.get('final_lead_close_date', None))
 
             lead.secure_url = data.get('secure_link', '')
 
@@ -891,6 +895,7 @@ def update_lead(request):
                 lead_closer_status =lead.lead_closer_status,
                 lead_closer_status_new =lead.lead_closer_status_new,
                 lead_close_date=lead.lead_close_date,
+                final_lead_close_date=lead.final_lead_close_date,
 
                 created_by=lead.created_by,  # or request.user if preferred
                 updated_by=lead.updated_by,

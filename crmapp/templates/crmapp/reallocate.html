@@ -808,7 +808,7 @@
             data.forEach(lead => {
               const option = document.createElement('option');
               option.value = lead.id;
-              option.textContent = `${lead.customer_name} (ID: ${lead.id})`;
+              option.textContent = `${lead.customer_name} (ID: ${lead.id}) - Source: ${lead.enquiry_source}`;
               leadSelect.appendChild(option);
             });
           })

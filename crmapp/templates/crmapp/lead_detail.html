@@ -983,7 +983,9 @@
   <option value="attempted_4" {% if lead.lead_closer_status == "attempted_4" %}selected{% endif %}>Attempted 4</option>
 
   <option value="no_response" {% if lead.lead_closer_status == "no_response" %}selected{% endif %}>No Response</option>
-</select>
+
+<option value="invalid_close" {% if lead.lead_closer_status == "invalid_close" %}selected{% endif %}>Invalid Close</option>
+  </select>
 
 </div>
 
@@ -1083,6 +1085,16 @@
                         <option value="Cold" {% if lead.lead_status == 'Cold' %}selected{% endif %}>Cold (More than 30 days)</option>
                       </select>
                     </div>
+
+                    <div class="col-md-4" id="call_type_block">
+                      <label>Call Type:</label>
+                      <select class="form-select" name="call_type" id="call_type_select">
+                        <option value="">--Select Call Type--</option>
+                        <option value="Inbound" {% if lead.call_type == 'Inbound' %}selected{% endif %}>Inbound</option>
+                        <option value="Outbound" {% if lead.call_type == 'Outbound' %}selected{% endif %}>Outbound</option>
+                      </select>
+                    </div>
+
 
 
                     <div class="col-md-4">
@@ -1306,7 +1318,10 @@
 
 
 
-
+                    <div class="col-md-4">
+                      <label>Lead Close Date:</label>
+                      <input type="date" class="form-control" id="final_lead_close_date" name="final_lead_close_date" value="{{ lead.final_lead_close_date|date:'Y-m-d' }}">
+                    </div>
 
                     <div class="col-md-6">
                       <label>Address:</label>

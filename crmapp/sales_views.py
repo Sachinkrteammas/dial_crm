@@ -263,14 +263,19 @@ def lead_detail(request, lead_id):
     }
 
     followup_count = lead.follow_lead_table.count()
-
-    if followup_count == 0:
-        lead.lead_closer_status = "pending"
-    elif 1 <= followup_count <= 4:
-        lead.lead_closer_status = f"attempted_{followup_count}"
+    if lead.sub_calling_status == "Invalid":
+        # Highest priority: invalid case
+        lead.lead_closer_status = "invalid_close"
     else:
-        # 5 or more follow-ups with no response
-        lead.lead_closer_status = "no_response"
+        # Fallback: use follow-up logic
+
+
+        if followup_count == 0:
+            lead.lead_closer_status = "pending"
+        elif 1 <= followup_count <= 4:
+            lead.lead_closer_status = f"attempted_{followup_count}"
+        else:
+            lead.lead_closer_status = "no_response"
 
     return render(request, 'crmapp/lead_detail.html', {
         'lead': lead,
@@ -702,6 +707,7 @@ def main_leads_export(request):
             'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
             'Lead Closer Status New',
             'Lead Close Date',
+            'Final Lead Close Date',
             'Created By', 'Updated By', 'Created At', 'Updated At',
 
             # --- Sales Info ---
@@ -758,6 +764,7 @@ def main_leads_export(request):
                 lead.lead_closer_status,
                 lead.lead_closer_status_new,
                 lead.lead_close_date,
+                lead.final_lead_close_date,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
@@ -1146,7 +1153,7 @@ def follow_up_data(request):
 
 @login_required
 def get_leads_by_user(request, user_id):
-    leads = LeadTable.objects.filter(created_by_id=user_id).values('id', 'customer_name')
+    leads = LeadTable.objects.filter(created_by_id=user_id).values('id', 'customer_name','enquiry_source')
     return JsonResponse(list(leads), safe=False)
 
 
@@ -1420,6 +1427,7 @@ def call_date(request):
             'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
             'Lead Closer Status New',
             'Lead Close Date',
+            'Final Lead Close Date',
             'Created By', 'Updated By', 'Created At', 'Updated At',
 
             # --- Sales Info ---
@@ -1476,6 +1484,7 @@ def call_date(request):
                 lead.lead_closer_status,
                 lead.lead_closer_status_new,
                 lead.lead_close_date,
+                lead.final_lead_close_date,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
