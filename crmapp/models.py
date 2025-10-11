@@ -214,6 +214,9 @@ class LeadTable(models.Model):
     lead_close_date = models.DateField(blank=True, null=True)
     final_lead_close_date = models.DateField(blank=True, null=True)
 
+    lead_upload_type = models.CharField(max_length=100, blank=True, null=True)
+    lead_action = models.CharField(max_length=100, blank=True, null=True)
+
     contact_details = models.ForeignKey(ContactDetails, on_delete=models.CASCADE, null=True, blank=True, related_name='contact_details')
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_leads')
@@ -347,6 +350,9 @@ class HistoryLead(models.Model):
     lead_closer_status_new = models.CharField(max_length=100, blank=True, null=True)
     lead_close_date = models.DateField(blank=True, null=True)
     final_lead_close_date = models.DateField(blank=True, null=True)
+
+    lead_upload_type = models.CharField(max_length=100, blank=True, null=True)
+    lead_action = models.CharField(max_length=100, blank=True, null=True)
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_leads_history')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_leads_history')

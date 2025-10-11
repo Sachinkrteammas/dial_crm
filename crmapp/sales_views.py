@@ -22,6 +22,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from datetime import datetime
 
+
 @login_required
 def sales_user(request):
     # Render Menu
@@ -262,20 +263,20 @@ def lead_detail(request, lead_id):
         "Other": []
     }
 
-    followup_count = lead.follow_lead_table.count()
-    if lead.sub_calling_status == "Invalid":
-        # Highest priority: invalid case
-        lead.lead_closer_status = "invalid_close"
-    else:
-        # Fallback: use follow-up logic
-
-
-        if followup_count == 0:
-            lead.lead_closer_status = "pending"
-        elif 1 <= followup_count <= 4:
-            lead.lead_closer_status = f"attempted_{followup_count}"
-        else:
-            lead.lead_closer_status = "no_response"
+    # followup_count = lead.follow_lead_table.count()
+    # if lead.sub_calling_status == "Invalid":
+    #     # Highest priority: invalid case
+    #     lead.lead_closer_status = "invalid_close"
+    # else:
+    #     # Fallback: use follow-up logic
+    #
+    #
+    #     if followup_count == 0:
+    #         lead.lead_closer_status = "pending"
+    #     elif 1 <= followup_count <= 4:
+    #         lead.lead_closer_status = f"attempted_{followup_count}"
+    #     else:
+    #         lead.lead_closer_status = "no_response"
 
     return render(request, 'crmapp/lead_detail.html', {
         'lead': lead,
@@ -293,7 +294,7 @@ def lead_detail(request, lead_id):
         'sales_contacts': sales_contacts,
         'followup_history': followup_history,
         'current_time': now,
-        'followup_count': followup_count,
+        # 'followup_count': followup_count,
     })
 
 
@@ -477,7 +478,7 @@ def leads_export(request):
                 lead.district,
                 lead.zone,
                 lead.pin_code,
-                lead.agent_name,
+                str(lead.created_by).split('@')[0] if lead.created_by else '',
                 lead.order_qty,
                 lead.order_description,
                 float(lead.order_value) if lead.order_value else '',
@@ -704,10 +705,11 @@ def main_leads_export(request):
             'Address', 'Landmark', 'Brand', 'Product', 'Sub Product',
             'State', 'District', 'Zone', 'Pincode', 'Agent Name',
             'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
-            'Registration Status', 'Remark', 'Secure URL', 'Seller Email ID', 'Seller Phone No','Lead Closer Status',
+            'Registration Status', 'Remark', 'Secure URL', 'Sales Officer Email Id', 'Sales Officer Contact Number','Lead Closer Status',
             'Lead Closer Status New',
             'Lead Close Date',
             'Final Lead Close Date',
+            'Lead Upload Type',
             'Created By', 'Updated By', 'Created At', 'Updated At',
 
             # --- Sales Info ---
@@ -751,7 +753,7 @@ def main_leads_export(request):
                 lead.district,
                 lead.zone,
                 lead.pin_code,
-                lead.agent_name,
+                str(lead.created_by).split('@')[0] if lead.created_by else '',
                 lead.order_qty,
                 lead.order_description,
                 float(lead.order_value) if lead.order_value else '',
@@ -765,6 +767,7 @@ def main_leads_export(request):
                 lead.lead_closer_status_new,
                 lead.lead_close_date,
                 lead.final_lead_close_date,
+                lead.lead_upload_type,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
@@ -824,17 +827,40 @@ def reallocate(request):
                 # Transfer specific lead
                 lead = get_object_or_404(LeadTable, id=lead_id, created_by=from_user)
                 lead.created_by = to_user
+                lead.lead_action = f"{from_user.get_full_name() or from_user.username} transferred the lead to {to_user.get_full_name() or to_user.username}"
                 lead.save()
+
+                # Save history (only lead_action)
+                HistoryLead.objects.create(
+                    lead_table=lead,
+                    lead_action=lead.lead_action,
+                    created_by=from_user,
+                    updated_by=to_user
+                )
+
                 messages.success(
                     request,
                     f" Lead {lead.id} successfully reallocated from {from_user.email} to {to_user.email}."
                 )
             else:
                 # Transfer all leads from from_user to to_user
-                updated_count = LeadTable.objects.filter(created_by=from_user).update(created_by=to_user)
+                leads_to_update = LeadTable.objects.filter(created_by=from_user)
+                for lead in leads_to_update:
+                    lead.created_by = to_user
+                    lead.lead_action = f"{from_user.get_full_name() or from_user.username} transferred the lead to {to_user.get_full_name() or to_user.username}"
+                    lead.save()
+
+                    # Save history (only lead_action)
+                    HistoryLead.objects.create(
+                        lead_table=lead,
+                        lead_action=lead.lead_action,
+                        created_by=from_user,
+                        updated_by=to_user
+                    )
+
                 messages.success(
                     request,
-                    f" {updated_count} leads successfully transferred from {from_user.email} to {to_user.email}."
+                    f" {leads_to_update.count()} leads successfully transferred from {from_user.email} to {to_user.email}."
                 )
 
         except User.DoesNotExist:
@@ -931,6 +957,7 @@ def upload_leads_excel(request):
                 try:
                     lead_id = str(row.get('lead_id', '')).strip()  # Expected to be User ID
                     customer_name = str(row.get('customer_name', '')).strip()
+                    customer_type = str(row.get('Campaign_type', '')).strip()
                     calling_number = str(row.get('calling_number', '')).strip()
                     enquiry_type = str(row.get('enquiry_type', '')).strip()
                     enquiry_source = str(row.get('enquiry_source', '')).strip()
@@ -976,10 +1003,12 @@ def upload_leads_excel(request):
                     # Create Lead
                     LeadTable.objects.create(
                         customer_name=customer_name,
+                        customer_type=customer_type,
                         calling_number=calling_number,
                         enquiry_type=enquiry_type,
                         enquiry_source=enquiry_source,
                         lead_date=lead_date,
+                        lead_upload_type="Bulk",
                         created_by=user
                     )
                     success_count += 1
@@ -1007,10 +1036,10 @@ def download_excel_template(request):
     ws.title = "Leads Template"
 
     # Add headers
-    headers = ['lead_id', 'customer_name', 'calling_number', 'enquiry_type', 'enquiry_source', 'lead_date']
+    headers = ['lead_id', 'customer_name','Campaign_type', 'calling_number', 'enquiry_type', 'enquiry_source', 'lead_date']
     ws.append(headers)
 
-    ws.append(['15', 'Sachin kr', '9876543210', 'Product Inquiry', 'Website', '2025-07-14'])
+    ws.append(['15', 'Sachin kr','Self', '9876543210', 'Product Inquiry', 'Website', '2025-07-14'])
 
     excel_file = BytesIO()
     wb.save(excel_file)
@@ -1471,7 +1500,7 @@ def call_date(request):
                 lead.district,
                 lead.zone,
                 lead.pin_code,
-                lead.agent_name,
+                str(lead.created_by).split('@')[0] if lead.created_by else '',
                 lead.order_qty,
                 lead.order_description,
                 float(lead.order_value) if lead.order_value else '',
@@ -1516,3 +1545,141 @@ def call_date(request):
     return render(request, 'crmapp/call_date.html', {
         "menu_html": menu_html
     })
+
+
+@csrf_exempt
+def upload_leads_update(request):
+    if request.method == 'POST' and request.FILES.get('file'):
+        excel_file = request.FILES['file']
+
+        try:
+            df = pd.read_excel(excel_file)
+            success_count = 0
+            failed_entries = []
+
+            for _, row in df.iterrows():
+                try:
+                    calling_number = str(row.get('Calling Number', '')).strip()
+                    customer_name = str(row.get('Customer Name', '')).strip()
+
+                    if not calling_number:
+                        failed_entries.append({'Customer Name': customer_name, 'reason': 'Calling Number is missing'})
+                        continue
+
+                    # Always create a new lead
+                    lead = LeadTable(
+                        calling_number=calling_number,
+                        customer_name=customer_name,
+                        customer_type=row.get('Customer Type') or None,
+                        enquiry_type=row.get('Enquiry Type') or None,
+                        enquiry_source=row.get('Enquiry Source') or None,
+                        sub_enquiry_source=row.get('Sub Enquiry Source') or None,
+                        lead_date=pd.to_datetime(row.get('Lead Date')).date() if not pd.isna(
+                            row.get('Lead Date')) else None,
+                        call_date=pd.to_datetime(row.get('Call Date')).date() if not pd.isna(
+                            row.get('Call Date')) else None,
+                        call_type=row.get('Call Type') or None,
+                        calling_status=row.get('Calling Status') or None,
+                        interested_status=row.get('Interested Status') or None,
+                        sub_calling_status=row.get('Sub Calling Status') or None,
+                        sub_sub_calling_status=row.get('Sub Sub Calling Status') or None,
+                        select_bus=row.get('Select Business') or None,
+                        buyer_type=row.get('Buyer Type') or None,
+                        lead_status=row.get('Lead Status') or None,
+                        construction_level=row.get('Construction Level') or None,
+                        name=row.get('Name') or None,
+                        alternative_number=row.get('Alternative Number') or None,
+                        email_id=row.get('Email ID') or None,
+                        address=row.get('Address') or None,
+                        landmark=row.get('Landmark') or None,
+                        brand=row.get('Brand') or None,
+                        product=row.get('Product') or None,
+                        sub_product=row.get('Sub Product') or None,
+                        state=row.get('State') or None,
+                        district=row.get('District') or None,
+                        zone=row.get('Zone') or None,
+                        pin_code=row.get('Pincode') or None,
+                        agent_name=row.get('Agent Name') or None,
+                        order_qty=int(row.get('Order Qty')) if not pd.isna(row.get('Order Qty')) else None,
+                        order_description=row.get('Order Description') or None,
+                        order_value=float(row.get('Order Value')) if not pd.isna(row.get('Order Value')) else None,
+                        customer_type_select=row.get('Customer Type Select') or None,
+                        registration_status=row.get('Registration Status') or None,
+                        remark=row.get('Remark') or None,
+                        secure_url=row.get('Secure URL') or None,
+                        seller_email_id=row.get('Seller Email ID') or None,
+                        seller_phone_no=row.get('Seller Phone No') or None,
+                        seller_email_id_L2=row.get('Seller Email ID L2') or None,
+                        seller_phone_no_L2=row.get('Seller Phone No L2') or None,
+                        lead_closer_status=row.get('Lead Closer Status') or None,
+                        lead_closer_status_new=row.get('Lead Closer Status New') or None,
+                        lead_close_date=pd.to_datetime(row.get('Lead Close Date')).date() if not pd.isna(
+                            row.get('Lead Close Date')) else None,
+                        final_lead_close_date=pd.to_datetime(row.get('Final Lead Close Date')).date() if not pd.isna(
+                            row.get('Final Lead Close Date')) else None,
+                        lead_upload_type="Bulk"
+                    )
+
+                    if request.user.is_authenticated:
+                        lead.created_by = request.user
+                        lead.updated_by = request.user
+
+                    lead.save()
+                    success_count += 1
+
+
+                except Exception as e:
+                    failed_entries.append({'Customer Name': customer_name, 'reason': str(e)})
+
+            return JsonResponse({
+                'status': 'completed',
+                'success_count': success_count,
+                'failed_entries': failed_entries
+            })
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'fail', 'message': 'Invalid request'}, status=400)
+
+
+def download_excel_template_update(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Leads Update Template"
+
+    headers = [
+        'Customer Name', 'Customer Type', 'Calling Number', 'Enquiry Type', 'Enquiry Source',
+        'Sub Enquiry Source', 'Lead Date', 'Call Date', 'Call Type', 'Calling Status', 'Interested Status',
+        'Sub Calling Status', 'Sub Sub Calling Status', 'Select Business', 'Buyer Type', 'Lead Status',
+        'Construction Level', 'Name', 'Alternative Number', 'Email ID', 'Address', 'Landmark', 'Brand',
+        'Product', 'Sub Product', 'State', 'District', 'Zone', 'Pincode', 'Agent Name', 'Order Qty',
+        'Order Description', 'Order Value', 'Customer Type Select', 'Registration Status', 'Remark',
+        'Secure URL', 'Seller Email ID', 'Seller Phone No', 'Seller Email ID L2', 'Seller Phone No L2',
+        'Lead Closer Status', 'Lead Closer Status New', 'Lead Close Date', 'Final Lead Close Date',
+        'Created By', 'Updated By', 'Created At', 'Updated At'
+    ]
+    ws.append(headers)
+
+    # Optional sample row
+    sample_row = [
+        'Sachin Kumar', 'Self', '9876543210', 'Product Inquiry', 'Website', 'Sub Source',
+        '2025-07-14', '2025-07-14', 'Inbound', 'Connected', 'Interested', 'Follow-up', 'Final',
+        'Bus A', 'Retail', 'Open', 'Level 1', 'Sachin', '9876543210', 'sachin@example.com',
+        'Some Address', 'Near Park', 'BrandX', 'ProductY', 'SubProductZ', 'State1', 'District1',
+        'Zone1', '123456', 'AgentX', 10, 'Sample Order', 1000.00, 'Type1', 'Registered', 'No remark',
+        'http://secureurl.com', 'seller@example.com', '9876543210', 'seller2@example.com', '9876501234',
+        'Closed', 'Closed New', '2025-07-20', '2025-07-21', 'admin', 'admin', '2025-07-14 10:00', '2025-07-14 10:30'
+    ]
+    ws.append(sample_row)
+
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)
+
+    response = HttpResponse(
+        excel_file.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="lead_update_template.xlsx"'
+    return response

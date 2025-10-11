@@ -72,4 +72,9 @@ urlpatterns = [
     ## whatsapp api call
     path("api/send-whatsapp/", sales_views.send_whatsapp_message, name="send_whatsapp"),
 
+
+    path('api/upload-leads-update/', sales_views.upload_leads_update, name='upload_leads_update'),
+    path('download-excel-template-update/', sales_views.download_excel_template_update, name='download_excel_template_update'),
+
+
 ]

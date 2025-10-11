@@ -646,6 +646,15 @@ def save_lead(request):
         print(matching_leads,"matching_leads")
 
         for lead in matching_leads:
+            if (lead.lead_closer_status or '').lower() == "no_response":
+                updated = SalesInfoTable.objects.filter(lead_table=lead).update(status="closed")
+                if not updated:  # if no row existed
+                    SalesInfoTable.objects.create(
+                        lead_table=lead,
+                        status="closed",
+                        created_by=request.user if request.user.is_authenticated else None
+                    )
+
             # Step 2: If any related SalesInfoTable has status != 'close', block
             sales_info_qs = SalesInfoTable.objects.filter(lead_table=lead)
             if sales_info_qs.exists():
@@ -674,6 +683,7 @@ def save_lead(request):
             enquiry_type=enquiry_type,
             enquiry_source=enquiry_source,
             lead_date=lead_date,
+            lead_upload_type="Manual",
             created_by=request.user if request.user.is_authenticated else None
         )
 
@@ -756,6 +766,7 @@ def update_lead(request):
         try:
             lead_id = request.POST.get('lead_id')
             print("Lead ID ====", lead_id)
+            user = request.user
             if not lead_id:
                 return JsonResponse({'status': 'error', 'message': 'Lead ID is required'})
 
@@ -791,9 +802,38 @@ def update_lead(request):
             lead.lead_date = parse_date(data.get('lead_date', None))
             lead.call_date = parse_date(data.get('call_date', None))
             lead.call_type = data.get('call_type', '')
-            lead.calling_status = data.get('calling_status', '')
-            lead.interested_status = data.get('interest_status', '')
+            # lead.calling_status = data.get('calling_status', '')
+            # lead.interested_status = data.get('interest_status', '')
+            calling_status = data.get("calling_status", "")
+            #interest_status = data.get("interest_status", "")
             lead.sub_calling_status = data.get('sub_calling_status', '')
+
+            lead.calling_status = calling_status
+
+            if calling_status == "Connect" and lead.sub_calling_status == "Valid":
+                # Force default
+                lead.interested_status = "Interested"
+
+            elif calling_status == "Connect" and lead.sub_calling_status == "Invalid":
+                # Force default
+                lead.interested_status = "Not Interested"
+
+            elif calling_status == "Not Connect":
+                lead.interested_status = "No Response"
+
+            elif calling_status == "Connect" and lead.sub_calling_status == "Call Back":
+                lead.interested_status = "Interested"
+
+
+            elif calling_status == "Connect" and (lead.sub_calling_status == "Services" or lead.sub_calling_status == "Complaint"):
+                lead.interested_status = "Not Applicable"
+
+
+            else:
+                # Use provided or empty string
+                lead.interested_status = ''
+
+
             lead.sub_sub_calling_status = data.get('sub_sub_calling_status', '')
             lead.select_bus = data.get('category', '')
             lead.buyer_type = data.get('buyer_type', '')
@@ -835,6 +875,15 @@ def update_lead(request):
             lead.seller_phone_no_L2 = data.get('seller_phone_L2', '')
 
             lead.lead_closer_status = data.get('lead_closer_status', '')
+            if lead.lead_closer_status.lower() == "no_response":
+                updated = SalesInfoTable.objects.filter(lead_table=lead).update(status="closed")
+                if not updated:  # means no row was updated
+                    SalesInfoTable.objects.create(
+                        lead_table=lead,
+                        status="closed",
+                        created_by=request.user if request.user.is_authenticated else None
+                    )
+
             lead.lead_closer_status_new = data.get('lead_closer_status_new', '')
 
             if (lead.lead_closer_status or lead.lead_closer_status_new.lower().startswith("closed")):
@@ -843,6 +892,11 @@ def update_lead(request):
             lead.final_lead_close_date = parse_date(data.get('final_lead_close_date', None))
 
             lead.secure_url = data.get('secure_link', '')
+            if user and user.is_authenticated:
+                display_name = user.get_full_name() or user.username
+                first_word = display_name.split()[0] if display_name else ""
+
+                lead.lead_action = f"{first_word} has modified the lead"
 
             lead.save()
 
@@ -897,6 +951,8 @@ def update_lead(request):
                 lead_close_date=lead.lead_close_date,
                 final_lead_close_date=lead.final_lead_close_date,
 
+                lead_action = lead.lead_action,
+
                 created_by=lead.created_by,  # or request.user if preferred
                 updated_by=lead.updated_by,
             )
@@ -904,6 +960,56 @@ def update_lead(request):
             # Call the email function
             # from .sales_views import send_lead_email
             # send_lead_email(request, lead_id)
+
+            # try:
+            #     api_url = "https://birlanuuat.salesdiary.in:4078/api/hil_connects/save_lead_v2"
+            #     access_token = "YOUR_ACCESS_TOKEN_HERE"
+            #
+            #     payload = {
+            #         "data": [
+            #             {
+            #                 "tid": f"CRM{lead.id:04d}",
+            #                 "salesman_email": lead.seller_email_id,
+            #                 "salesman_mobile": lead.seller_phone_no,
+            #                 "name": lead.name,
+            #                 "lead_type": lead.customer_type,
+            #                 "type": lead.enquiry_type,
+            #                 "date": lead.lead_date.strftime("%Y-%m-%d") if lead.lead_date else "",
+            #                 "potential": float(lead.order_value) if lead.order_value else 0,
+            #                 "email": lead.email_id,
+            #                 "mobile": lead.calling_number,
+            #                 "contact_name": lead.customer_name,
+            #                 "gst": getattr(lead, "gst", ""),
+            #                 "pan": getattr(lead, "pan", ""),
+            #                 "street1": lead.address,
+            #                 "street2": lead.landmark,
+            #                 "city": lead.district,
+            #                 "state": lead.state,
+            #                 "country": "India",
+            #                 "zip": lead.pin_code,
+            #                 "latitude": getattr(lead, "latitude", ""),
+            #                 "longitude": getattr(lead, "longitude", ""),
+            #                 "source": lead.enquiry_source,
+            #                 "status": lead.calling_status,
+            #                 "Intrested Status": lead.interested_status,
+            #                 "Sub Calling Status": lead.sub_calling_status,
+            #                 "Select BUs": lead.select_bus,
+            #                 "Remark": lead.remark,
+            #                 "Product": lead.product,
+            #                 "Alternative Number": lead.alternative_number,
+            #                 "Landmark": lead.landmark,
+            #                 "Order Qty": lead.order_qty or 0,
+            #                 "Order Value": float(lead.order_value) if lead.order_value else 0
+            #             }
+            #         ]
+            #     }
+            #
+            #     headers = {"Content-Type": "application/json"}
+            #     response = requests.post(f"{api_url}?access_token={access_token}", json=payload, headers=headers)
+            #     api_response = response.json()
+            #     print("API Response:", api_response)
+            # except Exception as e:
+            #     print("Error sending lead to API:", str(e))
 
 
             # return JsonResponse({'status': 'success'})

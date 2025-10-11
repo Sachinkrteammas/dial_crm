@@ -53,6 +53,12 @@
 
     <!-- Page CSS -->
 
+      <style>
+          .card{
+          margin:10px;
+          }
+      </style>
+
     <!-- Helpers -->
     <script src="/assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
@@ -672,9 +678,9 @@
 
               <div class="col-12" style="width: 95%; margin-left: 23px; margin-top: 40px;">
                   <div class="card">
-                    <h5 class="card-header">Upload Leads via Excel
+                    <h5 class="card-header">New Upload Leads via Excel
 
-                      <span style="margin-left:600px"><a href="{% url 'download_excel_template' %}" class="btn btn-outline-success">
+                      <span style="margin-left:800px"><a href="{% url 'download_excel_template' %}" class="btn btn-outline-success">
                         Download Excel Template
                       </a>
                       </span>
@@ -691,6 +697,31 @@
                           <input class="form-control" type="file" name="file" id="file-upload" accept=".xlsx" required />
                         </div>
                         <button type="submit" class="btn btn-primary">Upload</button>
+                      </form>
+                    </div>
+                  </div>
+
+
+                  <div class="card" >
+                    <h5 class="card-header">
+                      Manual Leads for Update via Excel
+                      <span style="margin-left:745px">
+                        <a href="{% url 'download_excel_template_update' %}" class="btn btn-outline-success">
+                          Download Update Excel Template
+                        </a>
+                      </span>
+                    </h5>
+                    <div class="card-body">
+                      <div id="upload-message-update" class="alert d-none" role="alert"></div>
+
+                      <form method="post" enctype="multipart/form-data" action="/api/upload-leads-update/" id="excel-upload-form-update">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                          <label for="file-upload-update" class="form-label">Select Excel File (for Update)</label>
+                          <input class="form-control" type="file" name="file" id="file-upload-update" accept=".xlsx" required />
+
+                        </div>
+                        <button type="submit" class="btn btn-primary">Manual & Update</button>
                       </form>
                     </div>
                   </div>
@@ -832,6 +863,45 @@
     messageBox.scrollIntoView({ behavior: 'smooth' });
   });
 </script>
+
+  <script>
+  const formUpdate = document.getElementById('excel-upload-form-update');
+  const messageBoxUpdate = document.getElementById('upload-message-update');
+
+  formUpdate.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const formData = new FormData(formUpdate);
+
+    const response = await fetch(formUpdate.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    });
+
+    const data = await response.json();
+    messageBoxUpdate.classList.remove('d-none', 'alert-success', 'alert-danger');
+
+    if (data.status === 'completed') {
+      messageBoxUpdate.classList.add('alert', 'alert-success');
+      let failedMsg = '';
+      if (data.failed_entries.length > 0) {
+        failedMsg = `<br>Failed (${data.failed_entries.length}):<ul>`;
+        data.failed_entries.forEach(entry => {
+          failedMsg += `<li>${entry['Customer Name'] || ''}: ${entry.reason}</li>`;
+        });
+        failedMsg += '</ul>';
+      }
+      messageBoxUpdate.innerHTML = `Uploaded successfully: ${data.success_count} leads.${failedMsg}`;
+    } else {
+      messageBoxUpdate.classList.add('alert', 'alert-danger');
+      messageBoxUpdate.innerHTML = `Upload failed: ${data.message || 'Unknown error'}`;
+    }
+
+    messageBoxUpdate.scrollIntoView({ behavior: 'smooth' });
+  });
+  </script>
 
   </body>
 </html>

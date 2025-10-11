@@ -57,5 +57,6 @@ class WebhookLeadSerializer(serializers.Serializer):
             call_date=validated_data["Date"],
             email_id=validated_data["Email"],
             name=validated_data["Name"],
+            lead_upload_type="Webhook",
             created_by=user
         )
