@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views,sales_views
-from .api_view import WebhookLeadsView
+from .api_view import WebhookLeadsView,webhook
 
 urlpatterns = [
     path('', views.crm_login, name='login'),
@@ -30,6 +30,7 @@ urlpatterns = [
 
     #API VIEW
     path('api/webhook-leads/', WebhookLeadsView.as_view(), name='webhook_leads_api'),
+    path('api/webhook/', webhook, name='webhook'),
     #API VIEW END
 
     #Sales url

@@ -254,9 +254,10 @@ def lead_detail(request, lead_id):
         "Inbound": ["Banner", "BTL", "Coupon", "Facebook", "birlanu.com", "IndiaMart SMS", "Info Mail", "Instagram",
                     "SMS", "Word of Mouth", "YouTube"],
         "IndiaMart": ["BuyLeads", "Direct Leads", "IndiaMart Mail"],
-        "Mail": ["info@hil.in"],
+        "Mail": ["info@hil.in","Customer Care"],
         "Plantix": ["Direct Leads"],
-        "Social": ["Facebook", "Instagram"],
+        "Meta": ["Facebook", "Instagram"],
+        "Social": ["ORM"],
         "TradeIndia": ["Direct Leads"],
         "WebScraping": ["Walling Project"],
         "Website": ["Contact", "Pop-up"],
@@ -1555,85 +1556,155 @@ def upload_leads_update(request):
         try:
             df = pd.read_excel(excel_file)
             success_count = 0
+            update_count = 0
             failed_entries = []
 
             for _, row in df.iterrows():
                 try:
+                    unique_id = str(row.get('Unique Id', '')).strip()
                     calling_number = str(row.get('Calling Number', '')).strip()
                     customer_name = str(row.get('Customer Name', '')).strip()
 
                     if not calling_number:
-                        failed_entries.append({'Customer Name': customer_name, 'reason': 'Calling Number is missing'})
+                        failed_entries.append({
+                            'Customer Name': customer_name or 'Unknown',
+                            'reason': 'Calling Number is missing'
+                        })
                         continue
 
-                    # Always create a new lead
-                    lead = LeadTable(
-                        calling_number=calling_number,
-                        customer_name=customer_name,
-                        customer_type=row.get('Customer Type') or None,
-                        enquiry_type=row.get('Enquiry Type') or None,
-                        enquiry_source=row.get('Enquiry Source') or None,
-                        sub_enquiry_source=row.get('Sub Enquiry Source') or None,
-                        lead_date=pd.to_datetime(row.get('Lead Date')).date() if not pd.isna(
-                            row.get('Lead Date')) else None,
-                        call_date=pd.to_datetime(row.get('Call Date')).date() if not pd.isna(
-                            row.get('Call Date')) else None,
-                        call_type=row.get('Call Type') or None,
-                        calling_status=row.get('Calling Status') or None,
-                        interested_status=row.get('Interested Status') or None,
-                        sub_calling_status=row.get('Sub Calling Status') or None,
-                        sub_sub_calling_status=row.get('Sub Sub Calling Status') or None,
-                        select_bus=row.get('Select Business') or None,
-                        buyer_type=row.get('Buyer Type') or None,
-                        lead_status=row.get('Lead Status') or None,
-                        construction_level=row.get('Construction Level') or None,
-                        name=row.get('Name') or None,
-                        alternative_number=row.get('Alternative Number') or None,
-                        email_id=row.get('Email ID') or None,
-                        address=row.get('Address') or None,
-                        landmark=row.get('Landmark') or None,
-                        brand=row.get('Brand') or None,
-                        product=row.get('Product') or None,
-                        sub_product=row.get('Sub Product') or None,
-                        state=row.get('State') or None,
-                        district=row.get('District') or None,
-                        zone=row.get('Zone') or None,
-                        pin_code=row.get('Pincode') or None,
-                        agent_name=row.get('Agent Name') or None,
-                        order_qty=int(row.get('Order Qty')) if not pd.isna(row.get('Order Qty')) else None,
-                        order_description=row.get('Order Description') or None,
-                        order_value=float(row.get('Order Value')) if not pd.isna(row.get('Order Value')) else None,
-                        customer_type_select=row.get('Customer Type Select') or None,
-                        registration_status=row.get('Registration Status') or None,
-                        remark=row.get('Remark') or None,
-                        secure_url=row.get('Secure URL') or None,
-                        seller_email_id=row.get('Seller Email ID') or None,
-                        seller_phone_no=row.get('Seller Phone No') or None,
-                        seller_email_id_L2=row.get('Seller Email ID L2') or None,
-                        seller_phone_no_L2=row.get('Seller Phone No L2') or None,
-                        lead_closer_status=row.get('Lead Closer Status') or None,
-                        lead_closer_status_new=row.get('Lead Closer Status New') or None,
-                        lead_close_date=pd.to_datetime(row.get('Lead Close Date')).date() if not pd.isna(
-                            row.get('Lead Close Date')) else None,
-                        final_lead_close_date=pd.to_datetime(row.get('Final Lead Close Date')).date() if not pd.isna(
-                            row.get('Final Lead Close Date')) else None,
-                        lead_upload_type="Bulk"
-                    )
+                    # Try to find existing lead by Unique ID
+                    lead = None
+                    if unique_id:
+                        try:
+                            numeric_id = int(''.join(filter(str.isdigit, unique_id)))
+                            lead = LeadTable.objects.filter(id=numeric_id).first()
+                        except ValueError:
+                            lead = None
 
-                    if request.user.is_authenticated:
-                        lead.created_by = request.user
-                        lead.updated_by = request.user
+                    # --- Update existing lead ---
+                    if lead:
+                        # Update all fields if present
+                        lead.calling_number = calling_number
+                        lead.customer_name = customer_name
+                        lead.customer_type = row.get('Customer Type') or lead.customer_type
+                        lead.enquiry_type = row.get('Enquiry Type') or lead.enquiry_type
+                        lead.enquiry_source = row.get('Enquiry Source') or lead.enquiry_source
+                        lead.sub_enquiry_source = row.get('Sub Enquiry Source') or lead.sub_enquiry_source
+                        lead.lead_date = pd.to_datetime(row.get('Lead Date')).date() if not pd.isna(row.get('Lead Date')) else lead.lead_date
+                        lead.call_date = pd.to_datetime(row.get('Call Date')).date() if not pd.isna(row.get('Call Date')) else lead.call_date
+                        lead.call_type = row.get('Call Type') or lead.call_type
+                        lead.calling_status = row.get('Calling Status') or lead.calling_status
+                        lead.interested_status = row.get('Interested Status') or lead.interested_status
+                        lead.sub_calling_status = row.get('Sub Calling Status') or lead.sub_calling_status
+                        lead.sub_sub_calling_status = row.get('Sub Sub Calling Status') or lead.sub_sub_calling_status
+                        lead.select_bus = row.get('Select Business') or lead.select_bus
+                        lead.buyer_type = row.get('Buyer Type') or lead.buyer_type
+                        lead.lead_status = row.get('Lead Status') or lead.lead_status
+                        lead.construction_level = row.get('Construction Level') or lead.construction_level
+                        lead.name = row.get('Name') or lead.name
+                        lead.alternative_number = row.get('Alternative Number') or lead.alternative_number
+                        lead.email_id = row.get('Email ID') or lead.email_id
+                        lead.address = row.get('Address') or lead.address
+                        lead.landmark = row.get('Landmark') or lead.landmark
+                        lead.brand = row.get('Brand') or lead.brand
+                        lead.product = row.get('Product') or lead.product
+                        lead.sub_product = row.get('Sub Product') or lead.sub_product
+                        lead.state = row.get('State') or lead.state
+                        lead.district = row.get('District') or lead.district
+                        lead.zone = row.get('Zone') or lead.zone
+                        lead.pin_code = row.get('Pincode') or lead.pin_code
+                        lead.agent_name = row.get('Agent Name') or lead.agent_name
+                        lead.order_qty = int(row.get('Order Qty')) if not pd.isna(row.get('Order Qty')) else lead.order_qty
+                        lead.order_description = row.get('Order Description') or lead.order_description
+                        lead.order_value = float(row.get('Order Value')) if not pd.isna(row.get('Order Value')) else lead.order_value
+                        lead.customer_type_select = row.get('Customer Type Select') or lead.customer_type_select
+                        lead.registration_status = row.get('Registration Status') or lead.registration_status
+                        lead.remark = row.get('Remark') or lead.remark
+                        lead.secure_url = row.get('Secure URL') or lead.secure_url
+                        lead.seller_email_id = row.get('Seller Email ID') or lead.seller_email_id
+                        lead.seller_phone_no = row.get('Seller Phone No') or lead.seller_phone_no
+                        lead.seller_email_id_L2 = row.get('Seller Email ID L2') or lead.seller_email_id_L2
+                        lead.seller_phone_no_L2 = row.get('Seller Phone No L2') or lead.seller_phone_no_L2
+                        lead.lead_closer_status = row.get('Lead Closer Status') or lead.lead_closer_status
+                        lead.lead_closer_status_new = row.get('Lead Closer Status New') or lead.lead_closer_status_new
+                        lead.lead_close_date = pd.to_datetime(row.get('Lead Close Date')).date() if not pd.isna(row.get('Lead Close Date')) else lead.lead_close_date
+                        lead.final_lead_close_date = pd.to_datetime(row.get('Final Lead Close Date')).date() if not pd.isna(row.get('Final Lead Close Date')) else lead.final_lead_close_date
 
-                    lead.save()
-                    success_count += 1
+                        if request.user.is_authenticated:
+                            lead.updated_by = request.user
 
+                        lead.save()
+                        update_count += 1
+
+                    # --- Create new lead if Unique Id missing or not found ---
+                    else:
+                        lead = LeadTable(
+                            calling_number=calling_number,
+                            customer_name=customer_name,
+                            customer_type=row.get('Customer Type') or None,
+                            enquiry_type=row.get('Enquiry Type') or None,
+                            enquiry_source=row.get('Enquiry Source') or None,
+                            sub_enquiry_source=row.get('Sub Enquiry Source') or None,
+                            lead_date=pd.to_datetime(row.get('Lead Date')).date() if not pd.isna(row.get('Lead Date')) else None,
+                            call_date=pd.to_datetime(row.get('Call Date')).date() if not pd.isna(row.get('Call Date')) else None,
+                            call_type=row.get('Call Type') or None,
+                            calling_status=row.get('Calling Status') or None,
+                            interested_status=row.get('Interested Status') or None,
+                            sub_calling_status=row.get('Sub Calling Status') or None,
+                            sub_sub_calling_status=row.get('Sub Sub Calling Status') or None,
+                            select_bus=row.get('Select Business') or None,
+                            buyer_type=row.get('Buyer Type') or None,
+                            lead_status=row.get('Lead Status') or None,
+                            construction_level=row.get('Construction Level') or None,
+                            name=row.get('Name') or None,
+                            alternative_number=row.get('Alternative Number') or None,
+                            email_id=row.get('Email ID') or None,
+                            address=row.get('Address') or None,
+                            landmark=row.get('Landmark') or None,
+                            brand=row.get('Brand') or None,
+                            product=row.get('Product') or None,
+                            sub_product=row.get('Sub Product') or None,
+                            state=row.get('State') or None,
+                            district=row.get('District') or None,
+                            zone=row.get('Zone') or None,
+                            pin_code=row.get('Pincode') or None,
+                            agent_name=row.get('Agent Name') or None,
+                            order_qty=int(row.get('Order Qty')) if not pd.isna(row.get('Order Qty')) else None,
+                            order_description=row.get('Order Description') or None,
+                            order_value=float(row.get('Order Value')) if not pd.isna(row.get('Order Value')) else None,
+                            customer_type_select=row.get('Customer Type Select') or None,
+                            registration_status=row.get('Registration Status') or None,
+                            remark=row.get('Remark') or None,
+                            secure_url=row.get('Secure URL') or None,
+                            seller_email_id=row.get('Seller Email ID') or None,
+                            seller_phone_no=row.get('Seller Phone No') or None,
+                            seller_email_id_L2=row.get('Seller Email ID L2') or None,
+                            seller_phone_no_L2=row.get('Seller Phone No L2') or None,
+                            lead_closer_status=row.get('Lead Closer Status') or None,
+                            lead_closer_status_new=row.get('Lead Closer Status New') or None,
+                            lead_close_date=pd.to_datetime(row.get('Lead Close Date')).date() if not pd.isna(row.get('Lead Close Date')) else None,
+                            final_lead_close_date=pd.to_datetime(row.get('Final Lead Close Date')).date() if not pd.isna(row.get('Final Lead Close Date')) else None,
+                            lead_upload_type="Bulk"
+                        )
+
+                        if request.user.is_authenticated:
+                            lead.created_by = request.user
+                            lead.updated_by = request.user
+
+                        lead.save()
+                        success_count += 1
 
                 except Exception as e:
-                    failed_entries.append({'Customer Name': customer_name, 'reason': str(e)})
+                    failed_entries.append({
+                        'Customer Name': customer_name or 'Unknown',
+                        'reason': str(e)
+                    })
 
             return JsonResponse({
                 'status': 'completed',
-                'success_count': success_count,
+                'created': success_count,
+                'updated': update_count,
+                'failed': len(failed_entries),
                 'failed_entries': failed_entries
             })
 
@@ -1643,13 +1714,14 @@ def upload_leads_update(request):
     return JsonResponse({'status': 'fail', 'message': 'Invalid request'}, status=400)
 
 
+
 def download_excel_template_update(request):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Leads Update Template"
 
     headers = [
-        'Customer Name', 'Customer Type', 'Calling Number', 'Enquiry Type', 'Enquiry Source',
+        'Unique Id','Customer Name', 'Customer Type', 'Calling Number', 'Enquiry Type', 'Enquiry Source',
         'Sub Enquiry Source', 'Lead Date', 'Call Date', 'Call Type', 'Calling Status', 'Interested Status',
         'Sub Calling Status', 'Sub Sub Calling Status', 'Select Business', 'Buyer Type', 'Lead Status',
         'Construction Level', 'Name', 'Alternative Number', 'Email ID', 'Address', 'Landmark', 'Brand',
@@ -1663,7 +1735,7 @@ def download_excel_template_update(request):
 
     # Optional sample row
     sample_row = [
-        'Sachin Kumar', 'Self', '9876543210', 'Product Inquiry', 'Website', 'Sub Source',
+        'BN1','Sachin Kumar', 'Self', '9876543210', 'Product Inquiry', 'Website', 'Sub Source',
         '2025-07-14', '2025-07-14', 'Inbound', 'Connected', 'Interested', 'Follow-up', 'Final',
         'Bus A', 'Retail', 'Open', 'Level 1', 'Sachin', '9876543210', 'sachin@example.com',
         'Some Address', 'Near Park', 'BrandX', 'ProductY', 'SubProductZ', 'State1', 'District1',

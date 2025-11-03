@@ -94,4 +94,129 @@ class WebhookLeadsView(APIView):
 
 
 
+###########################################  Meta Api Test ########################
+
+import json
+import requests
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+
+VERIFY_TOKEN = "my_secret_token_123"
+
+# ⚡ Replace this with your Page Access Token (long-lived)
+PAGE_ACCESS_TOKEN = "EAA5ZBgUCFFrMBPohlDeJDrOBNYHpxfA3X6ka5dKMfc033e2IG7m1O4lZCpqwu7XuNZAcpab43RIYZBDO7mwJG44fTGiNKhZBuJnRP2Fwaa4j7cjzzo2mbZAgDv37dAA35PmyvvrawMK2nLf3zChgkdfZCruw8FI9g9EWttWxSW7gsumN6PiGbWDijfzrkUy1fYuKZB7h"
+
+GRAPH_API_URL = "https://graph.facebook.com/v23.0"
+
+@csrf_exempt
+def webhook(request):
+    print("🔔 Webhook hit")
+    print("Method:", request.method)
+    print("Headers:", dict(request.headers))
+    print("Raw query params:", request.GET.dict())
+
+    if request.method == "GET":
+        # Verification handshake
+        mode = request.GET.get("hub.mode")
+        token = request.GET.get("hub.verify_token")
+        challenge = request.GET.get("hub.challenge")
+
+        if mode == "subscribe" and token == VERIFY_TOKEN:
+            print("✅ Verification success — returning challenge:", challenge)
+            return HttpResponse(challenge)
+
+        print("❌ Verification failed")
+        return HttpResponse("Verification failed", status=403)
+
+    elif request.method == "POST":
+        print("🔔 Webhook POST triggered")
+        try:
+            body_unicode = request.body.decode("utf-8", errors="ignore")
+            print("RAW BODY:", body_unicode or "[EMPTY BODY]")
+
+            data = json.loads(body_unicode or "{}")
+            print("Parsed JSON:", json.dumps(data, indent=2))
+
+            # Extract leadgen_id if present
+            if "entry" in data:
+                for entry in data["entry"]:
+                    for change in entry.get("changes", []):
+                        if change.get("field") == "leadgen":
+                            lead_id = change["value"].get("leadgen_id")
+                            print("🎯 Leadgen ID received:", lead_id)
+
+                            if lead_id:
+                                fetch_and_log_lead_details(lead_id)
+
+        except Exception as e:
+            print("❌ Error parsing webhook:", str(e))
+
+        return HttpResponse("EVENT_RECEIVED", status=200)
+
+    return HttpResponse(status=404)
+
+
+def fetch_and_save_lead_details(lead_id: str):
+    """Fetch lead details from Facebook Graph API and save to LeadTable."""
+    url = f"{GRAPH_API_URL}/{lead_id}"
+    params = {
+        "access_token": PAGE_ACCESS_TOKEN,
+        "fields": "created_time,field_data"
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        lead_data = response.json()
+
+        print("📥 Lead details fetched from Graph API:")
+        print(json.dumps(lead_data, indent=2))
+
+        # Extract fields
+        parsed_fields = {}
+        for field in lead_data.get("field_data", []):
+            name = field.get("name")
+            values = field.get("values", [])
+            parsed_fields[name] = values[0] if values else None
+
+        print("✅ Parsed Lead Fields:", parsed_fields)
+
+        # ---- Map Facebook fields to DB columns ----
+        lead = LeadTable.objects.create(
+            customer_name=parsed_fields.get("full_name"),
+            calling_number=parsed_fields.get("phone_number"),
+            state=parsed_fields.get("state"),
+            district=parsed_fields.get("city"),
+            pin_code=parsed_fields.get("zip_code"),
+            enquiry_source="Meta",
+            sub_enquiry_source="Facebook",
+            lead_date=parse_datetime(lead_data.get("created_time")) or datetime.now(),
+            remark="Facebook Lead",
+        )
+
+        print(f"💾 Lead saved successfully (ID: {lead.id})")
+
+    except requests.exceptions.RequestException as e:
+        print("❌ Error fetching lead from Graph API:", str(e))
+    except Exception as e:
+        print("❌ Error saving lead to DB:", str(e))
+
+
+# ==== Privacy/Policy views ====
+# def privacy_policy(request):
+#     return render(request, "policies/privacy.html")
+#
+# def terms_of_service(request):
+#     return render(request, "policies/terms.html")
+#
+# def data_deletion(request):
+#     return render(request, "policies/data_deletion.html")
+
+
+
+
+
+
+
 

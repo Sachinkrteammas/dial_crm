@@ -160,7 +160,7 @@
     <div class="row g-3">
       <div class="col-md-6">
         <label class="form-label">Sale in MT</label>
-        <input type="text" name="sale_mt" value="{{ sales.sale_mt|default:'' }}" class="form-control">
+        <input type="text" name="sale_mt" value="{{ sales.sale_mt|default:'' }}" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
       </div>
 
       <div class="col-md-6">

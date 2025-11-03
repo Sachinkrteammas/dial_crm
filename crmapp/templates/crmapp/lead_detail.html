@@ -71,6 +71,14 @@
 
     </style>
 
+      <style>
+      .required-star {
+        color: red;
+        font-size: 18px;
+        font-weight: bold;
+      }
+    </style>
+
     <!-- Vendors CSS -->
 
     <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
@@ -915,15 +923,15 @@
                   <div class="row g-3">
 
                     <div class="col-md-4">
-                      <label>Customer Name:</label>
+                      <label><span class="required-star">*</span>Customer Name:</label>
                       <input type="text" class="form-control required-field" name="customer_name" value="{{ lead.customer_name|default_if_none:'' }}">
                     </div>
                     <div class="col-md-4">
-                      <label>Campaign Type:</label>
+                      <label><span class="required-star">*</span>Campaign Type:</label>
                     <input type="text" class="form-control required-field" name="customer_type" value="{{ lead.customer_type|default_if_none:'' }}">
                     </div>
                     <div class="col-md-4">
-                      <label>Calling Number:</label>
+                      <label><span class="required-star">*</span>Calling Number:</label>
                       <button type="button" onclick="log_call_customer();" class="btn btn-sm btn-outline-primary ms-2 call-btn">
                             <i class="ti-phone"></i> Call
                           </button>
@@ -933,12 +941,12 @@
                     </div>
 
                     <div class="col-md-4">
-                      <label>Enquiry Type:</label>
+                      <label><span class="required-star">*</span>Enquiry Type:</label>
                         <input type="text" class="form-control required-field" name="enquiry_type" value="{{ lead.enquiry_type |default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
-                      <label>Enquiry Source:</label>
+                      <label><span class="required-star">*</span>Enquiry Source:</label>
                       <select class="form-select required-field" name="enquiry_source">
                         <option value="">-- Select Enquiry Source --</option>
                         {% for val in enquiry_sources %}
@@ -948,14 +956,14 @@
                     </div>
 
                     <div class="col-md-4">
-                      <label>Sub Enquiry Source:</label>
+                      <label><span class="required-star">*</span>Sub Enquiry Source:</label>
                       <select class="form-select required-field" name="sub_enquiry_source" id="sub_enquiry_source_select">
                         <option value="">-- Select Sub Enquiry Source --</option>
                       </select>
                     </div>
 
                     <div class="col-md-4">
-  <label>Calling Status:</label>
+  <label><span class="required-star">*</span>Calling Status:</label>
   <select class="form-select required-field" name="calling_status" id="calling_status_select">
     <option value="">--Select--</option>
     <option value="Connect" {% if lead.calling_status == 'Connect' %}selected{% endif %}>Connect</option>
@@ -972,7 +980,7 @@
   </div>
 
   <div class="col-md-4">
-    <label>Sub Sub Calling Status:</label>
+    <label><span class="required-star">*</span>Sub Sub Calling Status:</label>
     <select class="form-select required-field" name="sub_sub_calling_status" id="sub_sub_calling_status_select">
       <option value="">--Select Sub Sub Type--</option>
     </select>
@@ -1008,9 +1016,9 @@
 
 </div>
 
-<div class="col-md-4" id="remarks_id" style="display: none;">
+<div class="col-md-4" id="remarks_id" >
   <label>Remark:</label>
-  <input type="text" class="form-control" name="remark" value="{{ lead.remark|default_if_none:'' }}">
+  <input type="text" class="form-control" name="remark" id="remark" value="{{ lead.remark|default_if_none:'' }}">
 </div>
 
 
@@ -1032,7 +1040,7 @@
 
 
                    <div class="col-md-4">
-                      <label for="buyer_type">Buyer Type:</label>
+                      <label for="buyer_type"><span class="required-star">*</span>Buyer Type:</label>
                       <select class="form-select required-field" name="buyer_type" id="buyer_type" onchange="toggleConstructionLevel(); updateRegistrationOptions();">
                         <option value="">-- Select Buyer Type --</option>
                         <option value="Architect" {% if lead.buyer_type == "Architect" %}selected{% endif %}>Architect</option>
@@ -1055,7 +1063,7 @@
 
 
                     <div class="col-md-4">
-                        <label>Select BUs:</label>
+                        <label><span class="required-star">*</span>Select BUs:</label>
                         <select class="form-select required-field" name="category">
                           <option value="">-- Select BU --</option>
                           <option value="Flooring" {% if lead.select_bus == "Flooring" %}selected{% endif %}>Flooring</option>
@@ -1069,7 +1077,7 @@
 
 
                     <div class="col-md-4">
-                        <label>Brand Name:</label>
+                        <label><span class="required-star">*</span>Brand Name:</label>
                         <select id="brandSelect" name="brand_name" class="form-select required-field">
                           <option value="">--Select Brand--</option>
                           {% for brand in brands %}
@@ -1079,7 +1087,7 @@
                       </div>
 
                       <div class="col-md-4">
-                        <label>Product:</label>
+                        <label><span class="required-star">*</span>Product:</label>
                         <select id="productSelect" name="product" class="form-select required-field">
                           <option value="">--Select Product--</option>
                         </select>
@@ -1096,7 +1104,7 @@
 
 
                     <div class="col-md-4" id="lead_status_block" style="display: none;">
-                      <label>Lead Status:</label>
+                      <label><span class="required-star">*</span>Lead Status:</label>
                       <select class="form-select required-field" name="lead_status" id="lead_status_select">
                         <option value="">--Select Lead Status--</option>
                         <option value="Hot" {% if lead.lead_status == 'Hot' %}selected{% endif %}>Hot (7-15 days)</option>
@@ -1106,7 +1114,7 @@
                     </div>
 
                     <div class="col-md-4" id="call_type_block">
-                      <label>Call Type:</label>
+                      <label><span class="required-star">*</span>Call Type:</label>
                       <select class="form-select required-field" name="call_type" id="call_type_select">
                         <option value="">--Select Call Type--</option>
                         <option value="Inbound" {% if lead.call_type == 'Inbound' %}selected{% endif %}>Inbound</option>
@@ -1117,22 +1125,22 @@
 
 
                     <div class="col-md-4">
-                      <label>Name:</label>
+                      <label><span class="required-star">*</span>Name:</label>
                       <input type="text" class="form-control required-field" name="name" value="{{ lead.name|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
-                      <label>Lead Date:</label>
+                      <label><span class="required-star">*</span>Lead Date:</label>
                       <input type="date" class="form-control required-field" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">
                     </div>
 
                     <div class="col-md-4">
-                      <label>Call Date:</label>
+                      <label><span class="required-star">*</span>Call Date:</label>
                       <input type="date" class="form-control required-field" id="call_date_field" name="call_date" value="{{ lead.call_date|date:'Y-m-d' }}">
                     </div>
 
                     <div class="col-md-4">
-                      <label>Pin Code:</label>
+                      <label><span class="required-star">*</span>Pin Code:</label>
                       <input type="text" class="form-control required-field" name="pin_code" value="{{ lead.pin_code|default_if_none:'' }}">
                     </div>
 
@@ -1204,7 +1212,7 @@
 
 
                     <div class="col-md-4">
-                      <label>Remark:</label>
+                      <label><span class="required-star">*</span>Remark:</label>
                       <input type="text" class="form-control required-field" name="remark" value="{{ lead.remark|default_if_none:'' }}">
                     </div>
 
@@ -2688,12 +2696,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const lead_close_id = document.getElementById("lead_close_id");
-        const remarks_id = document.getElementById("remarks_id");
-        if (lead_close_id && remarks_id) {
+        //const remarks_id = document.getElementById("remarks_id");
+        if (lead_close_id) {
           const shouldShow = shownotconnectedBlock || showConnected_invalid;
 
           lead_close_id.style.display = shouldShow ? "block" : "none";
-          remarks_id.style.display = shouldShow ? "block" : "none";
+          //remarks_id.style.display = shouldShow ? "block" : "none";
         }
 
 
