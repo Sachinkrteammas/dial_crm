@@ -114,7 +114,7 @@ PAGE_ACCESS_TOKEN = "EAA5ZBgUCFFrMBPohlDeJDrOBNYHpxfA3X6ka5dKMfc033e2IG7m1O4lZCp
 GRAPH_API_URL = "https://graph.facebook.com/v23.0"
 
 
-LOG_FILE = "logs/meta.log"
+LOG_FILE = "/var/www/html/dial_crm/logs/meta.log"
 
 logging.basicConfig(
     filename=LOG_FILE,
