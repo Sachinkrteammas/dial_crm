@@ -96,14 +96,10 @@ class WebhookLeadsView(APIView):
 
 ###########################################  Meta Api Test ########################
 
-import os
 import json
 import requests
-import logging
-from datetime import datetime
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.dateparse import parse_datetime
 from django.shortcuts import render
 
 VERIFY_TOKEN = "my_secret_token_123"
@@ -112,19 +108,6 @@ VERIFY_TOKEN = "my_secret_token_123"
 PAGE_ACCESS_TOKEN = "EAA5ZBgUCFFrMBPohlDeJDrOBNYHpxfA3X6ka5dKMfc033e2IG7m1O4lZCpqwu7XuNZAcpab43RIYZBDO7mwJG44fTGiNKhZBuJnRP2Fwaa4j7cjzzo2mbZAgDv37dAA35PmyvvrawMK2nLf3zChgkdfZCruw8FI9g9EWttWxSW7gsumN6PiGbWDijfzrkUy1fYuKZB7h"
 
 GRAPH_API_URL = "https://graph.facebook.com/v23.0"
-
-
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
-
-LOG_FILE = os.path.join(LOG_DIR, "facebook_webhook_log.txt")
-
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
 
 @csrf_exempt
 def webhook(request):
@@ -175,7 +158,7 @@ def webhook(request):
 
 
 def fetch_and_save_lead_details(lead_id: str):
-    """Fetch lead details from Facebook Graph API and log everything."""
+    """Fetch lead details from Facebook Graph API and save to LeadTable."""
     url = f"{GRAPH_API_URL}/{lead_id}"
     params = {
         "access_token": PAGE_ACCESS_TOKEN,
@@ -187,24 +170,18 @@ def fetch_and_save_lead_details(lead_id: str):
         response.raise_for_status()
         lead_data = response.json()
 
-        # ---- Log API response ----
-        logging.info(f"📥 Fetched lead data from Graph API (Lead ID: {lead_id})")
-        logging.info(json.dumps(lead_data, indent=2))
+        print("📥 Lead details fetched from Graph API:")
 
-        # ---- Parse field_data ----
+        # Extract fields
         parsed_fields = {}
         for field in lead_data.get("field_data", []):
             name = field.get("name")
             values = field.get("values", [])
             parsed_fields[name] = values[0] if values else None
 
-        logging.info("✅ Parsed Lead Fields:")
-        logging.info(json.dumps(parsed_fields, indent=2))
+        print("✅ Parsed Lead Fields:", parsed_fields)
 
-        print(f"✅ Lead data logged successfully (Lead ID: {lead_id})")
-
-        # ✅ If you want to save to DB later, uncomment this block:
-
+        # ---- Map Facebook fields to DB columns ----
         lead = LeadTable.objects.create(
             customer_name=parsed_fields.get("full_name"),
             calling_number=parsed_fields.get("phone_number"),
@@ -216,13 +193,13 @@ def fetch_and_save_lead_details(lead_id: str):
             lead_date=parse_datetime(lead_data.get("created_time")) or datetime.now(),
             remark="Facebook Lead",
         )
-        logging.info(f"💾 Lead saved successfully (ID: {lead.id})")
 
+        print(f"💾 Lead saved successfully (ID: {lead.id})")
 
     except requests.exceptions.RequestException as e:
-        logging.error(f"❌ Error fetching lead from Graph API: {str(e)}")
+        print("❌ Error fetching lead from Graph API:", str(e))
     except Exception as e:
-        logging.exception(f"❌ Error logging lead data: {str(e)}")
+        print("❌ Error saving lead to DB:", str(e))
 
 
 # ==== Privacy/Policy views ====
