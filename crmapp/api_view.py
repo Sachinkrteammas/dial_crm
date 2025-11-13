@@ -101,6 +101,10 @@ import requests
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
+import logging
+from datetime import datetime
+from django.utils.dateparse import parse_datetime
+
 
 VERIFY_TOKEN = "my_secret_token_123"
 
@@ -108,6 +112,18 @@ VERIFY_TOKEN = "my_secret_token_123"
 PAGE_ACCESS_TOKEN = "EAA5ZBgUCFFrMBPohlDeJDrOBNYHpxfA3X6ka5dKMfc033e2IG7m1O4lZCpqwu7XuNZAcpab43RIYZBDO7mwJG44fTGiNKhZBuJnRP2Fwaa4j7cjzzo2mbZAgDv37dAA35PmyvvrawMK2nLf3zChgkdfZCruw8FI9g9EWttWxSW7gsumN6PiGbWDijfzrkUy1fYuKZB7h"
 
 GRAPH_API_URL = "https://graph.facebook.com/v23.0"
+
+
+LOG_FILE = "logs/meta.log"
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+
 
 @csrf_exempt
 def webhook(request):
@@ -170,18 +186,19 @@ def fetch_and_save_lead_details(lead_id: str):
         response.raise_for_status()
         lead_data = response.json()
 
-        print("📥 Lead details fetched from Graph API:")
+        logging.info(f"📥 Fetched lead details for Lead ID: {lead_id}")
+        logging.info(json.dumps(lead_data, indent=2))
 
-        # Extract fields
+        # ---- Extract fields ----
         parsed_fields = {}
         for field in lead_data.get("field_data", []):
             name = field.get("name")
             values = field.get("values", [])
             parsed_fields[name] = values[0] if values else None
 
-        print("✅ Parsed Lead Fields:", parsed_fields)
+        logging.info(f"✅ Parsed Lead Fields: {json.dumps(parsed_fields, indent=2)}")
 
-        # ---- Map Facebook fields to DB columns ----
+        # ---- Save lead into DB ----
         lead = LeadTable.objects.create(
             customer_name=parsed_fields.get("full_name"),
             calling_number=parsed_fields.get("phone_number"),
@@ -194,12 +211,12 @@ def fetch_and_save_lead_details(lead_id: str):
             remark="Facebook Lead",
         )
 
-        print(f"💾 Lead saved successfully (ID: {lead.id})")
+        logging.info(f"💾 Lead saved successfully (ID: {lead.id})")
 
     except requests.exceptions.RequestException as e:
-        print("❌ Error fetching lead from Graph API:", str(e))
+        logging.error(f"❌ Error fetching lead from Graph API: {str(e)}")
     except Exception as e:
-        print("❌ Error saving lead to DB:", str(e))
+        logging.error(f"❌ Error saving lead to DB: {str(e)}")
 
 
 # ==== Privacy/Policy views ====
