@@ -173,7 +173,7 @@ def webhook(request):
     return HttpResponse(status=404)
 
 
-def fetch_and_save_lead_details(lead_id: str):
+def fetch_and_log_lead_details(lead_id: str):
     """Fetch lead details from Facebook Graph API and save to LeadTable."""
     url = f"{GRAPH_API_URL}/{lead_id}"
     params = {
