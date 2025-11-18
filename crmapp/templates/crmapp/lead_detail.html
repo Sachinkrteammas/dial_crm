@@ -1017,7 +1017,7 @@
 </div>
 
 <div class="col-md-4" id="remarks_id" >
-  <label>Remark:</label>
+  <label><span class="required-star">*</span>Remark:</label>
   <input type="text" class="form-control" name="remark" id="remark" value="{{ lead.remark|default_if_none:'' }}">
 </div>
 
@@ -1211,10 +1211,10 @@
 
 
 
-                    <div class="col-md-4">
-                      <label><span class="required-star">*</span>Remark:</label>
-                      <input type="text" class="form-control required-field" name="remark" value="{{ lead.remark|default_if_none:'' }}">
-                    </div>
+<!--                    <div class="col-md-4">-->
+<!--                      <label><span class="required-star">*</span>Remark:</label>-->
+<!--                      <input type="text" class="form-control required-field" name="remark" value="{{ lead.remark|default_if_none:'' }}">-->
+<!--                    </div>-->
 
 
 
@@ -2593,145 +2593,162 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const dispositionData = JSON.parse(document.getElementById('call-disposition-data').textContent);
+document.addEventListener("DOMContentLoaded", () => {
+  const dispositionData = JSON.parse(document.getElementById('call-disposition-data').textContent);
 
-    const callingStatus = document.getElementById('calling_status_select');
-    const subCallingStatus = document.getElementById('sub_calling_status_select');
-    const subSubCallingStatus = document.getElementById('sub_sub_calling_status_select');
-    const connectedFields = document.getElementById('connectedFields');
+  const callingStatus = document.getElementById('calling_status_select');
+  const subCallingStatus = document.getElementById('sub_calling_status_select');
+  const subSubCallingStatus = document.getElementById('sub_sub_calling_status_select');
+  const connectedFields = document.getElementById('connectedFields');
+  const leadCloserSelect = document.getElementById('lead_closer_status');
+  const leadCloseBlock = document.getElementById('lead_close_id');
+  const callbackTimeField = document.getElementById('callbackTimeField'); // ✅ Added
 
-    const leadSub = "{{ lead.sub_calling_status|escapejs }}";
-    const leadSubSub = "{{ lead.sub_sub_calling_status|escapejs }}";
+  // ✅ Store original lead closer options
+  const originalLeadCloserOptions = Array.from(leadCloserSelect.options).map(opt => ({
+    value: opt.value,
+    text: opt.text
+  }));
 
-    function clearAndInit(select, label) {
-      select.innerHTML = `<option value="">--Select ${label}--</option>`;
-    }
+  const leadSub = "{{ lead.sub_calling_status|escapejs }}";
+  const leadSubSub = "{{ lead.sub_sub_calling_status|escapejs }}";
 
-    function populateSubTypes() {
-      clearAndInit(subCallingStatus, "Sub Type");
-      clearAndInit(subSubCallingStatus, "Sub Sub Type");
+  // Utility: Clear and add default option
+  function clearAndInit(select, label) {
+    select.innerHTML = `<option value="">--Select ${label}--</option>`;
+  }
 
-      const selectedType = callingStatus.value;
-      const filterKey = selectedType === "Connect" ? "Connected" :
-                        selectedType === "Not Connect" ? "Not Connected" : "";
+  // ✅ Populate Sub Type dropdown
+  function populateSubTypes() {
+    clearAndInit(subCallingStatus, "Sub Type");
+    clearAndInit(subSubCallingStatus, "Sub Sub Type");
 
-      if (!filterKey) return;
+    const selectedType = callingStatus.value;
+    const filterKey = selectedType === "Connect" ? "Connected" :
+                      selectedType === "Not Connect" ? "Not Connected" : "";
 
-      const subTypes = [...new Set(dispositionData
-        .filter(d => d.type === filterKey && d.sub_type)
-        .map(d => d.sub_type))];
+    if (!filterKey) return;
 
-      subTypes.forEach(sub => {
-        const option = document.createElement('option');
-        option.value = sub;
-        option.textContent = sub;
-        subCallingStatus.appendChild(option);
-      });
-    }
+    const subTypes = [...new Set(dispositionData
+      .filter(d => d.type === filterKey && d.sub_type)
+      .map(d => d.sub_type))];
 
-    function populateSubSubTypes() {
-      clearAndInit(subSubCallingStatus, "Sub Sub Type");
+    subTypes.forEach(sub => {
+      const option = document.createElement('option');
+      option.value = sub;
+      option.textContent = sub;
+      subCallingStatus.appendChild(option);
+    });
+  }
 
-      const selectedType = callingStatus.value;
-      const selectedSubType = subCallingStatus.value;
-      const filterKey = selectedType === "Connect" ? "Connected" :
-                        selectedType === "Not Connect" ? "Not Connected" : "";
+  // ✅ Populate Sub Sub Type dropdown
+  function populateSubSubTypes() {
+    clearAndInit(subSubCallingStatus, "Sub Sub Type");
 
-      if (!filterKey || !selectedSubType) return;
+    const selectedType = callingStatus.value;
+    const selectedSubType = subCallingStatus.value;
+    const filterKey = selectedType === "Connect" ? "Connected" :
+                      selectedType === "Not Connect" ? "Not Connected" : "";
 
-      const subSubTypes = [...new Set(dispositionData
-        .filter(d => d.type === filterKey && d.sub_type === selectedSubType && d.sub_sub_type)
-        .map(d => d.sub_sub_type))];
+    if (!filterKey || !selectedSubType) return;
 
-      subSubTypes.forEach(sub => {
-        const option = document.createElement('option');
-        option.value = sub;
-        option.textContent = sub;
-        subSubCallingStatus.appendChild(option);
-      });
-    }
+    const subSubTypes = [...new Set(dispositionData
+      .filter(d => d.type === filterKey && d.sub_type === selectedSubType && d.sub_sub_type)
+      .map(d => d.sub_sub_type))];
 
-<!--    function toggleConnectedFields() {-->
-<!--      const selectedType = callingStatus.value;-->
-<!--      const selectedSub = subCallingStatus.value;-->
+    subSubTypes.forEach(sub => {
+      const option = document.createElement('option');
+      option.value = sub;
+      option.textContent = sub;
+      subSubCallingStatus.appendChild(option);
+    });
+  }
 
-<!--      if (selectedType === "Connect" && selectedSub !== "Invalid" && selectedSub !== "Call Back") {-->
-<!--        connectedFields.style.display = "flex";-->
-<!--      } else {-->
-<!--        connectedFields.style.display = "none";-->
-<!--      }-->
-<!--    }-->
+  // ✅ Dynamically filter lead closer options
+  function updateLeadCloserOptions(subValue) {
+    const isInvalid = subValue && subValue.toLowerCase() === "invalid";
+    const currentValue = leadCloserSelect.value; // preserve current
 
-    function toggleConnectedFields() {
-      const selectedType = callingStatus.value;
-      const selectedSub = subCallingStatus.value;
+    leadCloserSelect.innerHTML = "";
 
-      const showConnected = selectedType === "Connect" && selectedSub !== "Invalid" && selectedSub !== "Call Back";
-      const showCallback = selectedSub === "Call Back";
+    const filtered = originalLeadCloserOptions.filter(opt => {
+      if (opt.value === "") return true; // always keep placeholder
+      if (isInvalid) return opt.value === "invalid_close";
+      return opt.value !== "invalid_close";
+    });
 
-      const showInterestBlock = selectedSub === "Valid";
+    filtered.forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.text;
+      if (opt.value === currentValue) o.selected = true;
+      leadCloserSelect.appendChild(o);
+    });
+  }
 
-      const shownotconnectedBlock = selectedType === "Not Connect"
+  // ✅ Handle visibility toggling
+  function toggleConnectedFields() {
+    const selectedType = callingStatus.value;
+    const selectedSub = subCallingStatus.value;
 
-      const showConnected_invalid = selectedType === "Connect" && selectedSub === "Invalid";
+    const showConnected = selectedType === "Connect" && selectedSub !== "Invalid" && selectedSub !== "Call Back";
+    const showCallback = selectedSub === "Call Back";
+    const showInterestBlock = selectedSub === "Valid";
+    const showNotConnected = selectedType === "Not Connect";
+    const showConnectedInvalid = selectedType === "Connect" && selectedSub === "Invalid";
 
-      // Show/hide connected fields (e.g. brand, order, etc.)
-      connectedFields.style.display = showConnected ? "flex" : "none";
+    // Connected fields
+    connectedFields.style.display = showConnected ? "flex" : "none";
 
-      // Show/hide callback time input
-      if (callbackTimeField) {
-        callbackTimeField.style.display = showCallback ? "block" : "none";
+    // ✅ Callback time field toggle
+    if (callbackTimeField) {
+      callbackTimeField.style.display = showCallback ? "block" : "none";
+
+      // (optional) auto-set default time to now + 30min
+      if (showCallback && !callbackTimeField.querySelector("input").value) {
+        const input = callbackTimeField.querySelector("input");
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 30);
+        input.value = now.toISOString().slice(0, 16);
       }
-
-      // Show/hide Interested/Not Interested dropdown
-        const interestStatusBlock = document.getElementById("interest_status_block");
-        if (interestStatusBlock) {
-          interestStatusBlock.style.display = showInterestBlock ? "block" : "none";
-        }
-
-        const lead_status_block = document.getElementById("lead_status_block");
-        if (lead_status_block) {
-          lead_status_block.style.display = showInterestBlock ? "block" : "none";
-        }
-
-        const lead_close_id = document.getElementById("lead_close_id");
-        //const remarks_id = document.getElementById("remarks_id");
-        if (lead_close_id) {
-          const shouldShow = shownotconnectedBlock || showConnected_invalid;
-
-          lead_close_id.style.display = shouldShow ? "block" : "none";
-          //remarks_id.style.display = shouldShow ? "block" : "none";
-        }
-
-
     }
 
-    // On change handlers
-    callingStatus.addEventListener('change', () => {
-      populateSubTypes();
-      setTimeout(() => {
-        toggleConnectedFields(); // ensure field toggling after dropdown filled
-      }, 50);
-    });
+    // Interest & Lead Status blocks
+    const interestStatusBlock = document.getElementById("interest_status_block");
+    const leadStatusBlock = document.getElementById("lead_status_block");
+    if (interestStatusBlock) interestStatusBlock.style.display = showInterestBlock ? "block" : "none";
+    if (leadStatusBlock) leadStatusBlock.style.display = showInterestBlock ? "block" : "none";
 
-    subCallingStatus.addEventListener('change', () => {
-      populateSubSubTypes();
-      toggleConnectedFields();
-    });
+    // Lead closer visibility + options
+    if (leadCloseBlock) {
+      const shouldShow = showNotConnected || showConnectedInvalid;
+      leadCloseBlock.style.display = shouldShow ? "block" : "none";
+      updateLeadCloserOptions(selectedSub);
+    }
+  }
 
-    // Initial Load Logic
+  // Event handlers
+  callingStatus.addEventListener('change', () => {
     populateSubTypes();
-
-    setTimeout(() => {
-      if (leadSub) subCallingStatus.value = leadSub;
-      populateSubSubTypes();
-      if (leadSubSub) subSubCallingStatus.value = leadSubSub;
-
-      toggleConnectedFields();
-    }, 100);
+    setTimeout(toggleConnectedFields, 50);
   });
+
+  subCallingStatus.addEventListener('change', () => {
+    populateSubSubTypes();
+    toggleConnectedFields();
+  });
+
+  // Initial setup
+  populateSubTypes();
+  setTimeout(() => {
+    if (leadSub) subCallingStatus.value = leadSub;
+    populateSubSubTypes();
+    if (leadSubSub) subSubCallingStatus.value = leadSubSub;
+    toggleConnectedFields();
+  }, 150);
+});
 </script>
+
 
 
 

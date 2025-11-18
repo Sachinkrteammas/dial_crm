@@ -1755,3 +1755,16 @@ def download_excel_template_update(request):
     )
     response['Content-Disposition'] = 'attachment; filename="lead_update_template.xlsx"'
     return response
+
+
+from django.shortcuts import render
+
+def privacy_policy(request):
+    return render(request, "crmapp/privacy_policy.html")
+
+
+def terms_of_service (request):
+    return render(request,"crmapp/terms_of_service.html")
+
+def data_deletion (request):
+    return render(request,"crmapp/data_deletion.html")

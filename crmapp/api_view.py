@@ -29,7 +29,7 @@ class WebhookLeadsView(APIView):
 
         # Fetch adviser list
         adviser_ids = list(
-            UserList.objects.filter(user_role__iexact="adviser", is_deactivated=False)
+            UserList.objects.filter(user_role__iexact="adviser", is_deactivated=False, inbound_outbound__iexact="Inbound")
             .exclude(user__isnull=True)
             .values_list("user_id", flat=True)
         )
@@ -174,7 +174,7 @@ def webhook(request):
 
 
 def fetch_and_log_lead_details(lead_id: str):
-    """Fetch lead details from Facebook Graph API and save to LeadTable."""
+    """Fetch lead details from Facebook Graph API and save to LeadTable with equal adviser allocation."""
     url = f"{GRAPH_API_URL}/{lead_id}"
     params = {
         "access_token": PAGE_ACCESS_TOKEN,
@@ -198,10 +198,55 @@ def fetch_and_log_lead_details(lead_id: str):
 
         logging.info(f"✅ Parsed Lead Fields: {json.dumps(parsed_fields, indent=2)}")
 
-        # ---- Save lead into DB ----
+        # ==============================
+        #     ADVISER ALLOCATION
+        # ==============================
+        adviser_ids = list(
+            UserList.objects.filter(
+                user_role__iexact="adviser",
+                is_deactivated=False,
+                inbound_outbound__iexact="Inbound"
+            )
+            .exclude(user__isnull=True)
+            .values_list("user_id", flat=True)
+        )
+
+        if not adviser_ids:
+            msg = "❌ No active advisers found."
+            print(msg)
+            logging.warning(msg)
+            return
+
+        adviser_users = {user.id: user for user in User.objects.filter(id__in=adviser_ids)}
+        adviser_count = len(adviser_users)
+
+        # ---- Round-robin adviser selection ----
+        with transaction.atomic():
+            tracker, _ = AdviserAssignmentTracker.objects.select_for_update().get_or_create(
+                key="facebook_lead_assignment"
+            )
+
+            current_index = tracker.last_index or 0
+            adviser_id = adviser_ids[current_index % adviser_count]
+            adviser_user = adviser_users[adviser_id]
+
+            tracker.last_index = (current_index + 1) % adviser_count
+            tracker.save()
+
+        # ==============================
+        #     SAVE LEAD INTO DB
+        # ==============================
+        raw_number = parsed_fields.get("phone_number")
+
+        if raw_number:
+            digits_only = "".join(filter(str.isdigit, raw_number))
+            cleaned_number = digits_only[-10:] if len(digits_only) >= 10 else digits_only
+        else:
+            cleaned_number = None
+
         lead = LeadTable.objects.create(
             customer_name=parsed_fields.get("full_name"),
-            calling_number=parsed_fields.get("phone_number"),
+            calling_number=cleaned_number,
             state=parsed_fields.get("state"),
             district=parsed_fields.get("city"),
             pin_code=parsed_fields.get("zip_code"),
@@ -209,14 +254,23 @@ def fetch_and_log_lead_details(lead_id: str):
             sub_enquiry_source="Facebook",
             lead_date=parse_datetime(lead_data.get("created_time")) or datetime.now(),
             remark="Facebook Lead",
+            lead_upload_type="Webhook",
+            created_by=adviser_user,
         )
 
-        logging.info(f"💾 Lead saved successfully (ID: {lead.id})")
+        msg = f"💾 Lead saved successfully (ID: {lead.id}) → Adviser: {adviser_user.username}"
+        print(msg)
+        logging.info(msg)
 
     except requests.exceptions.RequestException as e:
-        logging.error(f"❌ Error fetching lead from Graph API: {str(e)}")
+        err = f"❌ Error fetching lead from Graph API: {str(e)}"
+        print(err)
+        logging.error(err)
     except Exception as e:
-        logging.error(f"❌ Error saving lead to DB: {str(e)}")
+        err = f"❌ Error saving lead to DB: {str(e)}"
+        print(err)
+        logging.exception(err)
+
 
 
 # ==== Privacy/Policy views ====

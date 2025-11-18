@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views,sales_views
+from . import views,sales_views,salesdiary
 from .api_view import WebhookLeadsView,webhook
 
 urlpatterns = [
@@ -77,5 +77,18 @@ urlpatterns = [
     path('api/upload-leads-update/', sales_views.upload_leads_update, name='upload_leads_update'),
     path('download-excel-template-update/', sales_views.download_excel_template_update, name='download_excel_template_update'),
 
+
+    ############ salesdiary url ##############
+
+    path("get-access-token/", salesdiary.get_access_token, name="get_access_token"),
+    path("get-business-structure/", salesdiary.get_business_structure, name="get_business_structure"),
+    path("get-lead-status/", salesdiary.get_lead_status, name="get_lead_status"),
+    path("save_lead_status/", salesdiary.save_lead_status, name="save_lead_status"),
+
+
+    ####### policy #########
+    path("privacy_policy/", sales_views.privacy_policy, name="privacy_policy"),
+    path("terms_of_service/", sales_views.terms_of_service, name="terms_of_service"),
+    path("data_deletion/", sales_views.data_deletion, name="data_deletion"),
 
 ]

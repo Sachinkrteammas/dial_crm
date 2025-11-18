@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Deletion</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        /* Header styling */
+        header {
+            background-color: #f0f2f5;
+            color: black;
+            padding: 10px 0;
+            text-align: center;
+            font-family: 'Georgia', serif;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5625em; /* 25px equivalent */
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        /* Container styling */
+        .container {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0px 30px 20px 30px;
+        }
+
+        /* H2 styling */
+        h2 {
+            color: black;
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            font-size: 1.125em; /* 18px equivalent */
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+
+        }
+
+        /* Paragraph styling */
+        p {
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+
+        /* Horizontal rule */
+        hr {
+            border: 0;
+            border-top: 1px solid #ddd;
+            margin: 30px 0;
+        }
+
+        /* Ordered list styling: lowercase roman numerals (i, ii, iii) */
+        ol.roman {
+            list-style: none;
+            counter-reset: roman;
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        ol.roman li {
+            counter-increment: roman;
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 2em;
+        }
+        ol.roman li::before {
+            content: "(" counter(roman, lower-roman) ") ";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        /* Ordered list styling: lowercase letters (a, b, c) */
+        ol.alpha {
+            list-style: none;
+            counter-reset: alpha;
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        ol.alpha li {
+            counter-increment: alpha;
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 2em;
+        }
+        ol.alpha li::before {
+            content: "(" counter(alpha, lower-alpha) ") ";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        /* Ordered list styling: numbers (1, 2, 3) */
+        ol.numeric {
+            list-style: none;
+            counter-reset: num;
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        ol.numeric li {
+            counter-increment: num;
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 2em;
+        }
+        ol.numeric li::before {
+            content: "(" counter(num) ") ";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px 20px;
+                margin: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+
+    </header>
+
+    <div class="container">
+
+           <h1>Data Deletion</h1>
+
+        <h2>6.1 Confidentiality Obligation</h2>
+        <p>MAS shall keep strictly confidential all information, including but not limited to data, user databases, analysis reports, documents, and all information disclosed to MAS or accessed by it during service delivery (“Confidential Information”).</p>
+        <p>MAS shall ensure that all personnel adhere to these confidentiality obligations and safeguard all User Data.</p>
+
+        <h2>6.2 Incident Notification</h2>
+        <p>MAS shall promptly notify the User Data owner of any unauthorized access, disclosure, or misuse of Confidential Information. MAS will take all necessary steps to contain, recover, and prevent further unauthorized use, including initiating injunctive or protective remedies where applicable.</p>
+
+        <h2>6.3 Restrictions on Use & Copying</h2>
+        <p>MAS shall not copy, duplicate, reproduce, translate, adapt, reverse-engineer, or alter any Confidential Information or User Data without the prior written authorization of the data owner, except where legally mandated for processes such as NCPR database scrubbing.</p>
+
+        <h2>6.4 Limited Disclosure to MAS Personnel Only</h2>
+        <p>MAS shall not disclose any Confidential Information or User Data to any external party. Disclosure shall be limited strictly to MAS employees or officers requiring access for operational purposes. MAS shall ensure that such personnel are bound by confidentiality obligations no less stringent than those contained herein.</p>
+
+        <h2>6.5 Duration of Confidentiality</h2>
+        <p>MAS shall not disclose or use any Confidential Information or User Data during the service delivery period or for five (5) years thereafter, except with prior written authorization from the data owner. MAS will maintain adequate controls and safeguards to prevent any intentional or accidental disclosure.</p>
+
+        <h2>6.6 Exceptions</h2>
+        <p>These confidentiality obligations do not apply to information that:</p>
+        <ol class="alpha">
+            <li>is independently developed by MAS without reference to Confidential Information;</li>
+            <li>becomes publicly available without breach by MAS;</li>
+            <li>was already lawfully known to MAS;</li>
+            <li>is received from a third party lawfully and without a confidentiality breach;</li>
+            <li>MAS is legally compelled to disclose under judicial or regulatory orders, provided MAS notifies the data owner and limits disclosure to what is legally required.</li>
+        </ol>
+
+        <h2>6.7 Data Deletion (New Clause)</h2>
+        <p>Upon completion of services, or upon written instruction, MAS shall:</p>
+        <ol class="numeric">
+            <li>Permanently delete or destroy all User Data and Confidential Information in its possession, including backups, stored copies, and derived files;</li>
+            <li>Provide a written certificate of deletion, issued by an authorized MAS representative;</li>
+            <li>Retain data only where legally mandated, and even then solely for the required duration, with all confidentiality requirements continuing to apply.</li>
+        </ol>
+
+    </div>
+
+</body>
+</html>

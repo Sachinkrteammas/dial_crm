@@ -171,6 +171,7 @@ def save_user(request):
         role = request.POST.get('userRole')
         action = request.POST.get('userAction')
         username = request.POST.get('username')
+        inbound_outbound = request.POST.get('inboundOutbound')
 
         # Validate
         if not full_name or not email or not username:
@@ -218,6 +219,7 @@ def save_user(request):
             user_list_entry.contact_no = contact
             user_list_entry.company = company
             user_list_entry.user_role = role
+            user_list_entry.inbound_outbound = inbound_outbound
             user_list_entry.updated_by = request.user
             user_list_entry.is_deactivated = (action == "deactivate")
             user_list_entry.save()
@@ -248,6 +250,7 @@ def save_user(request):
                 contact_no=contact,
                 company=company,
                 user_role=role,
+                inbound_outbound=inbound_outbound,
                 created_by=request.user,
                 updated_by=request.user,
                 is_deactivated=False  # default for new users
@@ -1010,6 +1013,9 @@ def update_lead(request):
             #     print("API Response:", api_response)
             # except Exception as e:
             #     print("Error sending lead to API:", str(e))
+
+            from .salesdiary import save_lead_status
+            save_lead_status(request, lead_id)
 
 
             # return JsonResponse({'status': 'success'})

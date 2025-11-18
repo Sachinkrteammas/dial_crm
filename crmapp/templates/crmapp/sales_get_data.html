@@ -170,20 +170,20 @@
 
 
 
-      <div class="col-md-6">
-        <label class="form-label">Lead Status</label>
-        <select name="lead_status" class="form-select">
-          <option value="">-- Select --</option>
-          <option value="WARM" {% if sales.lead_status == "WARM" %}selected{% endif %}>WARM</option>
-          <option value="HOT" {% if sales.lead_status == "HOT" %}selected{% endif %}>HOT</option>
-          <option value="COLD" {% if sales.lead_status == "COLD" %}selected{% endif %}>COLD</option>
-        </select>
-      </div>
+<!--      <div class="col-md-6">-->
+<!--        <label class="form-label">Lead Status</label>-->
+<!--        <select name="lead_status" class="form-select">-->
+<!--          <option value="">&#45;&#45; Select &#45;&#45;</option>-->
+<!--          <option value="WARM" {% if sales.lead_status == "WARM" %}selected{% endif %}>WARM</option>-->
+<!--          <option value="HOT" {% if sales.lead_status == "HOT" %}selected{% endif %}>HOT</option>-->
+<!--          <option value="COLD" {% if sales.lead_status == "COLD" %}selected{% endif %}>COLD</option>-->
+<!--        </select>-->
+<!--      </div>-->
 
-      <div class="col-md-6">
-        <label class="form-label">CC Final Remarks Reformat</label>
-        <input type="text" name="cc_final_remarks_reformat" value="{{ sales.cc_final_remarks_reformat|default:'' }}" class="form-control">
-      </div>
+<!--      <div class="col-md-6">-->
+<!--        <label class="form-label">CC Final Remarks Reformat</label>-->
+<!--        <input type="text" name="cc_final_remarks_reformat" value="{{ sales.cc_final_remarks_reformat|default:'' }}" class="form-control">-->
+<!--      </div>-->
 
       <div class="col-md-6">
         <label class="form-label">Lead Category</label>
@@ -195,10 +195,10 @@
         <input type="text" name="product" value="{{ sales.product|default:'' }}" class="form-control">
       </div>
 
-      <div class="col-md-6">
-        <label class="form-label">Product Value</label>
-        <input type="text" name="product_value" value="{{ sales.product_value|default:'' }}" class="form-control">
-      </div>
+<!--      <div class="col-md-6">-->
+<!--        <label class="form-label">Product Value</label>-->
+<!--        <input type="text" name="product_value" value="{{ sales.product_value|default:'' }}" class="form-control">-->
+<!--      </div>-->
 
       <div class="col-md-6">
         <label class="form-label">Status</label>
