@@ -701,6 +701,46 @@
           </select>
         </div>
 
+            <div class="col-md-3 mb-3">
+            <label class="form-label">Enquiry Source</label>
+            <select class="form-select" name="enquiry_source" id="filter-source">
+                <option value="">-- Select Enquiry Source --</option>
+                <option>ChatBot</option>
+                <option>Exhibition</option>
+                <option>GetDistributor</option>
+                <option>Inbound</option>
+                <option>IndiaMart</option>
+                <option>Mail</option>
+                <option>Plantix</option>
+                <option>Meta</option>
+                <option>Social</option>
+                <option>TradeIndia</option>
+                <option>WebScraping</option>
+                <option>Website</option>
+                <option>Other</option>
+            </select>
+        </div>
+
+            <div class="col-md-3 mb-3">
+                    <label class="form-label">Mobile Number</label>
+                    <input type="text" class="form-control" name="mobile"
+                           id="filter-mobile" placeholder="Enter mobile number">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date"
+                           id="filter-start-date">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date"
+                           id="filter-end-date">
+                </div>
+
+
+
 
         <!-- Submit -->
         <div class="col-12 text-center mt-3">
@@ -792,34 +832,90 @@
   });
 </script>
 
-  <script>
+<!--  <script>-->
+<!--  document.addEventListener('DOMContentLoaded', function () {-->
+<!--    const fromUserSelect = document.querySelector('select[name="from_user"]');-->
+<!--    const leadSelect = document.getElementById('lead-select');-->
+
+<!--    fromUserSelect.addEventListener('change', function () {-->
+<!--      const userId = this.value;-->
+<!--      leadSelect.innerHTML = '<option value="">&#45;&#45; All Leads &#45;&#45;</option>'; // Clear previous leads-->
+
+<!--      if (userId) {-->
+<!--        fetch(`/get-leads-by-user/${userId}/`)-->
+<!--          .then(response => response.json())-->
+<!--          .then(data => {-->
+<!--            data.forEach(lead => {-->
+<!--              const option = document.createElement('option');-->
+<!--              option.value = lead.id;-->
+<!--              option.textContent = `${lead.customer_name} (ID: ${lead.id}) - Source: ${lead.enquiry_source}`;-->
+<!--              leadSelect.appendChild(option);-->
+<!--            });-->
+<!--          })-->
+<!--          .catch(err => {-->
+<!--            console.error("Failed to load leads", err);-->
+<!--          });-->
+<!--      }-->
+<!--    });-->
+<!--  });-->
+<!--  </script>-->
+
+    <script>
+
   document.addEventListener('DOMContentLoaded', function () {
-    const fromUserSelect = document.querySelector('select[name="from_user"]');
-    const leadSelect = document.getElementById('lead-select');
+  const fromUserSelect = document.querySelector('select[name="from_user"]');
+  const leadSelect = document.getElementById('lead-select');
 
-    fromUserSelect.addEventListener('change', function () {
-      const userId = this.value;
-      leadSelect.innerHTML = '<option value="">-- All Leads --</option>'; // Clear previous leads
+  const sourceInput = document.getElementById('filter-source');
+  const mobileInput = document.getElementById('filter-mobile');
+  const startDateInput = document.getElementById('filter-start-date');
+  const endDateInput = document.getElementById('filter-end-date');
 
-      if (userId) {
-        fetch(`/get-leads-by-user/${userId}/`)
-          .then(response => response.json())
-          .then(data => {
-            data.forEach(lead => {
-              const option = document.createElement('option');
-              option.value = lead.id;
-              option.textContent = `${lead.customer_name} (ID: ${lead.id}) - Source: ${lead.enquiry_source}`;
-              leadSelect.appendChild(option);
-            });
-          })
-          .catch(err => {
-            console.error("Failed to load leads", err);
-          });
-      }
-    });
-  });
-  </script>
+  function loadLeads() {
+    const userId = fromUserSelect.value;
+    leadSelect.innerHTML = '<option value="">-- All Leads --</option>';
+    if (!userId) return;
 
+    const params = new URLSearchParams();
+    if (sourceInput && sourceInput.value) params.append("source", sourceInput.value);
+    if (mobileInput && mobileInput.value) params.append("mobile", mobileInput.value);
+    if (startDateInput && startDateInput.value) params.append("start_date", startDateInput.value);
+    if (endDateInput && endDateInput.value) params.append("end_date", endDateInput.value);
+
+    const url = `/get-leads-by-user/${userId}/?${params.toString()}`;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = '-- No leads found --';
+          leadSelect.appendChild(opt);
+          return;
+        }
+        data.forEach(lead => {
+          const option = document.createElement('option');
+          option.value = lead.id; // THIS MUST BE the numeric id
+          option.textContent = `${lead.customer_name || 'No name'} (ID: ${lead.id}) - ${lead.enquiry_source || ''}`;
+          leadSelect.appendChild(option);
+        });
+      })
+      .catch(err => {
+        console.error("Failed to load leads:", err);
+      });
+  }
+
+  // events
+  fromUserSelect.addEventListener('change', loadLeads);
+  if (sourceInput) sourceInput.addEventListener('input', loadLeads);
+  if (mobileInput) mobileInput.addEventListener('input', loadLeads);
+  if (startDateInput) startDateInput.addEventListener('change', loadLeads);
+  if (endDateInput) endDateInput.addEventListener('change', loadLeads);
+});
+
+
+</script>
 
 
 

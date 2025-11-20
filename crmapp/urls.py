@@ -55,6 +55,8 @@ urlpatterns = [
 
 
     path('main_leads_export/',sales_views.main_leads_export,name="main_leads_export"),
+    path('updated_leads_export/',sales_views.updated_leads_export,name="updated_leads_export"),
+
     path('reallocate/',sales_views.reallocate,name="reallocate"),
     path('get-leads-by-user/<int:user_id>/', sales_views.get_leads_by_user, name='get_leads_by_user'),
     path('api/get-voc-options/',sales_views.get_voc_options_api, name='get_voc_options_api'),

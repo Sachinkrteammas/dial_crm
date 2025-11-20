@@ -652,6 +652,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
 
   const rowData = table.rows().data().toArray().find(row => String(row.id) === String(id));
 
+
   if (!rowData) {
     console.error('User not found');
     return;
@@ -669,6 +670,14 @@ document.addEventListener('DOMContentLoaded', function (e) {
 
    document.getElementById('user-action').value = rowData.is_deactivated ? 'deactivate' : 'active';
 
+  const inboundOutboundSelect = document.getElementById('inbound-outbound');
+  if (inboundOutboundSelect) {
+    if (rowData.inbound_outbound === 'Inbound' || rowData.inbound_outbound === 'Outbound') {
+      inboundOutboundSelect.value = rowData.inbound_outbound;
+    } else {
+      inboundOutboundSelect.value = 'Outbound';
+    }
+  }
 
  const actionBlock = document.getElementById('action-block');
   if (rowData.id && rowData.id !== 0) {

@@ -708,6 +708,7 @@ def main_leads_export(request):
             'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
             'Registration Status', 'Remark', 'Secure URL', 'Sales Officer Email Id', 'Sales Officer Contact Number','Lead Closer Status',
             'Lead Closer Status New',
+            'merged Lead Closer Status',
             'Lead Close Date',
             'Final Lead Close Date',
             'Lead Upload Type',
@@ -722,6 +723,12 @@ def main_leads_export(request):
 
         for idx, lead in enumerate(leads, start=1):
             sales = SalesInfoTable.objects.filter(lead_table=lead).first()
+
+            if lead.lead_closer_status and lead.lead_closer_status_new:
+                merged_status = f"{lead.lead_closer_status} | {lead.lead_closer_status_new}"
+            else:
+                merged_status = lead.lead_closer_status or lead.lead_closer_status_new
+
             ws.append([
                 idx,
                 f"BN{lead.pk}",
@@ -766,6 +773,7 @@ def main_leads_export(request):
                 lead.seller_phone_no,
                 lead.lead_closer_status,
                 lead.lead_closer_status_new,
+                merged_status,
                 lead.lead_close_date,
                 lead.final_lead_close_date,
                 lead.lead_upload_type,
@@ -804,6 +812,228 @@ def main_leads_export(request):
 
 
 @login_required
+def updated_leads_export(request):
+    print("updated_leads_export in=====")
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        parent_id = item.parent_id
+        menu_tree.setdefault(parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    from_date_str = request.GET.get('from_date')
+    to_date_str = request.GET.get('to_date')
+
+    if from_date_str and to_date_str:
+        from_date = parse_date(from_date_str)
+        to_date = parse_date(to_date_str)
+
+        if not from_date or not to_date:
+            return render(request, 'crmapp/leads_export.html', {
+                "menu_html": menu_html,
+                "error": "Invalid date format."
+            })
+
+        from_datetime = datetime.combine(from_date, datetime.min.time())
+        to_datetime = datetime.combine(to_date, datetime.max.time())
+
+        leads = LeadTable.objects.filter(updated_at__range=(from_datetime, to_datetime))
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Leads"
+
+        ws.append([
+            'ID',
+            'Unique Id',
+            'Customer Name', 'Customer Type', 'Calling Number', 'Enquiry Type', 'Enquiry Source', 'Sub Enquiry Source',
+            'Lead Date', 'Call Date', 'Call Type', 'Calling Status', 'Interested Status',
+            'Sub Calling Status', 'Sub Sub Calling Status', 'Select Business', 'Buyer Type',
+            'Lead Status', 'Construction Level', 'Name', 'Alternative Number', 'Email ID',
+            'Address', 'Landmark', 'Brand', 'Product', 'Sub Product',
+            'State', 'District', 'Zone', 'Pincode', 'Agent Name',
+            'Order Qty', 'Order Description', 'Order Value', 'Customer Type Select',
+            'Registration Status', 'Remark', 'Secure URL', 'Sales Officer Email Id', 'Sales Officer Contact Number','Lead Closer Status',
+            'Lead Closer Status New',
+            'merged Lead Closer Status',
+            'Lead Close Date',
+            'Final Lead Close Date',
+            'Lead Upload Type',
+            'Created By', 'Updated By', 'Created At', 'Updated At',
+
+            # --- Sales Info ---
+            'Sale MT', 'Sale INR', 'Sale Team Remarks',
+            'Sale Lead Status', 'CC Final Remarks',
+            'Sale Lead Category', 'Sale Product',
+            'Sale Product Value', 'Sale Status'
+        ])
+
+        for idx, lead in enumerate(leads, start=1):
+            sales = SalesInfoTable.objects.filter(lead_table=lead).first()
+
+            if lead.lead_closer_status and lead.lead_closer_status_new:
+                merged_status = f"{lead.lead_closer_status} | {lead.lead_closer_status_new}"
+            else:
+                merged_status = lead.lead_closer_status or lead.lead_closer_status_new
+
+            ws.append([
+                idx,
+                f"BN{lead.pk}",
+                lead.customer_name,
+                lead.customer_type,
+                lead.calling_number,
+                lead.enquiry_type,
+                lead.enquiry_source,
+                lead.sub_enquiry_source,
+                lead.lead_date.strftime('%Y-%m-%d') if lead.lead_date else '',
+                lead.call_date.strftime('%Y-%m-%d') if lead.call_date else '',
+                lead.call_type,
+                lead.calling_status,
+                lead.interested_status,
+                lead.sub_calling_status,
+                lead.sub_sub_calling_status,
+                lead.select_bus,
+                lead.buyer_type,
+                lead.lead_status,
+                lead.construction_level,
+                lead.name,
+                lead.alternative_number,
+                lead.email_id,
+                lead.address,
+                lead.landmark,
+                lead.brand,
+                lead.product,
+                lead.sub_product,
+                lead.state,
+                lead.district,
+                lead.zone,
+                lead.pin_code,
+                str(lead.created_by).split('@')[0] if lead.created_by else '',
+                lead.order_qty,
+                lead.order_description,
+                float(lead.order_value) if lead.order_value else '',
+                lead.customer_type_select,
+                lead.registration_status,
+                lead.remark,
+                lead.secure_url,
+                lead.seller_email_id,
+                lead.seller_phone_no,
+                lead.lead_closer_status,
+                lead.lead_closer_status_new,
+                merged_status,
+                lead.lead_close_date,
+                lead.final_lead_close_date,
+                lead.lead_upload_type,
+                str(lead.created_by) if lead.created_by else '',
+                str(lead.updated_by) if lead.updated_by else '',
+                lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
+                lead.updated_at.strftime('%Y-%m-%d %H:%M:%S') if lead.updated_at else '',
+
+                sales.sale_mt if sales else '',
+                sales.sale_inr if sales else '',
+                sales.sale_team_remarks if sales else '',
+                sales.lead_status if sales else '',
+                sales.cc_final_remarks_reformat if sales else '',
+                sales.lead_category if sales else '',
+                sales.product if sales else '',
+                sales.product_value if sales else '',
+                sales.status if sales else '',
+            ])
+
+        file_stream = BytesIO()
+        wb.save(file_stream)
+        file_stream.seek(0)
+
+        return FileResponse(
+            file_stream,
+            as_attachment=True,
+            filename='Updated_leads_data.xlsx',
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    # No export, show template
+    return render(request, 'crmapp/leads_export.html', {
+        "menu_html": menu_html
+    })
+
+
+# @login_required
+# def reallocate(request):
+#     menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+#     menu_tree = {}
+#     for item in menu_items:
+#         parent_id = item.parent_id
+#         menu_tree.setdefault(parent_id, []).append(item)
+#     menu_html = render_menu(None, menu_tree)
+#
+#     users = User.objects.all()
+#     leads = LeadTable.objects.all()
+#
+#     if request.method == 'POST':
+#         from_user_id = request.POST.get('from_user')
+#         to_user_id = request.POST.get('to_user')
+#         lead_id = request.POST.get('lead_id')
+#
+#         try:
+#             from_user = User.objects.get(id=from_user_id)
+#             to_user = User.objects.get(id=to_user_id)
+#
+#             if lead_id:
+#                 # Transfer specific lead
+#                 lead = get_object_or_404(LeadTable, id=lead_id, created_by=from_user)
+#                 lead.created_by = to_user
+#                 lead.lead_action = f"{from_user.get_full_name() or from_user.username} transferred the lead to {to_user.get_full_name() or to_user.username}"
+#                 lead.save()
+#
+#                 # Save history (only lead_action)
+#                 HistoryLead.objects.create(
+#                     lead_table=lead,
+#                     lead_action=lead.lead_action,
+#                     created_by=from_user,
+#                     updated_by=to_user
+#                 )
+#
+#                 messages.success(
+#                     request,
+#                     f" Lead {lead.id} successfully reallocated from {from_user.email} to {to_user.email}."
+#                 )
+#             else:
+#                 # Transfer all leads from from_user to to_user
+#                 leads_to_update = LeadTable.objects.filter(created_by=from_user)
+#                 for lead in leads_to_update:
+#                     lead.created_by = to_user
+#                     lead.lead_action = f"{from_user.get_full_name() or from_user.username} transferred the lead to {to_user.get_full_name() or to_user.username}"
+#                     lead.save()
+#
+#                     # Save history (only lead_action)
+#                     HistoryLead.objects.create(
+#                         lead_table=lead,
+#                         lead_action=lead.lead_action,
+#                         created_by=from_user,
+#                         updated_by=to_user
+#                     )
+#
+#                 messages.success(
+#                     request,
+#                     f" {leads_to_update.count()} leads successfully transferred from {from_user.email} to {to_user.email}."
+#                 )
+#
+#         except User.DoesNotExist:
+#             messages.error(request, " One or both users not found.")
+#         except LeadTable.DoesNotExist:
+#             messages.error(request, " Lead not found or does not belong to selected From User.")
+#         except Exception as e:
+#             messages.error(request, f" Error: {str(e)}")
+#
+#         return redirect('reallocate')
+#
+#     return render(request, 'crmapp/reallocate.html', {
+#         'users': users,
+#         'leads': leads,
+#         'menu_html': menu_html,
+#     })
+
+@login_required
 def reallocate(request):
     menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
     menu_tree = {}
@@ -813,72 +1043,106 @@ def reallocate(request):
     menu_html = render_menu(None, menu_tree)
 
     users = User.objects.all()
-    leads = LeadTable.objects.all()
 
     if request.method == 'POST':
         from_user_id = request.POST.get('from_user')
         to_user_id = request.POST.get('to_user')
         lead_id = request.POST.get('lead_id')
 
+        # Filters from POST
+        source = request.POST.get("enquiry_source", "")
+        mobile = request.POST.get("mobile", "")
+        start_date = request.POST.get("start_date", "")
+        end_date = request.POST.get("end_date", "")
+
+        # Validate user selections
+        if not from_user_id or not to_user_id:
+            messages.error(request, "Please select From User and To User.")
+            return redirect("reallocate")
+
         try:
             from_user = User.objects.get(id=from_user_id)
             to_user = User.objects.get(id=to_user_id)
-
-            if lead_id:
-                # Transfer specific lead
-                lead = get_object_or_404(LeadTable, id=lead_id, created_by=from_user)
-                lead.created_by = to_user
-                lead.lead_action = f"{from_user.get_full_name() or from_user.username} transferred the lead to {to_user.get_full_name() or to_user.username}"
-                lead.save()
-
-                # Save history (only lead_action)
-                HistoryLead.objects.create(
-                    lead_table=lead,
-                    lead_action=lead.lead_action,
-                    created_by=from_user,
-                    updated_by=to_user
-                )
-
-                messages.success(
-                    request,
-                    f" Lead {lead.id} successfully reallocated from {from_user.email} to {to_user.email}."
-                )
-            else:
-                # Transfer all leads from from_user to to_user
-                leads_to_update = LeadTable.objects.filter(created_by=from_user)
-                for lead in leads_to_update:
-                    lead.created_by = to_user
-                    lead.lead_action = f"{from_user.get_full_name() or from_user.username} transferred the lead to {to_user.get_full_name() or to_user.username}"
-                    lead.save()
-
-                    # Save history (only lead_action)
-                    HistoryLead.objects.create(
-                        lead_table=lead,
-                        lead_action=lead.lead_action,
-                        created_by=from_user,
-                        updated_by=to_user
-                    )
-
-                messages.success(
-                    request,
-                    f" {leads_to_update.count()} leads successfully transferred from {from_user.email} to {to_user.email}."
-                )
-
         except User.DoesNotExist:
-            messages.error(request, " One or both users not found.")
-        except LeadTable.DoesNotExist:
-            messages.error(request, " Lead not found or does not belong to selected From User.")
-        except Exception as e:
-            messages.error(request, f" Error: {str(e)}")
+            messages.error(request, "User not found.")
+            return redirect("reallocate")
 
-        return redirect('reallocate')
+        # -----------------------------------------------------------------------------------
+        # CASE 1 → SINGLE LEAD TRANSFER
+        # -----------------------------------------------------------------------------------
+        if lead_id:
+            try:
+                lead = LeadTable.objects.get(id=lead_id)
+            except LeadTable.DoesNotExist:
+                messages.error(request, "Lead does not exist.")
+                return redirect("reallocate")
 
-    return render(request, 'crmapp/reallocate.html', {
-        'users': users,
-        'leads': leads,
-        'menu_html': menu_html,
-    })
+            if lead.created_by_id != from_user.id:
+                messages.error(request, "Selected lead does not belong to this user.")
+                return redirect("reallocate")
 
+            # update lead
+            lead.created_by = to_user
+            lead.lead_action = (
+                f"{from_user.get_full_name() or from_user.username} transferred the "
+                f"lead to {to_user.get_full_name() or to_user.username}"
+            )
+            lead.save()
+
+            # save history
+            HistoryLead.objects.create(
+                lead_table=lead,
+                lead_action=lead.lead_action,
+                created_by=from_user,
+                updated_by=to_user,
+            )
+
+            messages.success(request, f"Lead {lead_id} transferred successfully!")
+            return redirect("reallocate")
+
+        # -----------------------------------------------------------------------------------
+        # CASE 2 → FILTERED MULTIPLE LEAD TRANSFER
+        # -----------------------------------------------------------------------------------
+        leads_qs = LeadTable.objects.filter(created_by=from_user)
+
+        # Apply filters exactly like the JS filtering
+        if source:
+            leads_qs = leads_qs.filter(enquiry_source__icontains=source)
+
+        if mobile:
+            leads_qs = leads_qs.filter(calling_number__icontains=mobile)
+
+        if start_date and end_date:
+            leads_qs = leads_qs.filter(lead_date__range=[start_date, end_date])
+        elif start_date:
+            leads_qs = leads_qs.filter(lead_date__gte=start_date)
+        elif end_date:
+            leads_qs = leads_qs.filter(lead_date__lte=end_date)
+
+        # Update filtered leads only
+        count = 0
+        for lead in leads_qs:
+            lead.created_by = to_user
+            lead.lead_action = (
+                f"{from_user.get_full_name() or from_user.username} transferred the "
+                f"lead to {to_user.get_full_name() or to_user.username}"
+            )
+            lead.save()
+
+            HistoryLead.objects.create(
+                lead_table=lead,
+                lead_action=lead.lead_action,
+                created_by=from_user,
+                updated_by=to_user,
+            )
+
+            count += 1
+
+        messages.success(request, f"{count} filtered leads transferred successfully!")
+        return redirect("reallocate")
+
+    # GET Request
+    return render(request, "crmapp/reallocate.html", {"users": users,'menu_html': menu_html,})
 
 
 @require_GET
@@ -1181,10 +1445,41 @@ def follow_up_data(request):
     })
 
 
+# @login_required
+# def get_leads_by_user(request, user_id):
+#     leads = LeadTable.objects.filter(created_by_id=user_id).values('id', 'customer_name','enquiry_source')
+#     return JsonResponse(list(leads), safe=False)
+
 @login_required
 def get_leads_by_user(request, user_id):
-    leads = LeadTable.objects.filter(created_by_id=user_id).values('id', 'customer_name','enquiry_source')
+    leads = LeadTable.objects.filter(created_by_id=user_id)
+
+    source = request.GET.get("source")
+    mobile = request.GET.get("mobile")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    # Filter: enquiry source
+    if source:
+        leads = leads.filter(enquiry_source__icontains=source.strip())
+
+    # Filter: mobile
+    if mobile:
+        leads = leads.filter(calling_number__icontains=mobile.strip())
+
+    # Filter: date range
+    if start_date and end_date:
+        leads = leads.filter(lead_date__range=[start_date, end_date])
+    elif start_date:
+        leads = leads.filter(lead_date__gte=start_date)
+    elif end_date:
+        leads = leads.filter(lead_date__lte=end_date)
+
+    # Select only required fields
+    leads = leads.values("id", "customer_name", "enquiry_source")
+
     return JsonResponse(list(leads), safe=False)
+
 
 
 from django.template.loader import render_to_string

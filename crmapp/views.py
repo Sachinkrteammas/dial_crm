@@ -153,7 +153,7 @@ def user_list(request):
 
 def user_list_api(request):
     users = UserList.objects.all().order_by('id').values(
-        'id', 'full_name','username', 'user_role', 'email_id', 'company', 'contact_no', 'is_deactivated'
+        'id', 'full_name','username', 'user_role', 'email_id', 'company', 'contact_no', 'is_deactivated','inbound_outbound'
     )
     return JsonResponse({'data': list(users)})
 

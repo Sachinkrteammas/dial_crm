@@ -82,16 +82,18 @@ def get_business_structure(request):
 
     return JsonResponse({"status": "error", "message": "Only GET method allowed"}, status=405)
 
-
+from datetime import datetime, timedelta
 #Get Lead Status
 @csrf_exempt
 def get_lead_status(request):
     if request.method != "GET":
         return JsonResponse({"status": "error", "message": "Only GET allowed"}, status=405)
 
+    today = datetime.today().date()
+    yesterday = today - timedelta(days=1)
     # Get optional query params
-    start_date = request.GET.get("start_date", "2025-11-17")
-    end_date = request.GET.get("end_date", "2025-11-18")
+    start_date = request.GET.get("start_date", str(yesterday))
+    end_date = request.GET.get("end_date", str(today))
     limit = request.GET.get("limit", "150")
     offset = request.GET.get("offset", "0")
 

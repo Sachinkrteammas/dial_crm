@@ -672,6 +672,7 @@
           <select class="form-select" id="export-type">
             <option value="history">History Lead</option>
             <option value="main">Lead</option>
+            <option value="updated_leads">Updated Lead</option>
           </select>
         </div>
 
@@ -773,7 +774,12 @@
   // Redirect based on selected type
   if (type === "history") {
     window.location.href = `/leads_export/?from_date=${fromDate}&to_date=${toDate}`;
-  } else {
+  }
+  else if (type === "updated_leads")
+  {
+    window.location.href = `/updated_leads_export/?from_date=${fromDate}&to_date=${toDate}`;
+  }
+   else {
     window.location.href = `/main_leads_export/?from_date=${fromDate}&to_date=${toDate}`;
   }
 }

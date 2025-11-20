@@ -29,7 +29,7 @@ class WebhookLeadsView(APIView):
 
         # Fetch adviser list
         adviser_ids = list(
-            UserList.objects.filter(user_role__iexact="adviser", is_deactivated=False, inbound_outbound__iexact="Inbound")
+            UserList.objects.filter(user_role__iexact="adviser", is_deactivated=False, inbound_outbound__iexact="Outbound")
             .exclude(user__isnull=True)
             .values_list("user_id", flat=True)
         )
@@ -115,6 +115,7 @@ GRAPH_API_URL = "https://graph.facebook.com/v23.0"
 
 
 LOG_FILE = "/var/www/html/dial_crm/logs/meta.log"
+
 
 logging.basicConfig(
     filename=LOG_FILE,
@@ -205,7 +206,7 @@ def fetch_and_log_lead_details(lead_id: str):
             UserList.objects.filter(
                 user_role__iexact="adviser",
                 is_deactivated=False,
-                inbound_outbound__iexact="Inbound"
+                inbound_outbound__iexact="Outbound"
             )
             .exclude(user__isnull=True)
             .values_list("user_id", flat=True)
