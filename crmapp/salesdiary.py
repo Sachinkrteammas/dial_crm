@@ -10,7 +10,7 @@ import re
 AUTH_URL = "https://birlanuuat.salesdiary.in:4078/api/res_users/authenticateSystemUser"
 STRUCTURE_URL = "https://birlanuuat.salesdiary.in:4078/api/sd_connects/get_business_structure"
 LEAD_STATUS_URL = "https://birlanuuat.salesdiary.in:4078/api/hil_connects/getLeadStatus"
-LEAD_SAVE_URL = "https://birlanuuat.salesdiary.in:4078/api/hil_connects/saveLead"
+LEAD_SAVE_URL = "https://birlanuuat.salesdiary.in:4078/api/hil_connects/save_partner_lead"
 AUTH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbnN0YW5jZSI6ImhpbHVhdCIsInVzZXJuYW1lIjoiYXBhcm5hIiwicGFzc3dvcmQiOiJhcGFybmEiLCJub25zZSI6IjE1NjU1ODg4ODg4ODY2In0.PtAi8fzH437NQ6pgRW8awIXd-WFDNq20ZnMzzbwx97k"
 
 
@@ -178,13 +178,32 @@ def save_lead_status(request, lead_id=None):
                 # Build payload dynamically from your database LeadTable
                 lead = LeadTable.objects.get(id=lead_id)
 
+                buyer_type_map = {
+                    "Architect": "influencer",
+                    "Carpenter": "influencer",
+                    "Contractor": "influencer",
+                    "Distributor": "supplier",
+                    "Engineer": "influencer",
+                    "Fabricator": "influencer",
+                    "Individual Buyer": "influencer",
+                    "Industrial": "project",
+                    "Others": "influencer",
+                    "Mason": "influencer",
+                    "Painter": "influencer",
+                    "Plumber": "influencer",
+                    "Retailer": "retailer",
+                    "Wholesaler/Stockist": "influencer",
+                }
+                partner_type = buyer_type_map.get(lead.buyer_type)
+
                 payload = {
                     "data": [{
                         "name": lead.name or " ",
-                        "type": "Retailer Pipes",
                         "date": lead.lead_date.strftime("%Y-%m-%d") if lead.lead_date else "",
+						"partner_type": partner_type,
                         "potential": float(lead.order_value) if lead.order_value else 0,
                         "emp_email": lead.seller_email_id or "",
+                        "email": lead.seller_email_id or "",
                         "emp_mobile": lead.seller_phone_no or "",
                         "mobile": lead.seller_phone_no or "",
                         "contact_name": lead.name or "",
