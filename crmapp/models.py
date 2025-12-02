@@ -276,6 +276,7 @@ class SalesInfoTable(models.Model):
     product = models.CharField(max_length=100, blank=True, null=True)
     product_value = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=100, blank=True, null=True)
+    sales_person_status = models.CharField(max_length=100, blank=True, null=True)
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_sales_info')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_sales_info')
@@ -385,6 +386,7 @@ class HistorySalesInfo(models.Model):
     product = models.CharField(max_length=100, blank=True, null=True)
     product_value = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=100, blank=True, null=True)
+    sales_person_status = models.CharField(max_length=100, blank=True, null=True)
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_sales_info_history')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_sales_info_history')

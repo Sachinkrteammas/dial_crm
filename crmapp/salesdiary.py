@@ -301,6 +301,7 @@ def extract_lead_id(tid):
         return None
 
 
+from django.utils import timezone
 def save_sales_info_from_response(response_json, created_by_user=None):
     """
     Parse JSON response and either create or update SalesInfoTable entries.
@@ -319,7 +320,8 @@ def save_sales_info_from_response(response_json, created_by_user=None):
         print(f"Processing Lead ID: {lead_id}")
 
         status_full = item.get("status", "")
-        status = status_full.split()[0] if status_full else ""
+        #status = status_full.split()[0] if status_full else ""
+        status = status_full
         remarks = item.get("remarks")
         priority = item.get("priority")
 
@@ -380,6 +382,9 @@ def save_sales_info_from_response(response_json, created_by_user=None):
             if changed:
                 if created_by_user:
                     sales_info.updated_by = created_by_user
+
+                sales_info.updated_at = timezone.now()
+
                 sales_info.save()
                 action = "updated"
             else:

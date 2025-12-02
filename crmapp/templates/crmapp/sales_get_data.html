@@ -204,9 +204,53 @@
         <label class="form-label">Status</label>
         <select name="status" class="form-select">
           <option value="">-- Select --</option>
-          <option value="Open" {% if sales.status == "Open" %}selected{% endif %}>Open</option>
-          <option value="Closed" {% if sales.status == "Closed" %}selected{% endif %}>Closed</option>
-          <option value="Pending" {% if sales.status == "Pending" %}selected{% endif %}>Pending</option>
+<!--          <option value="Open" {% if sales.status == "Open" %}selected{% endif %}>Open</option>-->
+<!--          <option value="Closed" {% if sales.status == "Closed" %}selected{% endif %}>Closed</option>-->
+<!--          <option value="Pending" {% if sales.status == "Pending" %}selected{% endif %}>Pending</option>-->
+            <option value="closed_with_dealership"
+              {% if sales.sales_person_status == "closed_with_dealership" %}selected{% endif %}>
+              Closed with Dealership
+            </option>
+
+            <option value="closed_with_order"
+              {% if sales.sales_person_status == "closed_with_order" %}selected{% endif %}>
+              Closed with Order
+            </option>
+
+            <option value="closed_with_solution"
+              {% if sales.sales_person_status == "closed_with_solution" %}selected{% endif %}>
+              Closed with Solution
+            </option>
+
+            <option value="closed_without_dealership"
+              {% if sales.sales_person_status == "closed_without_dealership" %}selected{% endif %}>
+              Closed without Dealership
+            </option>
+
+            <option value="closed_without_order"
+              {% if sales.sales_person_status == "closed_without_order" %}selected{% endif %}>
+              Closed without Order
+            </option>
+
+            <option value="followup"
+              {% if sales.sales_person_status == "followup" %}selected{% endif %}>
+              Follow-up
+            </option>
+
+            <option value="pending"
+              {% if sales.sales_person_status == "pending" %}selected{% endif %}>
+              Pending
+            </option>
+
+            <option value="underprocess"
+              {% if sales.sales_person_status == "underprocess" %}selected{% endif %}>
+              Under Process
+            </option>
+
+            <option value="validate"
+              {% if sales.sales_person_status == "validate" %}selected{% endif %}>
+              Validate
+            </option>
         </select>
       </div>
 

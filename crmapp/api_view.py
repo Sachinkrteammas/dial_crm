@@ -179,7 +179,7 @@ def fetch_and_log_lead_details(lead_id: str):
     url = f"{GRAPH_API_URL}/{lead_id}"
     params = {
         "access_token": PAGE_ACCESS_TOKEN,
-        "fields": "created_time,field_data"
+        "fields": "created_time,campaign_id,ad_name,form_id,campaign_name,field_data"
     }
 
     try:
@@ -189,6 +189,14 @@ def fetch_and_log_lead_details(lead_id: str):
 
         logging.info(f"📥 Fetched lead details for Lead ID: {lead_id}")
         logging.info(json.dumps(lead_data, indent=2))
+
+        ############ new changes to get ##########
+        campaign_id = lead_data.get("campaign_id")
+        ad_name = lead_data.get("ad_name")
+        form_id = lead_data.get("form_id")
+        campaign_name = lead_data.get("campaign_name")
+
+        ############ end ##########
 
         # ---- Extract fields ----
         parsed_fields = {}
@@ -248,6 +256,7 @@ def fetch_and_log_lead_details(lead_id: str):
         lead = LeadTable.objects.create(
             customer_name=parsed_fields.get("full_name"),
             calling_number=cleaned_number,
+            customer_type=campaign_name,
             state=parsed_fields.get("state"),
             district=parsed_fields.get("city"),
             pin_code=parsed_fields.get("zip_code"),

@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
 
 //    { data: 'id',visible: false },
     { data: 'full_name' },
-    { data: 'username' },
+    { data: 'inbound_outbound' },
     { data: 'user_role' },
     { data: 'email_id' },
     { data: 'company' },
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
       {
         targets: 2, // username
         render: function (data, type, full) {
-          return `<span class="text-heading">${full['username'] || ''}</span>`;
+          return `<span class="text-heading">${full['inbound_outbound'] || ''}</span>`;
         }
       },
       {

@@ -649,7 +649,7 @@ def save_lead(request):
         print(matching_leads,"matching_leads")
 
         for lead in matching_leads:
-            if (lead.lead_closer_status or '').lower() == "no_response":
+            if (lead.lead_closer_status or '').lower() == "no_response" or (lead.lead_closer_status_new or '').lower().startswith("closed"):
                 updated = SalesInfoTable.objects.filter(lead_table=lead).update(status="closed")
                 if not updated:  # if no row existed
                     SalesInfoTable.objects.create(

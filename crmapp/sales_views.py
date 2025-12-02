@@ -132,7 +132,18 @@ def update_sales_info(request):
         sales_info.lead_category = request.POST.get('lead_category')
         sales_info.product = request.POST.get('product')
         sales_info.product_value = request.POST.get('product_value')
-        sales_info.status = request.POST.get('status')
+
+        posted_status = (request.POST.get('status') or '').lower()
+
+        sales_info.sales_person_status = posted_status
+
+        # 2️⃣ Decide NEW value for 'status'
+        if posted_status.startswith("closed"):
+            sales_info.status = "Closed"
+        else:
+            sales_info.status = "Pending"
+
+        #sales_info.status = request.POST.get('status')
 
         # ✅ Only assign user if authenticated
         # if created and request.user.is_authenticated:
@@ -153,6 +164,7 @@ def update_sales_info(request):
             lead_category=sales_info.lead_category,
             product=sales_info.product,
             product_value=sales_info.product_value,
+            sales_person_status=sales_info.sales_person_status,
             status=sales_info.status,
         )
 
@@ -566,7 +578,7 @@ def sales_export(request):
                 lead.lead_category,
                 lead.product,
                 lead.product_value,
-                lead.status,
+                lead.sales_person_status,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
                 lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
@@ -790,7 +802,7 @@ def main_leads_export(request):
                 sales.lead_category if sales else '',
                 sales.product if sales else '',
                 sales.product_value if sales else '',
-                sales.status if sales else '',
+                sales.sales_person_status if sales else '',
             ])
 
         file_stream = BytesIO()
@@ -937,7 +949,7 @@ def updated_leads_export(request):
                 sales.lead_category if sales else '',
                 sales.product if sales else '',
                 sales.product_value if sales else '',
-                sales.status if sales else '',
+                sales.sales_person_status if sales else '',
             ])
 
         file_stream = BytesIO()
