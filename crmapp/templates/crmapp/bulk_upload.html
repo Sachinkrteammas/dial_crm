@@ -712,6 +712,13 @@
                       </span>
                     </h5>
                     <div class="card-body">
+                        <div id="loader-update" class="d-none text-center mb-3">
+                          <div class="spinner-border" role="status"></div>
+                          <p class="mt-2">Uploading... please wait</p>
+                        </div>
+
+
+
                       <div id="upload-message-update" class="alert d-none" role="alert"></div>
 
                       <form method="post" enctype="multipart/form-data" action="/api/upload-leads-update/" id="excel-upload-form-update">
@@ -867,10 +874,15 @@
   <script>
   const formUpdate = document.getElementById('excel-upload-form-update');
   const messageBoxUpdate = document.getElementById('upload-message-update');
+  const loaderUpdate = document.getElementById('loader-update');  // <-- added
 
   formUpdate.addEventListener('submit', async function (e) {
     e.preventDefault();
     const formData = new FormData(formUpdate);
+
+    // Show loader
+    loaderUpdate.classList.remove('d-none');      // <-- added
+    messageBoxUpdate.classList.add('d-none');     // <-- added
 
     const response = await fetch(formUpdate.action, {
       method: 'POST',
@@ -881,6 +893,7 @@
     });
 
     const data = await response.json();
+    loaderUpdate.classList.add('d-none');       // <-- added
     messageBoxUpdate.classList.remove('d-none', 'alert-success', 'alert-danger');
 
     if (data.status === 'completed') {
@@ -893,7 +906,14 @@
         });
         failedMsg += '</ul>';
       }
-      messageBoxUpdate.innerHTML = `Uploaded successfully: ${data.success_count} leads.${failedMsg}`;
+      messageBoxUpdate.innerHTML = `
+      <strong>Upload Summary</strong><br>
+      Created: ${data.created}<br>
+      Updated: ${data.updated}<br>
+      Failed: ${data.failed}
+      ${failedMsg}
+    `;
+
     } else {
       messageBoxUpdate.classList.add('alert', 'alert-danger');
       messageBoxUpdate.innerHTML = `Upload failed: ${data.message || 'Unknown error'}`;

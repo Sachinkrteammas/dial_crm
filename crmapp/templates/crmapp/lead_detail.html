@@ -1365,6 +1365,11 @@
 
                   <div class="mt-4 text-end">
                     <a href="{% url 'lead_table' %}" class="btn btn-secondary">Back</a>
+                      {% if lead.seller_email_id %}
+                        <button type="button" class="btn btn-warning" onclick="callSalesDiaryApi({{ lead.id }})">
+                            Sales Diary API
+                        </button>
+                    {% endif %}
                     <button type="submit" class="btn btn-primary">Save</button>
                   </div>
                     </div>
@@ -3476,6 +3481,55 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+
+    <script>
+function callSalesDiaryApi(lead_id) {
+
+    fetch("{% url 'sales_diary_api' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ lead_id: lead_id })
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        // STEP 1: Get lead_response safely
+        const results = data?.lead_response?.results;
+
+        if (!results) {
+            alert("Unexpected response format");
+            console.log("Response:", data);
+            return;
+        }
+
+        // STEP 2: Check if API returned success
+        if (results.status !== 200) {
+
+            let errorMsg = results.message || "Unknown Error";
+
+            // STEP 3: If deep nested error exists → use that message
+            if (results.data && results.data.length > 0) {
+                const item = results.data[0];
+                if (item.status === "error" && item.message) {
+                    errorMsg = item.message; // Real error
+                }
+            }
+
+            alert("Error: " + errorMsg);
+            return;
+        }
+
+        // STEP 4: Show success message
+        alert("Success: Lead pushed to Sales Diary");
+    })
+    .catch(error => {
+        alert("Unexpected Error: " + error);
+    });
+}
+</script>
 
 
 

@@ -93,4 +93,8 @@ urlpatterns = [
     path("terms_of_service/", sales_views.terms_of_service, name="terms_of_service"),
     path("data_deletion/", sales_views.data_deletion, name="data_deletion"),
 
+    ######## ales-diary-api ####
+    path("sales-diary-api/", views.sales_diary_api, name="sales_diary_api")
+
+
 ]

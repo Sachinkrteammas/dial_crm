@@ -1014,8 +1014,8 @@ def update_lead(request):
             # except Exception as e:
             #     print("Error sending lead to API:", str(e))
 
-            from .salesdiary import save_lead_status
-            save_lead_status(request, lead_id)
+
+
 
 
             # return JsonResponse({'status': 'success'})
@@ -1061,5 +1061,31 @@ def get_states_by_zone(request):
     states = ZoneTable.objects.filter(zone=zone).values_list('state_ut', flat=True).distinct()
     return JsonResponse({'states': list(states)})
 
+import json
+from django.http import JsonResponse
+from .salesdiary import save_lead_status
 
+def sales_diary_api(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid Method"}, status=400)
 
+    body = json.loads(request.body)
+    lead_id = body.get("lead_id")
+
+    try:
+        response = save_lead_status(request, lead_id)
+
+        # If response is JsonResponse → convert to dict
+        if isinstance(response, JsonResponse):
+            response = json.loads(response.content)
+
+        # Now response is a dict → safe=True allowed
+        return JsonResponse(response)
+
+    except Exception as e:
+        return JsonResponse({
+            "results": {
+                "status": 500,
+                "message": str(e)
+            }
+        })
