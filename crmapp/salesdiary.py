@@ -290,7 +290,6 @@ def extract_param_value(params, key_name):
             return v
     return None
 
-
 def extract_lead_id(tid):
     """Extract numeric lead ID from tid like 'CRM0098'."""
     if not tid:
@@ -307,7 +306,7 @@ def save_sales_info_from_response(response_json, created_by_user=None):
     Parse JSON response and either create or update SalesInfoTable entries.
     Avoids duplicate entries.
     """
-    data_list = response_json.get("results", {}).get("data", []) or [response_json]  # Handle single item
+    data_list = response_json.get("results", {}).get("data", []) or [response_json]
 
     saved = []
 
@@ -319,10 +318,8 @@ def save_sales_info_from_response(response_json, created_by_user=None):
 
         print(f"Processing Lead ID: {lead_id}")
 
-        status_full = item.get("status", "")
-        #status = status_full.split()[0] if status_full else ""
-        status = status_full
-        remarks = item.get("remarks")
+        status = item.get("status", "") or ""
+        remarks = item.get("remarks") or ""
         priority = item.get("priority")
 
         param_json = item.get("param_json", {}) or {}
@@ -331,68 +328,50 @@ def save_sales_info_from_response(response_json, created_by_user=None):
         # Extract specific fields from params
         sale_mt = extract_param_value(params, "Expected Sale in MT") or 0
         sale_inr = extract_param_value(params, "Expected Sales in INR") or 0
-        lead_status = status
         product = extract_param_value(params, "Product") or ""
         product_value = extract_param_value(params, "Product Value") or ""
-        sales_team_remarks = extract_param_value(params, "Special Instructions By Sales Team") or remarks or ""
+        sales_team_remarks = (
+            extract_param_value(params, "Special Instructions By Sales Team")
+            or remarks
+            or ""
+        )
 
         # Ensure the lead exists
         lead_obj, _ = LeadTable.objects.get_or_create(
-            id=lead_id, defaults={"name": item.get("name")}
+            id=lead_id,
+            defaults={"name": item.get("name")}
         )
 
-        # Use get_or_create for SalesInfoTable to avoid duplicates
-        sales_info, created = SalesInfoTable.objects.get_or_create(
+        # ✅ Correct & reliable for cron jobs
+        sales_info, created = SalesInfoTable.objects.update_or_create(
             lead_table=lead_obj,
             defaults={
                 "sale_mt": sale_mt,
                 "sale_inr": sale_inr,
                 "sale_team_remarks": sales_team_remarks,
-                "lead_status": lead_status,
+                "lead_status": status,
                 "cc_final_remarks_reformat": sales_team_remarks,
                 "lead_category": priority,
                 "status": status,
                 "product": product,
                 "product_value": product_value,
-                "created_by": created_by_user,
                 "updated_by": created_by_user,
+                "updated_at": timezone.now(),
             },
         )
 
-        if not created:
-            # ✅ Update existing record only if something changed
-            changed = False
-            fields_to_check = [
-                ("sale_mt", sale_mt),
-                ("sale_inr", sale_inr),
-                ("sale_team_remarks", sales_team_remarks),
-                ("lead_status", lead_status),
-                ("cc_final_remarks_reformat", sales_team_remarks),
-                ("lead_category", priority),
-                ("status", status),
-                ("product", product),
-                ("product_value", product_value),
-            ]
+        # set created_by only once
+        if created and created_by_user:
+            sales_info.created_by = created_by_user
+            sales_info.save(update_fields=["created_by"])
 
-            for field, value in fields_to_check:
-                if getattr(sales_info, field) != value:
-                    setattr(sales_info, field, value)
-                    changed = True
+        action = "created" if created else "updated"
 
-            if changed:
-                if created_by_user:
-                    sales_info.updated_by = created_by_user
-
-                sales_info.updated_at = timezone.now()
-
-                sales_info.save()
-                action = "updated"
-            else:
-                action = "no_change"
-        else:
-            action = "created"
-
-        saved.append({"lead_id": lead_id, "action": action})
+        saved.append({
+            "lead_id": lead_id,
+            "action": action
+        })
 
     return saved
+
 
