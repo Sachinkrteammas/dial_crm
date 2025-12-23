@@ -1,6 +1,7 @@
 import requests
 from django.conf import settings
 from .salesdiary import save_sales_info_from_response  # your existing function
+from django.utils import timezone
 
 def fetch_lead_status_job():
     """

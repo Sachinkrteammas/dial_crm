@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import LeadTable,SalesInfoTable,HistorySalesInfo
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 import re
 
 
@@ -282,8 +283,9 @@ User = get_user_model()
 
 def extract_param_value(params, key_name):
     """Extract the value of a param by its name inside param_json->params"""
+    key_name = key_name.strip().lower()
     for p in params:
-        if p.get("n", "").strip().lower() == key_name.strip().lower():
+        if p.get("n", "").strip().lower() == key_name:
             v = p.get("v")
             if isinstance(v, list) and v:
                 return v[0]
@@ -299,33 +301,38 @@ def extract_lead_id(tid):
     except ValueError:
         return None
 
-
-from django.utils import timezone
 def save_sales_info_from_response(response_json, created_by_user=None):
     """
     Parse JSON response and either create or update SalesInfoTable entries.
-    Avoids duplicate entries.
+    Automatically creates LeadTable if missing.
     """
     data_list = response_json.get("results", {}).get("data", []) or [response_json]
-
     saved = []
 
     for item in data_list:
-        lead_id = extract_lead_id(item.get("tid"))
+        tid = item.get("tid")
+        lead_id = extract_lead_id(tid)
         if not lead_id:
-            print(f"⚠️ Skipping invalid TID: {item.get('tid')}")
+            print(f"⚠️ Skipping invalid TID: {tid}")
             continue
 
-        print(f"Processing Lead ID: {lead_id}")
+        # Ensure LeadTable exists
+        lead_obj, lead_created = LeadTable.objects.get_or_create(
+            id=lead_id,
+            defaults={"name": item.get("name") or f"Lead {lead_id}"}
+        )
+        if lead_created:
+            print(f"✅ Created LeadTable for Lead ID {lead_id}")
+        else:
+            print(f"ℹ️ Found existing LeadTable for Lead ID {lead_id}")
 
-        status = item.get("status", "") or ""
+        # Extract fields
+        status = item.get("status") or ""
         remarks = item.get("remarks") or ""
         priority = item.get("priority")
-
         param_json = item.get("param_json", {}) or {}
         params = param_json.get("params", []) or []
 
-        # Extract specific fields from params
         sale_mt = extract_param_value(params, "Expected Sale in MT") or 0
         sale_inr = extract_param_value(params, "Expected Sales in INR") or 0
         product = extract_param_value(params, "Product") or ""
@@ -336,13 +343,7 @@ def save_sales_info_from_response(response_json, created_by_user=None):
             or ""
         )
 
-        # Ensure the lead exists
-        lead_obj = LeadTable.objects.filter(id=lead_id).first()
-        if not lead_obj:
-            print(f"⚠️ LeadTable id {lead_id} not found, skipping")
-            continue
-
-        # ✅ Correct & reliable for cron jobs
+        # Create or update SalesInfoTable
         sales_info, created = SalesInfoTable.objects.update_or_create(
             lead_table=lead_obj,
             defaults={
@@ -360,18 +361,16 @@ def save_sales_info_from_response(response_json, created_by_user=None):
             },
         )
 
-        # set created_by only once
+        # Set created_by only once
         if created and created_by_user:
             sales_info.created_by = created_by_user
             sales_info.save(update_fields=["created_by"])
 
         action = "created" if created else "updated"
+        saved.append({"lead_id": lead_id, "action": action})
+        print(f"✅ SalesInfoTable {action} for Lead ID {lead_id}")
 
-        saved.append({
-            "lead_id": lead_id,
-            "action": action
-        })
-
+    print(f"🏁 Finished processing {len(saved)} lead(s).")
     return saved
 
 
