@@ -337,10 +337,10 @@ def save_sales_info_from_response(response_json, created_by_user=None):
         )
 
         # Ensure the lead exists
-        lead_obj, _ = LeadTable.objects.get_or_create(
-            id=lead_id,
-            defaults={"name": item.get("name")}
-        )
+        lead_obj = LeadTable.objects.filter(id=lead_id).first()
+        if not lead_obj:
+            print(f"⚠️ LeadTable id {lead_id} not found, skipping")
+            continue
 
         # ✅ Correct & reliable for cron jobs
         sales_info, created = SalesInfoTable.objects.update_or_create(
