@@ -94,7 +94,8 @@ urlpatterns = [
     path("data_deletion/", sales_views.data_deletion, name="data_deletion"),
 
     ######## ales-diary-api ####
-    path("sales-diary-api/", views.sales_diary_api, name="sales_diary_api")
+    path("sales-diary-api/", views.sales_diary_api, name="sales_diary_api"),
+    path("url_request/", views.url_request, name="url_request")
 
 
 ]

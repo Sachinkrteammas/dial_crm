@@ -1089,3 +1089,9 @@ def sales_diary_api(request):
                 "message": str(e)
             }
         })
+
+from .cron import fetch_lead_status_job
+def url_request(request):
+    print('hy')
+    fetch_lead_status_job()
+    return JsonResponse({'status': ''}, status=200)
