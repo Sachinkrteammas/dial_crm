@@ -301,10 +301,12 @@ def extract_lead_id(tid):
     except ValueError:
         return None
 
+from django.utils import timezone
+
 def save_sales_info_from_response(response_json, created_by_user=None):
     """
     Parse JSON response and either create or update SalesInfoTable entries.
-    Automatically creates LeadTable if missing.
+    HistorySalesInfo is created ONLY when data changes.
     """
     data_list = response_json.get("results", {}).get("data", []) or [response_json]
     saved = []
@@ -317,19 +319,16 @@ def save_sales_info_from_response(response_json, created_by_user=None):
             continue
 
         # Ensure LeadTable exists
-        lead_obj, lead_created = LeadTable.objects.get_or_create(
+        lead_obj, _ = LeadTable.objects.get_or_create(
             id=lead_id,
             defaults={"name": item.get("name") or f"Lead {lead_id}"}
         )
-        if lead_created:
-            print(f"✅ Created LeadTable for Lead ID {lead_id}")
-        else:
-            print(f"ℹ️ Found existing LeadTable for Lead ID {lead_id}")
 
         # Extract fields
         status = item.get("status") or ""
         remarks = item.get("remarks") or ""
         priority = item.get("priority")
+
         param_json = item.get("param_json", {}) or {}
         params = param_json.get("params", []) or []
 
@@ -343,31 +342,70 @@ def save_sales_info_from_response(response_json, created_by_user=None):
             or ""
         )
 
-        # Create or update SalesInfoTable
+        # 🔹 Values to compare
+        new_values = {
+            "sale_mt": sale_mt,
+            "sale_inr": sale_inr,
+            "sale_team_remarks": sales_team_remarks,
+            "lead_status": status,
+            "cc_final_remarks_reformat": sales_team_remarks,
+            "lead_category": priority,
+            "status": status,
+            "product": product,
+            "product_value": product_value,
+        }
+
+        # 🔹 Fetch existing record (for change detection)
+        existing = SalesInfoTable.objects.filter(lead_table=lead_obj).first()
+
+        has_changed = False
+        if existing:
+            for field, new_val in new_values.items():
+                if str(getattr(existing, field)) != str(new_val):
+                    has_changed = True
+                    break
+        else:
+            has_changed = True  # First time create
+
+        # 🔹 Create or update SalesInfoTable
         sales_info, created = SalesInfoTable.objects.update_or_create(
             lead_table=lead_obj,
             defaults={
-                "sale_mt": sale_mt,
-                "sale_inr": sale_inr,
-                "sale_team_remarks": sales_team_remarks,
-                "lead_status": status,
-                "cc_final_remarks_reformat": sales_team_remarks,
-                "lead_category": priority,
-                "status": status,
-                "product": product,
-                "product_value": product_value,
+                **new_values,
                 "updated_by": created_by_user,
                 "updated_at": timezone.now(),
             },
         )
 
-        # Set created_by only once
+        # 🔹 Set created_by only once
         if created and created_by_user:
             sales_info.created_by = created_by_user
             sales_info.save(update_fields=["created_by"])
 
+        # ✅ Save history ONLY if something changed
+        if has_changed:
+            HistorySalesInfo.objects.create(
+                lead_table=sales_info,
+                sale_mt=sales_info.sale_mt,
+                sale_inr=sales_info.sale_inr,
+                sale_team_remarks=sales_info.sale_team_remarks,
+                lead_status=sales_info.lead_status,
+                cc_final_remarks_reformat=sales_info.cc_final_remarks_reformat,
+                lead_category=sales_info.lead_category,
+                product=sales_info.product,
+                product_value=sales_info.product_value,
+                status=sales_info.status,
+                created_by=sales_info.created_by,
+                updated_by=created_by_user,
+            )
+
         action = "created" if created else "updated"
-        saved.append({"lead_id": lead_id, "action": action})
+        saved.append({
+            "lead_id": lead_id,
+            "action": action,
+            "history_saved": has_changed,
+        })
+
         print(f"✅ SalesInfoTable {action} for Lead ID {lead_id}")
 
     print(f"🏁 Finished processing {len(saved)} lead(s).")

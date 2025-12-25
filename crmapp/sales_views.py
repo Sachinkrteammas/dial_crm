@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
-    SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact, TBLFollowUp, SalesVOC
+    SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact, TBLFollowUp, SalesVOC,SalesDiaryCounter
 from .views import render_menu
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -291,6 +291,14 @@ def lead_detail(request, lead_id):
     #     else:
     #         lead.lead_closer_status = "no_response"
 
+    success_count = (
+            SalesDiaryCounter.objects
+            .filter(lead_id=lead_id)
+            .values_list("success_count", flat=True)
+            .first()
+            or 0
+    )
+
     return render(request, 'crmapp/lead_detail.html', {
         'lead': lead,
         'menu_html': menu_html,
@@ -308,6 +316,7 @@ def lead_detail(request, lead_id):
         'followup_history': followup_history,
         'current_time': now,
         # 'followup_count': followup_count,
+        'success_count': success_count,
     })
 
 

@@ -22,7 +22,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
-    HistoryLead, SalesInfoTable
+    HistoryLead, SalesInfoTable,SalesDiaryCounter
 
 User = get_user_model()
 
@@ -1075,12 +1075,37 @@ def sales_diary_api(request):
     try:
         response = save_lead_status(request, lead_id)
 
-        # If response is JsonResponse → convert to dict
+        # Convert JsonResponse → dict
         if isinstance(response, JsonResponse):
             response = json.loads(response.content)
 
-        # Now response is a dict → safe=True allowed
+        # ✅ Correct response path
+        status_code = (
+            response
+            .get("lead_response", {})
+            .get("results", {})
+            .get("status")
+        )
+
+        if status_code == 200:
+            # ✅ Fetch Lead object
+            lead = LeadTable.objects.get(id=lead_id)
+
+            counter, _ = SalesDiaryCounter.objects.get_or_create(
+                lead=lead
+            )
+            counter.success_count += 1
+            counter.save(update_fields=["success_count"])
+
         return JsonResponse(response)
+
+    except LeadTable.DoesNotExist:
+        return JsonResponse({
+            "results": {
+                "status": 404,
+                "message": "Lead not found"
+            }
+        })
 
     except Exception as e:
         return JsonResponse({

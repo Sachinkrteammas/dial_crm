@@ -1364,6 +1364,9 @@
                   </div>
 
                   <div class="mt-4 text-end">
+                      {% if lead.seller_email_id %}
+                      <p>API Count:  {{ success_count }}</p>
+                      {% endif %}
                     <a href="{% url 'lead_table' %}" class="btn btn-secondary">Back</a>
                       {% if lead.seller_email_id %}
                         <button type="button" class="btn btn-warning" onclick="callSalesDiaryApi({{ lead.id }})">

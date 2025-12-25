@@ -487,3 +487,16 @@ class AdviserAssignmentTracker(models.Model):
 
     class Meta:
         db_table = 'adviser_assignment_tracker'
+
+
+class SalesDiaryCounter(models.Model):
+    lead = models.OneToOneField(
+        LeadTable,
+        on_delete=models.CASCADE,
+        related_name="sales_diary_counter"
+    )
+    success_count = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "sales_diary_counter"
