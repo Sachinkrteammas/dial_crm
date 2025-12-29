@@ -154,7 +154,7 @@ class ContactDetails(models.Model):
 
 
 class LeadTable(models.Model):
-    customer_name = models.CharField(max_length=100, blank=True, null=True)
+    customer_name = models.CharField(max_length=500, blank=True, null=True)
     customer_type = models.CharField(max_length=50, blank=True, null=True)
     calling_number = models.CharField(max_length=15, blank=True, null=True)
     enquiry_type = models.CharField(max_length=100, blank=True, null=True)
@@ -292,7 +292,7 @@ class SalesInfoTable(models.Model):
 
 class HistoryLead(models.Model):
     lead_table = models.ForeignKey(LeadTable, on_delete=models.CASCADE, null=True, blank=True, related_name='history_sales_infos')
-    customer_name = models.CharField(max_length=100, blank=True, null=True)
+    customer_name = models.CharField(max_length=500, blank=True, null=True)
     customer_type = models.CharField(max_length=50, blank=True, null=True)
     calling_number = models.CharField(max_length=15, blank=True, null=True)
     enquiry_type = models.CharField(max_length=100, blank=True, null=True)
