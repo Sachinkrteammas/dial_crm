@@ -4,7 +4,7 @@ from .models import LeadTable
 
 class WebhookLeadSerializer(serializers.Serializer):
     Name = serializers.CharField()
-    Email = serializers.EmailField()
+    Email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
     Phone = serializers.CharField()
     Enquiry_Type = serializers.CharField()
     Message = serializers.CharField()
@@ -55,7 +55,7 @@ class WebhookLeadSerializer(serializers.Serializer):
             sub_enquiry_source=validated_data["Source"],
             lead_date=validated_data["Date"],
             call_date=validated_data["Date"],
-            email_id=validated_data["Email"],
+            email_id=validated_data.get("Email"),
             name=validated_data["Name"],
             lead_upload_type="Webhook",
             created_by=user
