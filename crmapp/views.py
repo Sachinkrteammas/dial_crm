@@ -900,6 +900,7 @@ def update_lead(request):
                 first_word = display_name.split()[0] if display_name else ""
 
                 lead.lead_action = f"{first_word} has modified the lead"
+                lead.updated_by = user
 
             lead.save()
 

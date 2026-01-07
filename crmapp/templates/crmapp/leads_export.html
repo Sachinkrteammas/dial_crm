@@ -673,6 +673,7 @@
             <option value="history">History Lead</option>
             <option value="main">Lead</option>
             <option value="updated_leads">Updated Lead</option>
+            <option value="lead_close_status">Lead Closed Status</option>
           </select>
         </div>
 
@@ -778,6 +779,10 @@
   else if (type === "updated_leads")
   {
     window.location.href = `/updated_leads_export/?from_date=${fromDate}&to_date=${toDate}`;
+  }
+  else if (type === "lead_close_status")
+  {
+    window.location.href = `/lead_close_status_export/?from_date=${fromDate}&to_date=${toDate}`;
   }
    else {
     window.location.href = `/main_leads_export/?from_date=${fromDate}&to_date=${toDate}`;
