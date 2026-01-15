@@ -1821,6 +1821,129 @@ def new_lead(request):
     })
 
 
+####### Agent Lead page code start ######################
+from django.utils.timezone import now
+from datetime import datetime, time
+
+@login_required
+def agent_lead(request):
+    # ---------------- MENU ---------------- #
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+    menu_tree = {}
+    for item in menu_items:
+        menu_tree.setdefault(item.parent_id, []).append(item)
+    menu_html = render_menu(None, menu_tree)
+
+    # ---------------- BASE QUERY ---------------- #
+    leads = LeadTable.objects.filter(created_by=request.user)
+
+    # ---------------- FILTER PARAMS ---------------- #
+    query = request.GET.get('query')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    lead_closer_status = request.GET.get('lead_closer_status')
+    lead_closer_status_new = request.GET.get('lead_closer_status_new')
+
+    # ---------------- DATE LOGIC ---------------- #
+    today = now().date()
+
+    if start_date and end_date:
+        start_dt = datetime.combine(
+            datetime.strptime(start_date, "%Y-%m-%d").date(),
+            time.min
+        )
+        end_dt = datetime.combine(
+            datetime.strptime(end_date, "%Y-%m-%d").date(),
+            time.max
+        )
+
+        leads = leads.filter(
+            created_at__range=(start_dt, end_dt)
+        )
+    else:
+        leads = leads.filter(
+            created_at__date=today
+        )
+
+    # ---------------- STATUS FILTERS ---------------- #
+    if lead_closer_status:
+        leads = leads.filter(lead_closer_status__iexact=lead_closer_status)
+
+    if lead_closer_status_new:
+        leads = leads.filter(lead_closer_status_new__iexact=lead_closer_status_new)
+
+    # ---------------- SEARCH ---------------- #
+    if query:
+        leads = leads.filter(
+            Q(customer_name__icontains=query) |
+            Q(calling_number__icontains=query) |
+            Q(enquiry_type__icontains=query) |
+            Q(enquiry_source__icontains=query) |
+            Q(sub_calling_status__icontains=query)
+        )
+
+    # ---------------- ORDERING ---------------- #
+    leads = leads.order_by('-created_at')
+
+    # ================= LEAD BUCKETS ================= #
+
+    # New Leads (Pending / Null)
+    new_leads = leads.filter(
+        Q(lead_closer_status__isnull=True) |
+        Q(lead_closer_status__iexact='pending')
+    )
+
+    # Follow-ups (Lead Closer Final)
+    followups = leads.filter(
+        lead_closer_status_new__iexact='followup'
+    )
+
+    # RNR (Ring No Response)
+    rnr_leads = leads.filter(
+        lead_closer_status__iexact='no_response'
+    )
+
+    # ---------------- COUNTS ---------------- #
+    total_leads = leads.count()
+    new_leads_count = new_leads.count()
+    followups_count = followups.count()
+    rnr_count = rnr_leads.count()
+
+    # ---------------- PAGINATION ---------------- #
+    paginator = Paginator(leads, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    querydict = request.GET.copy()
+    querydict.pop('page', None)
+    querystring = querydict.urlencode()
+
+    # ---------------- ZONES ---------------- #
+    zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
+
+    # ---------------- RENDER ---------------- #
+    return render(request, 'crmapp/agent_lead.html', {
+        'menu_html': menu_html,
+        'leads': page_obj,
+        'zones': zones,
+        'page_obj': page_obj,
+
+        # Counts
+        'total_leads': total_leads,
+        'new_leads_count': new_leads_count,
+        'followups_count': followups_count,
+        'rnr_count': rnr_count,
+        'querystring': querystring,
+
+    })
+
+
+####### Agent Lead page code End ########################
+
+
+
+
+
 ########## whatsapp view api  ##########
 
 @csrf_exempt

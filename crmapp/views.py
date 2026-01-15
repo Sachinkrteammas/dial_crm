@@ -622,6 +622,9 @@ def lead_table(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    querydict = request.GET.copy()
+    querydict.pop('page', None)
+    querystring = querydict.urlencode()
 
     zones = ZoneTable.objects.values_list('zone', flat=True).distinct()
 
@@ -631,6 +634,7 @@ def lead_table(request):
         'zones': zones,
         'paginator': paginator,
         'page_obj': page_obj,
+        'querystring': querystring,
     })
 
 

@@ -72,6 +72,7 @@ urlpatterns = [
     path('follow_up_data/', sales_views.follow_up_data, name='follow_up_data'),
     path('not_connected_lead/', sales_views.not_connected_lead, name='not_connected_lead'),
     path('new_lead/', sales_views.new_lead, name='new_lead'),
+    path('agent_lead/', sales_views.agent_lead, name='agent_lead'),
 
     ## whatsapp api call
     path("api/send-whatsapp/", sales_views.send_whatsapp_message, name="send_whatsapp"),

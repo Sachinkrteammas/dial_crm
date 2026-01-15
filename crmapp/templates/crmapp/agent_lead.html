@@ -14,7 +14,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>User Leads</title>
+    <title>Agent Leads</title>
 
     <meta name="description" content="" />
 
@@ -668,7 +668,15 @@
             <!-- Content -->
             <div class="card" style=" width: 95%; margin-left: 25px; margin-top: 32px;">
                 <h5 class="card-header d-flex justify-content-between align-items-center">
-                    Lead Id: {{ user.id }}
+                    Agent Leads
+                    <span class="badge bg-primary me-4">Total {{ total_leads }}</span>
+                    <span class="badge bg-success me-4">Pending {{ new_leads_count }}</span>
+                    <span class="badge bg-warning me-4">Follow-up {{ followups_count }}</span>
+                    <span class="badge bg-danger">RNR {{ rnr_count }}</span>
+
+
+
+
 
                     <button
                       data-bs-toggle="modal"
@@ -685,20 +693,36 @@
 
     <!-- Calling Status -->
     <div class="col-md-2">
-                    <label>Calling Status:</label>
-                    <select class="form-select" name="calling_status" id="calling_status_select" style="height:32px;">
-                      <option value="">Select</option>
-                      <option value="Connect">Connect</option>
-                      <option value="Not Connect">Not Connect</option>
+                    <label>Lead Closer Attempted:</label>
+                    <select class="form-select" name="lead_closer_status">
+                      <option value="">--Select Status--</option>
+                      <option value="pending">Pending</option>
+                      <option value="attempted_1">Attempted 1</option>
+                      <option value="attempted_2">Attempted 2</option>
+                      <option value="attempted_3">Attempted 3</option>
+                      <option value="attempted_4">Attempted 4</option>
+                      <option value="no_response">No Response</option>
                     </select>
+
                   </div>
 
                   <!-- Sub Calling Status -->
                   <div class="col-md-2">
-                    <label for="sub_calling_status_select">Sub Status:</label>
-                    <select class="form-select" name="sub_calling_status" id="sub_calling_status_select"  style="height:32px;">
-                      <option value="">Select</option>
+                    <label >Lead Closer Status:</label>
+                    <select class="form-select" name="lead_closer_status_new">
+                      <option value="">--Select Final Status--</option>
+                      <option value="followup">Follow-up</option>
+                      <option value="validate">Validate</option>
+                      <option value="underprocess">Under Process</option>
+                      <option value="pending">Pending</option>
+                      <option value="closed_with_dealership">Closed with Dealership</option>
+                      <option value="closed_with_order">Closed with Order</option>
+                      <option value="closed_with_solution">Closed with Solution</option>
+                      <option value="closed_without_dealership">Closed without Dealership</option>
+                      <option value="closed_without_order">Closed without Order</option>
+                      <option value="dropped">Dropped</option>
                     </select>
+
                   </div>
 
     <!-- Search Text -->
@@ -739,9 +763,7 @@
                   <table class="table table-sm">
                     <thead>
                       <tr>
-                        <th>Unique Id</th>
                         <th>Customer Name</th>
-                        <th>Customer Type</th>
                         <th>Calling Number</th>
                         <th>Enquiry Type</th>
                         <th>Enquiry Source</th>
@@ -753,10 +775,7 @@
                     <tbody class="table-border-bottom-0">
                       {% for lead in leads %}
                       <tr>
-                        <td><span class="fw-medium">BN{{ lead.id }}</span></td>
                         <td><span class="fw-medium">{{ lead.customer_name }}</span></td>
-
-                          <td><span class="fw-medium">{{ lead.customer_type }}</span></td>
 
                         <td>
                           <a href="{% url 'lead_detail' lead.id %}" class=" btn btn-link p-0" data-id="{{ lead.id }}">
@@ -1182,12 +1201,6 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold">Customer Name <span style="color: red;">*</span></label>
               <input type="text" name="customer_name" class="form-control" required
-                     style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
-            </div>
-
-              <div class="col-md-6">
-              <label class="form-label fw-semibold">Customer Type <span style="color: red;">*</span></label>
-              <input type="text" name="customer_type" class="form-control" required
                      style="border-radius: 50px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
             </div>
 
