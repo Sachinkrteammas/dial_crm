@@ -1899,8 +1899,17 @@ def agent_lead(request):
     )
 
     # RNR (Ring No Response)
+    # rnr_leads = leads.filter(
+    #     lead_closer_status__iexact='no_response'
+    # )
     rnr_leads = leads.filter(
-        lead_closer_status__iexact='no_response'
+        lead_closer_status__in=[
+            'no_response',
+            'attempted_1',
+            'attempted_2',
+            'attempted_3',
+            'attempted_4'
+        ]
     )
 
     # ---------------- COUNTS ---------------- #
