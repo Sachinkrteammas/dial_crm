@@ -97,7 +97,9 @@ urlpatterns = [
 
     ######## ales-diary-api ####
     path("sales-diary-api/", views.sales_diary_api, name="sales_diary_api"),
-    path("url_request/", views.url_request, name="url_request")
+    path("url_request/", views.url_request, name="url_request"),
+
+    path("admin_dashboard/", views.admin_dashboard, name="admin_dashboard"),
 
 
 ]

@@ -10,7 +10,7 @@ from django.core import signing
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.core.validators import validate_email
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.forms import model_to_dict
 from django.http import JsonResponse, HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
@@ -23,6 +23,12 @@ from django.views.decorators.http import require_POST
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
     HistoryLead, SalesInfoTable,SalesDiaryCounter
+
+from django.db.models.functions import TruncMonth, Coalesce, TruncDate
+from django.utils.timezone import now
+from django.http import HttpResponseForbidden
+from collections import defaultdict
+
 
 User = get_user_model()
 
@@ -1125,3 +1131,207 @@ def url_request(request):
     print('hy')
     fetch_lead_status_job()
     return JsonResponse({'status': ''}, status=200)
+
+
+
+@login_required
+def admin_dashboard(request):
+
+    is_admin = UserList.objects.filter(
+        user=request.user,
+        user_role__iexact="admin",
+        is_deactivated=False
+    ).exists()
+
+    if not is_admin:
+        return HttpResponseForbidden("Admin access required")
+
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+
+    menu_tree = {}
+    for item in menu_items:
+        menu_tree.setdefault(item.parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
+
+    leads = LeadTable.objects.all()
+
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+    selected_adviser = request.GET.get("adviser")
+
+    today = now().date()
+
+    selected_start = start_date or today.strftime("%Y-%m-%d")
+    selected_end = end_date or today.strftime("%Y-%m-%d")
+
+    if start_date and end_date:
+        start_date = parse_date(start_date)
+        end_date = parse_date(end_date)
+
+        leads = leads.filter(
+            lead_date__range=(start_date, end_date)
+        )
+    else:
+        leads = leads.filter(
+            lead_date=today
+        )
+
+    adviser_users = User.objects.filter(
+        id__in=UserList.objects.filter(
+            user_role__iexact="adviser",
+            is_deactivated=False
+        ).values_list("user_id", flat=True)
+    )
+
+    if selected_adviser:
+        leads = leads.filter(
+            Q(updated_by_id=selected_adviser) |
+            Q(updated_by__isnull=True, created_by_id=selected_adviser)
+        )
+    else:
+        leads = leads.filter(
+            Q(updated_by__in=adviser_users) |
+            Q(updated_by__isnull=True, created_by__in=adviser_users)
+        )
+
+    daily_source_leads = (
+        leads
+        .filter(enquiry_source__isnull=False, calling_number__isnull=False)
+        .exclude(enquiry_source__exact="")
+        .exclude(calling_number__exact="")
+        .annotate(day=TruncDate("lead_date"))
+        .values("day", "enquiry_source")
+        .annotate(total=Count("calling_number", distinct=True))
+        .order_by("day")
+    )
+
+    calls_made = leads.exclude(call_date__isnull=True).count()
+
+    no_response = leads.filter(lead_closer_status__iexact="no_response").count()
+
+    followups = leads.filter(
+        lead_closer_status_new__iexact="followup"
+    ).count()
+
+    closed_order = leads.filter(
+        lead_closer_status_new__iexact="closed_with_order"
+    ).count()
+
+    closed_dealership = leads.filter(
+        lead_closer_status_new__iexact="closed_with_dealership"
+    ).count()
+
+    dropped_leads = leads.filter(
+        lead_closer_status_new__iexact="dropped"
+    ).count()
+
+    closed_without_order = leads.filter(
+        lead_closer_status_new__iexact="closed_without_order"
+    ).count()
+
+    closed_without_dealership = leads.filter(
+        lead_closer_status_new__iexact="closed_without_dealership"
+    ).count()
+
+
+    lead_register_month = (
+        leads.filter(lead_date__isnull=False)
+        .annotate(month=TruncMonth('lead_date'))
+        .values('month')
+        .annotate(total=Count('id'))
+        .order_by('month')
+    )
+
+    start = parse_date(selected_start)
+    end = parse_date(selected_end)
+
+    closure_qs = leads.filter(
+        lead_close_date__isnull=False,
+        lead_close_date__range=(start, end)
+    )
+
+    lead_closure_month = (
+        closure_qs
+        .annotate(month=TruncMonth('lead_close_date'))
+        .values('month')
+        .annotate(total=Count('id'))
+        .order_by('month')
+    )
+
+    brand_closures = (
+        leads.filter(lead_close_date__isnull=False)
+        .exclude(brand__isnull=True)
+        .exclude(brand__exact="")
+        .values('brand')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+
+    source_closures = (
+        leads.filter(lead_close_date__isnull=False)
+        .exclude(enquiry_source__exact="")
+        .exclude(enquiry_source__isnull=True)
+        .values('enquiry_source')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+
+    daily_source_dict = defaultdict(dict)
+    sources = set()
+
+    for row in daily_source_leads:
+        day = row["day"].strftime("%d %b")
+        source = row["enquiry_source"]
+        total = row["total"]
+
+        daily_source_dict[day][source] = total
+        sources.add(source)
+
+    labels = sorted(daily_source_dict.keys())
+    sources = sorted(list(sources))
+
+    datasets = []
+
+    for src in sources:
+        datasets.append({
+            "label": src,
+            "data": [
+                daily_source_dict[day].get(src, 0)
+                for day in labels
+            ]
+        })
+
+    context = {
+        "menu_html": menu_html,
+        "selected_start": selected_start,
+        "selected_end": selected_end,
+        "context_advisers": adviser_users,
+        "selected_adviser": selected_adviser,
+        "calls_made": calls_made,
+        "no_response": no_response,
+        "followups": followups,
+        "closed_order": closed_order,
+        "closed_dealership": closed_dealership,
+        "dropped_leads": dropped_leads,
+        "closed_without_order": closed_without_order,
+        "closed_without_dealership": closed_without_dealership,
+        "lead_register_month": json.dumps([
+            {
+                "month": i["month"].strftime("%b %Y"),
+                "total": i["total"]
+            } for i in lead_register_month
+        ]),
+        "lead_closure_month": json.dumps([
+            {
+                "month": i["month"].strftime("%b %Y"),
+                "total": i["total"]
+            } for i in lead_closure_month
+        ]),
+        "brand_closures": json.dumps(list(brand_closures)),
+        "source_closures": json.dumps(list(source_closures)),
+        "daily_source_labels": json.dumps(labels),
+        "daily_source_datasets": json.dumps(datasets),
+    }
+
+    return render(request, "crmapp/admin_dashboard.html", context)
