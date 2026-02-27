@@ -1281,6 +1281,8 @@ def admin_dashboard(request):
     sources = set()
 
     for row in daily_source_leads:
+        if not row["day"]:
+            continue
         day = row["day"].strftime("%d %b")
         source = row["enquiry_source"]
         total = row["total"]
@@ -1318,13 +1320,13 @@ def admin_dashboard(request):
         "closed_without_dealership": closed_without_dealership,
         "lead_register_month": json.dumps([
             {
-                "month": i["month"].strftime("%b %Y"),
+                "month": i["month"].strftime("%b %Y") if i["month"] else "",
                 "total": i["total"]
             } for i in lead_register_month
         ]),
         "lead_closure_month": json.dumps([
             {
-                "month": i["month"].strftime("%b %Y"),
+                "month": i["month"].strftime("%b %Y") if i["month"] else "",
                 "total": i["total"]
             } for i in lead_closure_month
         ]),
