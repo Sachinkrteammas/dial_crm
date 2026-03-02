@@ -1163,6 +1163,11 @@ def admin_dashboard(request):
 
     today = now().date()
 
+    from django.utils import timezone
+
+    print("DJANGO NOW:", timezone.now())
+    print("DJANGO DATE:", timezone.now().date())
+
     selected_start = start_date or today.strftime("%Y-%m-%d")
     selected_end = end_date or today.strftime("%Y-%m-%d")
 
