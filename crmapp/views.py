@@ -1178,6 +1178,8 @@ def admin_dashboard(request):
             lead_date=today
         )
 
+    print("AFTER DATE FILTER:", leads.count())
+
     adviser_users = User.objects.filter(
         id__in=UserList.objects.filter(
             user_role__iexact="adviser",
@@ -1195,6 +1197,8 @@ def admin_dashboard(request):
             Q(updated_by__in=adviser_users) |
             Q(updated_by__isnull=True, created_by__in=adviser_users)
         )
+
+    print("AFTER ADVISER FILTER:", leads.count())
 
     daily_source_leads = (
         leads
