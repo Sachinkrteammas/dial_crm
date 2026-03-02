@@ -1337,4 +1337,10 @@ def admin_dashboard(request):
         "daily_source_datasets": json.dumps(datasets),
     }
 
-    return JsonResponse(context, safe=False)
+    return JsonResponse({
+        "today": str(today),
+        "leads_count": leads.count(),
+        "daily_source_leads": list(daily_source_leads),
+        "labels": labels,
+        "datasets": datasets,
+    }, safe=False)
