@@ -574,6 +574,9 @@
       const dailyLabels = {{ daily_source_labels|safe }};
       const dailyDatasets = {{ daily_source_datasets|safe }};
 
+      console.log("Daily Labels:", dailyLabels);
+      console.log("Daily Datasets:", dailyDatasets);
+
       const dailyCtx = document.getElementById('dailySourceChart');
 
       new Chart(dailyCtx, {
