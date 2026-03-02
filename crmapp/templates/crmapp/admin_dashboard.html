@@ -571,8 +571,8 @@
     </script>
 
     <script>
-      const dailyLabels = {{ daily_source_labels|safe }};
-      const dailyDatasets = {{ daily_source_datasets|safe }};
+      const dailyLabels = JSON.parse('{{ daily_source_labels|escapejs }}');
+      const dailyDatasets = JSON.parse('{{ daily_source_datasets|escapejs }}');
 
       console.log("Daily Labels:", dailyLabels);
       console.log("Daily Datasets:", dailyDatasets);

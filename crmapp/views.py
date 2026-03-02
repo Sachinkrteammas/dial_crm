@@ -1284,7 +1284,7 @@ def admin_dashboard(request):
     for row in daily_source_leads:
         if not row["day"]:
             continue
-        day = format(row["day"], "d M")
+        day = row["day"].strftime("%d %b")
         source = row["enquiry_source"]
         total = row["total"]
 
