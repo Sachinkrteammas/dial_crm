@@ -1161,12 +1161,7 @@ def admin_dashboard(request):
     end_date = request.GET.get("end_date")
     selected_adviser = request.GET.get("adviser")
 
-    today = now().date()
-
-    from django.utils import timezone
-
-    print("DJANGO NOW:", timezone.now())
-    print("DJANGO DATE:", timezone.now().date())
+    today = timezone.localdate()
 
     selected_start = start_date or today.strftime("%Y-%m-%d")
     selected_end = end_date or today.strftime("%Y-%m-%d")
@@ -1182,8 +1177,6 @@ def admin_dashboard(request):
         leads = leads.filter(
             lead_date=today
         )
-
-    print("AFTER DATE FILTER:", leads.count())
 
     adviser_users = User.objects.filter(
         id__in=UserList.objects.filter(
@@ -1202,8 +1195,6 @@ def admin_dashboard(request):
             Q(updated_by__in=adviser_users) |
             Q(updated_by__isnull=True, created_by__in=adviser_users)
         )
-
-    print("AFTER ADVISER FILTER:", leads.count())
 
     daily_source_leads = (
         leads
