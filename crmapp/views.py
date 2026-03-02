@@ -29,6 +29,7 @@ from django.utils.timezone import now
 from django.http import HttpResponseForbidden
 from collections import defaultdict
 from django.utils.dateformat import format
+from django.db.models import F
 
 
 User = get_user_model()
@@ -1201,7 +1202,7 @@ def admin_dashboard(request):
         .filter(enquiry_source__isnull=False, calling_number__isnull=False)
         .exclude(enquiry_source__exact="")
         .exclude(calling_number__exact="")
-        .annotate(day=TruncDate("lead_date"))
+        .annotate(day=F("lead_date"))
         .values("day", "enquiry_source")
         .annotate(total=Count("calling_number", distinct=True))
         .order_by("day")
