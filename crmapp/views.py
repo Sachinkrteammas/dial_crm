@@ -1305,6 +1305,10 @@ def admin_dashboard(request):
             ]
         })
 
+    print("TODAY:", today)
+    print("LEADS COUNT:", leads.count())
+    print("DAILY QS:", list(daily_source_leads))
+
     context = {
         "menu_html": menu_html,
         "selected_start": selected_start,
@@ -1337,4 +1341,4 @@ def admin_dashboard(request):
         "daily_source_datasets": json.dumps(datasets),
     }
 
-    return render(request, "crmapp/admin_dashboard.html", context)
+    return JsonResponse(context, safe=False)
