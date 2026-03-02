@@ -571,16 +571,23 @@
     </script>
 
     <script>
+      const dailyLabels = {{ daily_source_labels|safe }};
+      const dailyDatasets = {{ daily_source_datasets|safe }};
+
       const dailyCtx = document.getElementById('dailySourceChart');
 
       new Chart(dailyCtx, {
           type: 'line',
-
           data: {
-              labels: {{ daily_source_labels|safe }},
-              datasets: {{ daily_source_datasets|safe }}
+              labels: dailyLabels,
+              datasets: dailyDatasets.map(ds => ({
+                  label: ds.label,
+                  data: ds.data,
+                  borderWidth: 2,
+                  fill: false,
+                  tension: 0.3
+              }))
           },
-
           options: {
               responsive: true,
               maintainAspectRatio: false,
