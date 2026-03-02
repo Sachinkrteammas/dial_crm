@@ -1305,10 +1305,6 @@ def admin_dashboard(request):
             ]
         })
 
-    print("TODAY:", today)
-    print("LEADS COUNT:", leads.count())
-    print("DAILY QS:", list(daily_source_leads))
-
     context = {
         "menu_html": menu_html,
         "selected_start": selected_start,
