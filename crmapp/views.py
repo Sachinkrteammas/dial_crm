@@ -28,6 +28,7 @@ from django.db.models.functions import TruncMonth, Coalesce, TruncDate
 from django.utils.timezone import now
 from django.http import HttpResponseForbidden
 from collections import defaultdict
+from django.utils.dateformat import format
 
 
 User = get_user_model()
@@ -1283,7 +1284,7 @@ def admin_dashboard(request):
     for row in daily_source_leads:
         if not row["day"]:
             continue
-        day = row["day"].strftime("%d %b")
+        day = format(row["day"], "d M")
         source = row["enquiry_source"]
         total = row["total"]
 
