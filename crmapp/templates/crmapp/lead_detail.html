@@ -924,30 +924,30 @@
 
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Customer Name:</label>
-                      <input type="text" class="form-control required-field" name="customer_name" value="{{ lead.customer_name|default_if_none:'' }}">
+                      <input type="text" class="form-control connect-valid-required" name="customer_name" value="{{ lead.customer_name|default_if_none:'' }}">
                     </div>
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Campaign Type:</label>
-                    <input type="text" class="form-control required-field" name="customer_type" value="{{ lead.customer_type|default_if_none:'' }}">
+                    <input type="text" class="form-control connect-valid-required" name="customer_type" value="{{ lead.customer_type|default_if_none:'' }}">
                     </div>
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Calling Number:</label>
                       <button type="button" onclick="log_call_customer();" class="btn btn-sm btn-outline-primary ms-2 call-btn">
                             <i class="ti-phone"></i> Call
                           </button>
-                      <input type="text" class="form-control required-field" name="calling_number" value="{{ lead.calling_number|default_if_none:'' }}">
+                      <input type="text" class="form-control connect-valid-required" name="calling_number" value="{{ lead.calling_number|default_if_none:'' }}">
 
 
                     </div>
 
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Enquiry Type:</label>
-                        <input type="text" class="form-control required-field" name="enquiry_type" value="{{ lead.enquiry_type |default_if_none:'' }}">
+                        <input type="text" class="form-control connect-valid-required" name="enquiry_type" value="{{ lead.enquiry_type |default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Enquiry Source:</label>
-                      <select class="form-select required-field" name="enquiry_source">
+                      <select class="form-select connect-valid-required" name="enquiry_source">
                         <option value="">-- Select Enquiry Source --</option>
                         {% for val in enquiry_sources %}
                           <option value="{{ val }}" {% if lead.enquiry_source == val %}selected{% endif %}>{{ val }}</option>
@@ -957,14 +957,14 @@
 
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Sub Enquiry Source:</label>
-                      <select class="form-select required-field" name="sub_enquiry_source" id="sub_enquiry_source_select">
+                      <select class="form-select connect-valid-required" name="sub_enquiry_source" id="sub_enquiry_source_select">
                         <option value="">-- Select Sub Enquiry Source --</option>
                       </select>
                     </div>
 
                     <div class="col-md-4">
   <label><span class="required-star">*</span>Calling Status:</label>
-  <select class="form-select required-field" name="calling_status" id="calling_status_select">
+  <select class="form-select connect-valid-required" name="calling_status" id="calling_status_select">
     <option value="">--Select--</option>
     <option value="Connect" {% if lead.calling_status == 'Connect' %}selected{% endif %}>Connect</option>
     <option value="Not Connect" {% if lead.calling_status == 'Not Connect' %}selected{% endif %}>Not Connect</option>
@@ -974,14 +974,14 @@
 
   <div class="col-md-4">
     <label>Sub Calling Status:</label>
-    <select class="form-select" name="sub_calling_status" id="sub_calling_status_select">
+    <select class="form-select connect-valid-required" name="sub_calling_status" id="sub_calling_status_select">
       <option value="">--Select Sub Type--</option>
     </select>
   </div>
 
   <div class="col-md-4">
     <label><span class="required-star">*</span>Sub Sub Calling Status:</label>
-    <select class="form-select required-field" name="sub_sub_calling_status" id="sub_sub_calling_status_select">
+    <select class="form-select connect-valid-required" name="sub_sub_calling_status" id="sub_sub_calling_status_select">
       <option value="">--Select Sub Sub Type--</option>
     </select>
   </div>
@@ -1041,7 +1041,7 @@
 
                    <div class="col-md-4">
                       <label for="buyer_type"><span class="required-star">*</span>Buyer Type:</label>
-                      <select class="form-select required-field" name="buyer_type" id="buyer_type" onchange="toggleConstructionLevel(); updateRegistrationOptions();">
+                      <select class="form-select connect-valid-required" name="buyer_type" id="buyer_type" onchange="toggleConstructionLevel(); updateRegistrationOptions();">
                         <option value="">-- Select Buyer Type --</option>
                         <option value="Architect" {% if lead.buyer_type == "Architect" %}selected{% endif %}>Architect</option>
                         <option value="Carpenter" {% if lead.buyer_type == "Carpenter" %}selected{% endif %}>Carpenter</option>
@@ -1078,7 +1078,7 @@
 
                     <div class="col-md-4">
                         <label><span class="required-star">*</span>Brand Name:</label>
-                        <select id="brandSelect" name="brand_name" class="form-select required-field">
+                        <select id="brandSelect" name="brand_name" class="form-select connect-valid-required">
                           <option value="">--Select Brand--</option>
                           {% for brand in brands %}
                             <option value="{{ brand }}" {% if lead.brand == brand %}selected{% endif %}>{{ brand }}</option>
@@ -1088,7 +1088,7 @@
 
                       <div class="col-md-4">
                         <label><span class="required-star">*</span>Product:</label>
-                        <select id="productSelect" name="product" class="form-select required-field">
+                        <select id="productSelect" name="product" class="form-select connect-valid-required">
                           <option value="">--Select Product--</option>
                         </select>
                       </div>
@@ -1105,7 +1105,7 @@
 
                     <div class="col-md-4" id="lead_status_block" style="display: none;">
                       <label><span class="required-star">*</span>Lead Status:</label>
-                      <select class="form-select required-field" name="lead_status" id="lead_status_select">
+                      <select class="form-select connect-valid-required" name="lead_status" id="lead_status_select">
                         <option value="">--Select Lead Status--</option>
                         <option value="Hot" {% if lead.lead_status == 'Hot' %}selected{% endif %}>Hot (7-15 days)</option>
                         <option value="Warm" {% if lead.lead_status == 'Warm' %}selected{% endif %}>Warm (15-30 days)</option>
@@ -1115,7 +1115,7 @@
 
                     <div class="col-md-4" id="call_type_block">
                       <label><span class="required-star">*</span>Call Type:</label>
-                      <select class="form-select required-field" name="call_type" id="call_type_select">
+                      <select class="form-select connect-valid-required" name="call_type" id="call_type_select">
                         <option value="">--Select Call Type--</option>
                         <option value="Inbound" {% if lead.call_type == 'Inbound' %}selected{% endif %}>Inbound</option>
                         <option value="Outbound" {% if lead.call_type == 'Outbound' %}selected{% endif %}>Outbound</option>
@@ -1126,22 +1126,22 @@
 
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Name:</label>
-                      <input type="text" class="form-control required-field" name="name" value="{{ lead.name|default_if_none:'' }}">
+                      <input type="text" class="form-control connect-valid-required" name="name" value="{{ lead.name|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Lead Date:</label>
-                      <input type="date" class="form-control required-field" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">
+                      <input type="date" class="form-control connect-valid-required" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Call Date:</label>
-                      <input type="date" class="form-control required-field" id="call_date_field" name="call_date" value="{{ lead.call_date|date:'Y-m-d' }}">
+                      <input type="date" class="form-control connect-valid-required" id="call_date_field" name="call_date" value="{{ lead.call_date|date:'Y-m-d' }}">
                     </div>
 
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Pin Code:</label>
-                      <input type="text" class="form-control required-field" name="pin_code" value="{{ lead.pin_code|default_if_none:'' }}">
+                      <input type="text" class="form-control connect-valid-required" name="pin_code" value="{{ lead.pin_code|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
@@ -1161,26 +1161,26 @@
                     </div>
 
                     <div class="col-md-4">
-                      <label>Order Qty:</label>
-                      <input type="number" class="form-control" name="order_qty" value="{{ lead.order_qty|default_if_none:'' }}">
+                      <label><span class="required-star">*</span>Order Qty:</label>
+                      <input type="number" class="form-control connect-valid-required" name="order_qty" value="{{ lead.order_qty|default_if_none:'' }}">
                     </div>
 
                     <div class="col-md-4">
-                      <label>Order Value:</label>
-                      <input type="text" class="form-control" name="order_value" value="{{ lead.order_value|default_if_none:'' }}">
+                      <label><span class="required-star">*</span>Order Value:</label>
+                      <input type="text" class="form-control connect-valid-required" name="order_value" value="{{ lead.order_value|default_if_none:'' }}">
                     </div>
 
 
                     <div class="col-md-4">
-                      <label>Order Description:</label>
-                      <input type="text" class="form-control" name="order_description" value="{{ lead.order_description|default_if_none:'' }}">
+                      <label><span class="required-star">*</span>Order Description:</label>
+                      <input type="text" class="form-control connect-valid-required" name="order_description" value="{{ lead.order_description|default_if_none:'' }}">
                     </div>
 
 
 
                    <div class="col-md-4" id="construction_level_div" style="display: none;">
-                    <label>Construction Type:</label>
-                    <select class="form-select" name="construction_level">
+                    <label><span class="required-star">*</span>Construction Type:</label>
+                    <select class="form-select connect-valid-required" name="construction_level">
                       <option value="">-- Select Construction Type --</option>
                       <option value="Pre-Construction" {% if lead.construction_level == "Pre-Construction" %}selected{% endif %}>Pre-Construction</option>
                       <option value="Under Construction" {% if lead.construction_level == "Under Construction" %}selected{% endif %}>Under Construction</option>
@@ -1352,7 +1352,7 @@
 
                     <div class="col-md-6">
                       <label>Address:</label>
-                      <textarea class="form-control" name="address">{{ lead.address|default_if_none:'' }}</textarea>
+                      <textarea class="form-control connect-valid-required" name="address">{{ lead.address|default_if_none:'' }}</textarea>
                     </div>
 
                     <div class="col-md-6">
@@ -3534,10 +3534,61 @@ function callSalesDiaryApi(lead_id) {
 }
 </script>
 
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
 
+          const callingStatus = document.getElementById("calling_status_select");
+          const subCallingStatus = document.getElementById("sub_calling_status_select");
+          const form = document.getElementById("leadFormModel");
 
+          function toggleRequiredFields() {
 
+              const isConnectValid =
+                  callingStatus.value === "Connect" &&
+                  subCallingStatus.value === "Valid";
 
+              const fields = document.querySelectorAll(".connect-valid-required");
+
+              fields.forEach(field => {
+                  if (isConnectValid) {
+                      field.setAttribute("required", "required");
+                      field.classList.add("required-highlight");
+                  } else {
+                      field.removeAttribute("required");
+                      field.classList.remove("required-highlight");
+                  }
+              });
+          }
+
+          callingStatus.addEventListener("change", toggleRequiredFields);
+          subCallingStatus.addEventListener("change", toggleRequiredFields);
+
+          toggleRequiredFields(); // run on page load
+
+          /* ---------- FINAL SUBMIT VALIDATION ---------- */
+          form.addEventListener("submit", function (e) {
+
+              const isConnectValid =
+                  callingStatus.value === "Connect" &&
+                  subCallingStatus.value === "Valid";
+
+              if (isConnectValid) {
+
+                  const fields = document.querySelectorAll(".connect-valid-required");
+
+                  for (let field of fields) {
+                      if (!field.value.trim()) {
+                          alert("Please fill all mandatory fields for Connect + Valid lead.");
+                          field.focus();
+                          e.preventDefault();
+                          return false;
+                      }
+                  }
+              }
+          });
+
+      });
+    </script>
 
 
     <!-- Main JS -->
