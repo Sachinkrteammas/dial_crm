@@ -928,7 +928,7 @@
                     </div>
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Campaign Type:</label>
-                    <input type="text" class="form-control connect-valid-required" name="customer_type" value="{{ lead.customer_type|default_if_none:'' }}">
+                    <input type="text" class="form-control" name="customer_type" value="{{ lead.customer_type|default_if_none:'' }}">
                     </div>
                     <div class="col-md-4">
                       <label><span class="required-star">*</span>Calling Number:</label>
@@ -1180,7 +1180,7 @@
 
                    <div class="col-md-4" id="construction_level_div" style="display: none;">
                     <label><span class="required-star">*</span>Construction Type:</label>
-                    <select class="form-select connect-valid-required" name="construction_level">
+                    <select class="form-select" name="construction_level">
                       <option value="">-- Select Construction Type --</option>
                       <option value="Pre-Construction" {% if lead.construction_level == "Pre-Construction" %}selected{% endif %}>Pre-Construction</option>
                       <option value="Under Construction" {% if lead.construction_level == "Under Construction" %}selected{% endif %}>Under Construction</option>
