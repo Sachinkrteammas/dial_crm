@@ -744,6 +744,7 @@
                         <th>Enquiry Type</th>
                         <th>Enquiry Source</th>
                         <th>Lead Date</th>
+                        <th>Allocation Time</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
@@ -761,6 +762,7 @@
                         <td>{{ lead.enquiry_type|default_if_none:'' }}</td>
                         <td>{{ lead.enquiry_source|default_if_none:'' }}</td>
                         <td>{{ lead.lead_date|date:"d-m-Y" }}</td>
+                        <td>{{ lead.created_at|date:"h:i A" }}</td>
                         <td>{{ lead.calling_status|default_if_none:'' }}</td>
                         <td>
                           <div class="dropdown">

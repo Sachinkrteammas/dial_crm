@@ -1229,8 +1229,8 @@
                     </div>
 
                     <div class="col-md-4">
-  <label>Sales Team Email ID L1:</label>
-  <input type="text" class="form-control" name="seller_email" id="seller_email" value="{{ lead.seller_email_id|default_if_none:'' }}">
+  <label><span class="required-star">*</span>Sales Team Email ID L1:</label>
+  <input type="text" class="form-control connect-valid-required" name="seller_email" id="seller_email" value="{{ lead.seller_email_id|default_if_none:'' }}">
 
 <!--  <select class="form-select" name="seller_email" id="seller_email_select">-->
 <!--    <option value="">&#45;&#45;Select Seller&#45;&#45;</option>-->
@@ -1245,8 +1245,8 @@
 </div>
 
 <div class="col-md-4">
-  <label>Sales Team Phone No L1:</label>
-<input type="text" class="form-control" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no|default_if_none:'' }}">
+  <label><span class="required-star">*</span>Sales Team Phone No L1:</label>
+<input type="text" class="form-control connect-valid-required" name="seller_phone" id="seller_phone" value="{{ lead.seller_phone_no|default_if_none:'' }}">
 </div>
 
 
@@ -1272,11 +1272,11 @@
 </div>
 
   <div class="col-md-4">
-  <label>Lead Closer Final:</label>
+  <label><span class="required-star">*</span>Lead Closer Final:</label>
   <!-- Hidden field (keep as reference if needed) -->
   <input type="hidden" value="{{ lead.lead_closer_status_new }}" id="lead_closer_status_hidden">
 
-  <select class="form-select" name="lead_closer_status_new" id="lead_closer_status_new">
+  <select class="form-select connect-valid-required" name="lead_closer_status_new" id="lead_closer_status_new">
     <option value="">--Select Status--</option>
 
     <option value="closed_with_dealership"

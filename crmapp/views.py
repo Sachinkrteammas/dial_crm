@@ -30,6 +30,9 @@ from django.http import HttpResponseForbidden
 from collections import defaultdict
 from django.utils.dateformat import format
 from django.db.models import F
+from django.db.models import Sum
+from django.db.models.functions import Cast
+from django.db.models import FloatField
 
 
 User = get_user_model()
@@ -1172,11 +1175,11 @@ def admin_dashboard(request):
         end_date = parse_date(end_date)
 
         leads = leads.filter(
-            lead_date__range=(start_date, end_date)
+            updated_at__date__range=(start_date, end_date)
         )
     else:
         leads = leads.filter(
-            lead_date=today
+            updated_at__date=today
         )
 
     adviser_users = User.objects.filter(
@@ -1197,6 +1200,17 @@ def admin_dashboard(request):
             Q(updated_by__isnull=True, created_by__in=adviser_users)
         )
 
+    if selected_adviser:
+        adviser_filter = (
+                Q(lead_table__updated_by_id=selected_adviser) |
+                Q(lead_table__updated_by__isnull=True, lead_table__created_by_id=selected_adviser)
+        )
+    else:
+        adviser_filter = (
+                Q(lead_table__updated_by__in=adviser_users) |
+                Q(lead_table__updated_by__isnull=True, lead_table__created_by__in=adviser_users)
+        )
+
     daily_source_leads = (
         leads
         .filter(enquiry_source__isnull=False, calling_number__isnull=False)
@@ -1207,6 +1221,20 @@ def admin_dashboard(request):
         .annotate(total=Count("calling_number", distinct=True))
         .order_by("day")
     )
+
+    total_new_leads_assigned = leads.count()
+
+    hot_leads = leads.filter(
+        lead_status__iexact="Hot"
+    ).count()
+
+    warm_leads = leads.filter(
+        lead_status__iexact="Warm"
+    ).count()
+
+    cold_leads = leads.filter(
+        lead_status__iexact="Cold"
+    ).count()
 
     calls_made = leads.exclude(call_date__isnull=True).count()
 
@@ -1220,9 +1248,28 @@ def admin_dashboard(request):
         lead_closer_status_new__iexact="closed_with_order"
     ).count()
 
+    start = parse_date(selected_start)
+    end = parse_date(selected_end)
+
+    closed_order_revenue = SalesInfoTable.objects.filter(
+        adviser_filter,
+        lead_table__lead_closer_status_new__iexact="closed_with_order",
+        lead_table__updated_at__date__range=(start, end)
+    ).aggregate(
+        total=Sum(Cast('sale_inr', FloatField()))
+    )['total'] or 0
+
     closed_dealership = leads.filter(
         lead_closer_status_new__iexact="closed_with_dealership"
     ).count()
+
+    closed_dealership_revenue = SalesInfoTable.objects.filter(
+        adviser_filter,
+        lead_table__lead_closer_status_new__iexact="closed_with_dealership",
+        lead_table__updated_at__date__range=(start, end)
+    ).aggregate(
+        total=Sum(Cast('sale_inr', FloatField()))
+    )['total'] or 0
 
     dropped_leads = leads.filter(
         lead_closer_status_new__iexact="dropped"
@@ -1245,19 +1292,27 @@ def admin_dashboard(request):
         .order_by('month')
     )
 
-    start = parse_date(selected_start)
-    end = parse_date(selected_end)
-
-    closure_qs = leads.filter(
-        lead_close_date__isnull=False,
-        lead_close_date__range=(start, end)
-    )
-
     lead_closure_month = (
-        closure_qs
+        leads.filter(lead_close_date__isnull=False)
         .annotate(month=TruncMonth('lead_close_date'))
         .values('month')
         .annotate(total=Count('id'))
+        .order_by('month')
+    )
+
+    monthly_closure_revenue = (
+        SalesInfoTable.objects
+        .filter(
+            adviser_filter,
+            lead_table__lead_close_date__isnull=False,
+            lead_table__updated_at__date__range=(start, end)
+        )
+        .annotate(month=TruncMonth('lead_table__lead_close_date'))
+        .values('month')
+        .annotate(
+            total_leads=Count('lead_table_id', distinct=True),
+            revenue=Sum(Cast('sale_inr', FloatField()))
+        )
         .order_by('month')
     )
 
@@ -1270,6 +1325,22 @@ def admin_dashboard(request):
         .order_by('-total')
     )
 
+    brand_revenue = (
+        SalesInfoTable.objects
+        .filter(
+            adviser_filter,
+            lead_table__updated_at__date__range=(start, end)
+        )
+        .exclude(lead_table__brand__isnull=True)
+        .exclude(lead_table__brand__exact="")
+        .values('lead_table__brand')
+        .annotate(
+            total_leads=Count('lead_table_id', distinct=True),
+            revenue=Sum(Cast('sale_inr', FloatField()))
+        )
+        .order_by('-revenue')
+    )
+
     source_closures = (
         leads.filter(lead_close_date__isnull=False)
         .exclude(enquiry_source__exact="")
@@ -1277,6 +1348,22 @@ def admin_dashboard(request):
         .values('enquiry_source')
         .annotate(total=Count('id'))
         .order_by('-total')
+    )
+
+    source_revenue = (
+        SalesInfoTable.objects
+        .filter(
+            adviser_filter,
+            lead_table__updated_at__date__range=(start, end)
+        )
+        .exclude(lead_table__enquiry_source__isnull=True)
+        .exclude(lead_table__enquiry_source__exact="")
+        .values('lead_table__enquiry_source')
+        .annotate(
+            total_leads=Count('lead_table_id', distinct=True),
+            revenue=Sum(Cast('sale_inr', FloatField()))
+        )
+        .order_by('-revenue')
     )
 
     daily_source_dict = defaultdict(dict)
@@ -1312,6 +1399,10 @@ def admin_dashboard(request):
         "selected_end": selected_end,
         "context_advisers": adviser_users,
         "selected_adviser": selected_adviser,
+        "total_new_leads_assigned": total_new_leads_assigned,
+        "hot_leads": hot_leads,
+        "warm_leads": warm_leads,
+        "cold_leads": cold_leads,
         "calls_made": calls_made,
         "no_response": no_response,
         "followups": followups,
@@ -1336,6 +1427,27 @@ def admin_dashboard(request):
         "source_closures": json.dumps(list(source_closures)),
         "daily_source_labels": json.dumps(labels),
         "daily_source_datasets": json.dumps(datasets),
+        "closed_order_revenue": closed_order_revenue,
+        "closed_dealership_revenue": closed_dealership_revenue,
+        "monthly_closure_revenue": json.dumps([
+            {
+                "month": i["month"].strftime("%b %Y") if i["month"] else "",
+                "total_leads": i["total_leads"],
+                "revenue": i["revenue"] or 0
+            } for i in monthly_closure_revenue
+        ]),
+
+        "brand_revenue": json.dumps(list(brand_revenue)),
+        "source_revenue": json.dumps(list(source_revenue)),
     }
 
     return render(request, "crmapp/admin_dashboard.html", context)
+    # return JsonResponse({
+    #     "closed_order": closed_order,
+    #     "closed_order_revenue": closed_order_revenue,
+    #     "closed_dealership": closed_dealership,
+    #     "closed_dealership_revenue": closed_dealership_revenue,
+    #     "monthly_closure_revenue": json.loads(context["monthly_closure_revenue"]),
+    #     "brand_revenue": json.loads(context["brand_revenue"]),
+    #     "source_revenue": json.loads(context["source_revenue"]),
+    # }, safe=False)

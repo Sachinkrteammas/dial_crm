@@ -67,6 +67,12 @@
     .kpi-card .card-body {
         padding: 4px;
     }
+
+    .chart-container {
+        position: relative;
+        height: 350px;
+        width: 100%;
+    }
     </style>
 
     <!-- Page CSS -->
@@ -306,6 +312,42 @@
             <div class="col-md-3">
               <div class="card text-center shadow-sm kpi-card">
                 <div class="card-body">
+                  <h6>New Leads Assigned</h6>
+                  <h2 class="text-primary">{{ total_new_leads_assigned }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Hot Leads</h6>
+                  <h2 class="text-danger">{{ hot_leads }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Warm Leads</h6>
+                  <h2 class="text-warning">{{ warm_leads }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Cold Leads</h6>
+                  <h2 class="text-info">{{ cold_leads }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
                   <h6>Calls Made</h6>
                   <h2 class="text-primary">{{ calls_made }}</h2>
                 </div>
@@ -375,6 +417,24 @@
               </div>
             </div>
 
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Closed Order Revenue</h6>
+                  <h2 class="text-success">₹ {{ closed_order_revenue|floatformat:0 }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Dealership Revenue</h6>
+                  <h2 class="text-info">₹ {{ closed_dealership_revenue|floatformat:0 }}</h2>
+                </div>
+              </div>
+            </div>
+
             </div>
 
 
@@ -395,6 +455,47 @@
             <div class="card-header">Lead Closure Monthly</div>
             <div class="card-body">
             <canvas id="closureChart"></canvas>
+            </div>
+            </div>
+            </div>
+
+            </div>
+
+            <div class="row mt-5">
+
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">Monthly Closure Revenue</div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="monthlyRevenueChart"></canvas>
+              </div>
+            </div>
+            </div>
+            </div>
+
+            </div>
+
+            <div class="row mt-5">
+
+            <div class="col-md-6">
+            <div class="card">
+            <div class="card-header">Brand Revenue</div>
+            <div class="card-body">
+            <div class="chart-container">
+            <canvas id="brandRevenueChart"></canvas>
+            </div>
+            </div>
+            </div>
+            </div>
+
+            <div class="col-md-6">
+            <div class="card">
+            <div class="card-header">Source Revenue</div>
+            <div class="card-body">
+            <div class="chart-container">
+            <canvas id="sourceRevenueChart"></canvas>
+            </div>
             </div>
             </div>
             </div>
@@ -608,6 +709,53 @@
                       beginAtZero: true
                   }
               }
+          }
+      });
+    </script>
+
+    <script>
+      const monthlyRevenueData = {{ monthly_closure_revenue|safe }};
+      const brandRevenueData = {{ brand_revenue|safe }};
+      const sourceRevenueData = {{ source_revenue|safe }};
+
+      new Chart(document.getElementById('monthlyRevenueChart'), {
+          type: 'bar',
+          data: {
+              labels: monthlyRevenueData.map(d => d.month),
+              datasets: [{
+                  label: 'Revenue (INR)',
+                  data: monthlyRevenueData.map(d => d.revenue),
+                  borderWidth: 2
+              }]
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false
+          }
+      });
+
+      new Chart(document.getElementById('brandRevenueChart'), {
+          type: 'bar',
+          data: {
+              labels: brandRevenueData.map(d => d.lead_table__brand),
+              datasets: [{
+                  label: 'Brand Revenue',
+                  data: brandRevenueData.map(d => d.revenue)
+              }]
+          }
+      });
+
+      new Chart(document.getElementById('sourceRevenueChart'), {
+          type: 'doughnut',
+          data: {
+              labels: sourceRevenueData.map(d => d.lead_table__enquiry_source),
+              datasets: [{
+                  data: sourceRevenueData.map(d => d.revenue)
+              }]
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false
           }
       });
     </script>
