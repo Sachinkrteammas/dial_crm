@@ -1008,6 +1008,7 @@
   <option value="attempted_2" {% if lead.lead_closer_status == "attempted_2" %}selected{% endif %}>Attempted 2</option>
   <option value="attempted_3" {% if lead.lead_closer_status == "attempted_3" %}selected{% endif %}>Attempted 3</option>
   <option value="attempted_4" {% if lead.lead_closer_status == "attempted_4" %}selected{% endif %}>Attempted 4</option>
+  <option value="attempted_5" {% if lead.lead_closer_status == "attempted_5" %}selected{% endif %}>Attempted 5</option>
 
   <option value="no_response" {% if lead.lead_closer_status == "no_response" %}selected{% endif %}>No Response</option>
 
@@ -1018,7 +1019,7 @@
 
 <div class="col-md-4" id="remarks_id" >
   <label><span class="required-star">*</span>Remark:</label>
-  <input type="text" class="form-control" name="remark" id="remark" value="{{ lead.remark|default_if_none:'' }}">
+  <input type="text" class="form-control not-connect-required" name="remark" id="remark" value="{{ lead.remark|default_if_none:'' }}">
 </div>
 
 
@@ -1312,6 +1313,21 @@
     <option value="followup"
       {% if lead.lead_closer_status_new and lead.lead_closer_status_new|lower == "followup" %}selected{% endif %}>
       Follow-up
+    </option>
+
+    <option value="fu1"
+      {% if lead.lead_closer_status_new and lead.lead_closer_status_new|lower == "fu1" %}selected{% endif %}>
+      FU1
+    </option>
+
+    <option value="fu2"
+      {% if lead.lead_closer_status_new and lead.lead_closer_status_new|lower == "fu2" %}selected{% endif %}>
+      FU2
+    </option>
+
+    <option value="fu3"
+      {% if lead.lead_closer_status_new and lead.lead_closer_status_new|lower == "fu3" %}selected{% endif %}>
+      FU3
     </option>
 
 <!--    <option value="no_response_from_sales_team"-->
@@ -3537,55 +3553,88 @@ function callSalesDiaryApi(lead_id) {
     <script>
       document.addEventListener("DOMContentLoaded", function () {
 
-          const callingStatus = document.getElementById("calling_status_select");
-          const subCallingStatus = document.getElementById("sub_calling_status_select");
-          const form = document.getElementById("leadFormModel");
+        const callingStatus = document.getElementById("calling_status_select");
+        const subCallingStatus = document.getElementById("sub_calling_status_select");
+        const form = document.getElementById("leadFormModel");
 
-          function toggleRequiredFields() {
+        function toggleRequiredFields() {
 
-              const isConnectValid =
-                  callingStatus.value === "Connect" &&
-                  subCallingStatus.value === "Valid";
+            const isConnectValid =
+                callingStatus.value === "Connect" &&
+                subCallingStatus.value === "Valid";
 
-              const fields = document.querySelectorAll(".connect-valid-required");
+            const isNotConnect =
+                callingStatus.value === "Not Connect";
 
-              fields.forEach(field => {
-                  if (isConnectValid) {
-                      field.setAttribute("required", "required");
-                      field.classList.add("required-highlight");
-                  } else {
-                      field.removeAttribute("required");
-                      field.classList.remove("required-highlight");
-                  }
-              });
-          }
+            const connectFields = document.querySelectorAll(".connect-valid-required");
+            const notConnectFields = document.querySelectorAll(".not-connect-required");
 
-          callingStatus.addEventListener("change", toggleRequiredFields);
-          subCallingStatus.addEventListener("change", toggleRequiredFields);
+            // Reset all first
+            [...connectFields, ...notConnectFields].forEach(field => {
+                field.removeAttribute("required");
+                field.classList.remove("required-highlight");
+            });
 
-          toggleRequiredFields(); // run on page load
+            // Connect + Valid case
+            if (isConnectValid) {
+                connectFields.forEach(field => {
+                    field.setAttribute("required", "required");
+                    field.classList.add("required-highlight");
+                });
+            }
 
-          /* ---------- FINAL SUBMIT VALIDATION ---------- */
-          form.addEventListener("submit", function (e) {
+            // Not Connect case
+            if (isNotConnect) {
+                notConnectFields.forEach(field => {
+                    field.setAttribute("required", "required");
+                    field.classList.add("required-highlight");
+                });
+            }
+        }
 
-              const isConnectValid =
-                  callingStatus.value === "Connect" &&
-                  subCallingStatus.value === "Valid";
+        callingStatus.addEventListener("change", toggleRequiredFields);
+        subCallingStatus.addEventListener("change", toggleRequiredFields);
 
-              if (isConnectValid) {
+        toggleRequiredFields(); // run on load
 
-                  const fields = document.querySelectorAll(".connect-valid-required");
 
-                  for (let field of fields) {
-                      if (!field.value.trim()) {
-                          alert("Please fill all mandatory fields for Connect + Valid lead.");
-                          field.focus();
-                          e.preventDefault();
-                          return false;
-                      }
-                  }
-              }
-          });
+        /* ---------- FINAL SUBMIT VALIDATION ---------- */
+        form.addEventListener("submit", function (e) {
+
+            const isConnectValid =
+                callingStatus.value === "Connect" &&
+                subCallingStatus.value === "Valid";
+
+            const isNotConnect =
+                callingStatus.value === "Not Connect";
+
+            if (isConnectValid) {
+                const fields = document.querySelectorAll(".connect-valid-required");
+
+                for (let field of fields) {
+                    if (!field.value.trim()) {
+                        alert("Please fill all mandatory fields for Connect + Valid lead.");
+                        field.focus();
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+
+            if (isNotConnect) {
+                const fields = document.querySelectorAll(".not-connect-required");
+
+                for (let field of fields) {
+                    if (!field.value.trim()) {
+                        alert("Please fill all mandatory fields for Not Connect lead.");
+                        field.focus();
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+
+        });
 
       });
     </script>

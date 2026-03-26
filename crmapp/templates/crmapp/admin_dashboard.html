@@ -267,9 +267,9 @@
             <div class="container-fluid mt-4">
 
             <!-- ================= FILTER ================= -->
-            <form method="get" class="row g-3 mb-4">
+            <form method="get" class="row g-3 mb-4 align-items-end">
 
-              <div class="col-md-3">
+              <div class="col-md-2">
                   <label>Adviser</label>
 
                   <select name="adviser" class="form-control">
@@ -288,18 +288,36 @@
               </div>
 
               <div class="col-md-3">
+                <label>Enquiry Source</label>
+
+                <select name="source" class="form-control">
+                    <option value="">All Sources</option>
+
+                    {% for src in context_sources %}
+                        <option value="{{ src }}"
+                            {% if selected_source == src %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ src }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+              <div class="col-md-2">
                   <label>Start Date</label>
                   <input type="date" name="start_date" class="form-control"
                          value="{{ selected_start }}">
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-2">
                   <label>End Date</label>
                   <input type="date" name="end_date" class="form-control"
                          value="{{ selected_end }}">
               </div>
 
-              <div class="col-md-2 d-flex align-items-end">
+              <div class="col-md-2">
                   <button class="btn btn-primary w-100">Filter</button>
               </div>
 
@@ -350,6 +368,24 @@
                 <div class="card-body">
                   <h6>Calls Made</h6>
                   <h2 class="text-primary">{{ calls_made }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Connected Calls</h6>
+                  <h2 class="text-success">{{ connect_calls }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Not Connected Calls</h6>
+                  <h2 class="text-danger">{{ not_connect_calls }}</h2>
                 </div>
               </div>
             </div>

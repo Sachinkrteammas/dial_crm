@@ -1161,9 +1161,16 @@ def admin_dashboard(request):
 
     leads = LeadTable.objects.all()
 
+    sources_list = LeadTable.objects.exclude(
+        enquiry_source__isnull=True
+    ).exclude(
+        enquiry_source__exact=""
+    ).values_list("enquiry_source", flat=True).distinct().order_by("enquiry_source")
+
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
     selected_adviser = request.GET.get("adviser")
+    selected_source = request.GET.get("source")
 
     today = timezone.localdate()
 
@@ -1175,11 +1182,11 @@ def admin_dashboard(request):
         end_date = parse_date(end_date)
 
         leads = leads.filter(
-            updated_at__date__range=(start_date, end_date)
+            created_at__date__range=(start_date, end_date)
         )
     else:
         leads = leads.filter(
-            updated_at__date=today
+            created_at__date=today
         )
 
     adviser_users = User.objects.filter(
@@ -1211,6 +1218,9 @@ def admin_dashboard(request):
                 Q(lead_table__updated_by__isnull=True, lead_table__created_by__in=adviser_users)
         )
 
+    if selected_source:
+        leads = leads.filter(enquiry_source=selected_source)
+
     daily_source_leads = (
         leads
         .filter(enquiry_source__isnull=False, calling_number__isnull=False)
@@ -1221,6 +1231,14 @@ def admin_dashboard(request):
         .annotate(total=Count("calling_number", distinct=True))
         .order_by("day")
     )
+
+    connect_calls = leads.filter(
+        calling_status__iexact="Connect"
+    ).count()
+
+    not_connect_calls = leads.filter(
+        calling_status__iexact="Not Connect"
+    ).count()
 
     total_new_leads_assigned = leads.count()
 
@@ -1254,7 +1272,7 @@ def admin_dashboard(request):
     closed_order_revenue = SalesInfoTable.objects.filter(
         adviser_filter,
         lead_table__lead_closer_status_new__iexact="closed_with_order",
-        lead_table__updated_at__date__range=(start, end)
+        lead_table__created_at__date__range=(start, end)
     ).aggregate(
         total=Sum(Cast('sale_inr', FloatField()))
     )['total'] or 0
@@ -1266,7 +1284,7 @@ def admin_dashboard(request):
     closed_dealership_revenue = SalesInfoTable.objects.filter(
         adviser_filter,
         lead_table__lead_closer_status_new__iexact="closed_with_dealership",
-        lead_table__updated_at__date__range=(start, end)
+        lead_table__created_at__date__range=(start, end)
     ).aggregate(
         total=Sum(Cast('sale_inr', FloatField()))
     )['total'] or 0
@@ -1305,7 +1323,7 @@ def admin_dashboard(request):
         .filter(
             adviser_filter,
             lead_table__lead_close_date__isnull=False,
-            lead_table__updated_at__date__range=(start, end)
+            lead_table__created_at__date__range=(start, end)
         )
         .annotate(month=TruncMonth('lead_table__lead_close_date'))
         .values('month')
@@ -1329,7 +1347,7 @@ def admin_dashboard(request):
         SalesInfoTable.objects
         .filter(
             adviser_filter,
-            lead_table__updated_at__date__range=(start, end)
+            lead_table__created_at__date__range=(start, end)
         )
         .exclude(lead_table__brand__isnull=True)
         .exclude(lead_table__brand__exact="")
@@ -1354,7 +1372,7 @@ def admin_dashboard(request):
         SalesInfoTable.objects
         .filter(
             adviser_filter,
-            lead_table__updated_at__date__range=(start, end)
+            lead_table__created_at__date__range=(start, end)
         )
         .exclude(lead_table__enquiry_source__isnull=True)
         .exclude(lead_table__enquiry_source__exact="")
@@ -1399,7 +1417,11 @@ def admin_dashboard(request):
         "selected_end": selected_end,
         "context_advisers": adviser_users,
         "selected_adviser": selected_adviser,
+        "selected_source": selected_source,
+        "context_sources": sources_list,
         "total_new_leads_assigned": total_new_leads_assigned,
+        "connect_calls": connect_calls,
+        "not_connect_calls": not_connect_calls,
         "hot_leads": hot_leads,
         "warm_leads": warm_leads,
         "cold_leads": cold_leads,
