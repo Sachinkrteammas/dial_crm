@@ -161,6 +161,8 @@ class LeadTable(models.Model):
     enquiry_source = models.CharField(max_length=100, blank=True, null=True)
     sub_enquiry_source = models.CharField(max_length=100, blank=True, null=True)
 
+    dialer_lead_id = models.CharField(max_length=100, null=True, blank=True)
+
     lead_date = models.DateField(blank=True, null=True)
     call_date = models.DateField(blank=True, null=True)
 

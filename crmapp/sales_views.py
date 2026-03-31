@@ -181,7 +181,7 @@ def update_sales_info(request):
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 @login_required
-def lead_detail(request, lead_id):
+def lead_detail(request, lead_id=None, source_id=None):
     state = request.GET.get('state', '')
     menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
     menu_tree = {}
@@ -195,13 +195,32 @@ def lead_detail(request, lead_id):
     #     "Plantix", "TradeIndia", "WebScraping", "WebSite", "Other"
     # ]
 
-    lead = get_object_or_404(LeadTable, id=lead_id)
+    source_id = request.GET.get('source_id')
+    dialer_lead_id = request.GET.get('lead_id')
+
+    try:
+        if source_id:
+            final_lead_id = int(source_id)
+        elif lead_id:
+            final_lead_id = int(lead_id)
+        else:
+            return HttpResponse("No lead id provided", status=400)
+    except ValueError:
+        return HttpResponse("Invalid lead id", status=400)
+
+    lead = get_object_or_404(LeadTable, id=final_lead_id)
+
+    if dialer_lead_id:
+        if lead.dialer_lead_id != dialer_lead_id:
+            lead.dialer_lead_id = dialer_lead_id
+            lead.save(update_fields=['dialer_lead_id'])
+
     payload = {'uid': lead.id, 'email': lead.seller_email_id}
     encrypted_data = signing.dumps(payload)
     secure_url = request.build_absolute_uri(f"/sales_get_data/?data={encrypted_data}")
 
     # 🔹 Paginate Lead History
-    lead_history_qs = HistoryLead.objects.filter(lead_table_id=lead_id).order_by('-created_at')
+    lead_history_qs = HistoryLead.objects.filter(lead_table_id=final_lead_id).order_by('-created_at')
     page_lead = request.GET.get('page_lead')
 
     paginator_lead = Paginator(lead_history_qs, 5)
@@ -235,7 +254,7 @@ def lead_detail(request, lead_id):
     call_dispositions_qs = CallDisposition.objects.all().values('type', 'sub_type', 'sub_sub_type')
     call_dispositions = list(call_dispositions_qs)  # to use in JS
 
-    lead = get_object_or_404(LeadTable, id=lead_id)
+    # lead = get_object_or_404(LeadTable, id=lead_id)
     state = lead.state
 
     sales_contacts = SalesContact.objects.filter(state__iexact=state).values(
@@ -293,7 +312,7 @@ def lead_detail(request, lead_id):
 
     success_count = (
             SalesDiaryCounter.objects
-            .filter(lead_id=lead_id)
+            .filter(lead_id=final_lead_id)
             .values_list("success_count", flat=True)
             .first()
             or 0

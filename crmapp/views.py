@@ -33,6 +33,8 @@ from django.db.models import F
 from django.db.models import Sum
 from django.db.models.functions import Cast
 from django.db.models import FloatField
+from django.db import connections
+from datetime import datetime
 
 
 User = get_user_model()
@@ -588,17 +590,14 @@ def lead_table(request):
         menu_tree.setdefault(parent_id, []).append(item)
     menu_html = render_menu(None, menu_tree)
 
-    # Handle date filter
     query = request.GET.get('query')
-    # leads = LeadTable.objects.all().order_by('-created_at')
     leads = LeadTable.objects.filter(created_by=request.user).order_by('-created_at')
     leads_search = LeadTable.objects.all().order_by('-created_at')
+
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
-
     calling_status = request.GET.get('calling_status')
     sub_calling_status = request.GET.get('sub_calling_status')
-
 
     if calling_status:
         leads = leads.filter(calling_status__iexact=calling_status)
@@ -606,7 +605,6 @@ def lead_table(request):
     if sub_calling_status:
         leads = leads.filter(sub_calling_status__iexact=sub_calling_status)
 
-    # Apply date filters
     if start_date:
         leads = leads.filter(lead_date__gte=parse_date(start_date))
     if end_date:
@@ -615,10 +613,10 @@ def lead_table(request):
     if query:
         if query.upper().startswith("BN"):
             try:
-                query_id = int(query[2:])  # take after "BN"
+                query_id = int(query[2:])
                 leads = leads_search.filter(pk=query_id)
             except ValueError:
-                leads = leads_search.none()  # invalid format like BNxx (non-numeric)
+                leads = leads_search.none()
         else:
             leads = leads_search.filter(
                 Q(customer_name__icontains=query) |
@@ -628,10 +626,56 @@ def lead_table(request):
                 Q(sub_calling_status__icontains=query)
             )
 
-    # Apply pagination
-    paginator = Paginator(leads, 10)  # 10 leads per page
+    # Pagination
+    paginator = Paginator(leads, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    # Convert to list (important for modification)
+    leads_list = list(page_obj)
+
+    # STEP 1: Collect phone numbers (ONLY current page)
+    numbers = [lead.calling_number for lead in leads_list if lead.calling_number]
+
+    first_call_map = {}
+
+    if numbers:
+        format_strings = ','.join(['%s'] * len(numbers))
+
+        query = f"""
+            SELECT phone_number, MIN(call_date) as first_call_date
+            FROM vicidial_log
+            WHERE phone_number IN ({format_strings})
+            GROUP BY phone_number
+        """
+
+        # STEP 2: Run RAW SQL on ASTERISK DB
+        with connections['asterisk'].cursor() as cursor:
+            cursor.execute(query, numbers)
+            rows = cursor.fetchall()
+
+        first_call_map = {
+            row[0]: row[1] for row in rows
+        }
+
+    # STEP 3: Calculate FRT
+    for lead in leads_list:
+        first_call = first_call_map.get(lead.calling_number)
+
+        if first_call and lead.created_at:
+
+            if timezone.is_naive(first_call):
+                first_call = timezone.make_aware(first_call, timezone.get_current_timezone())
+
+            frt_seconds = (first_call - lead.created_at).total_seconds()
+
+            lead.frt_seconds = int(frt_seconds)
+            lead.frt_minutes = round(frt_seconds / 60, 2)
+        else:
+            lead.frt_seconds = None
+            lead.frt_minutes = None
+
+    # =========================================================
 
     querydict = request.GET.copy()
     querydict.pop('page', None)
@@ -641,7 +685,7 @@ def lead_table(request):
 
     return render(request, 'crmapp/lead.html', {
         'menu_html': menu_html,
-        'leads': page_obj,
+        'leads': leads_list,
         'zones': zones,
         'paginator': paginator,
         'page_obj': page_obj,

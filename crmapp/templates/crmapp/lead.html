@@ -749,6 +749,7 @@
                         <th>Enquiry Source</th>
                         <th>Lead Date</th>
                         <th>Allocation Time</th>
+                        <th>FRT (Min)</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
@@ -773,6 +774,13 @@
                           {% localtime on %}
                             {{ lead.created_at|date:"h:i A" }}
                           {% endlocaltime %}
+                        </td>
+                        <td>
+                          {% if lead.frt_minutes %}
+                            {{ lead.frt_minutes }} min
+                          {% else %}
+                            -
+                          {% endif %}
                         </td>
                         <td>{{ lead.calling_status|default_if_none:'' }}</td>
                         <td>
