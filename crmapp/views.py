@@ -632,48 +632,48 @@ def lead_table(request):
     page_obj = paginator.get_page(page_number)
 
     # Convert to list (important for modification)
-    leads_list = list(page_obj)
+    # leads_list = list(page_obj)
 
     # STEP 1: Collect phone numbers (ONLY current page)
-    numbers = [lead.calling_number for lead in leads_list if lead.calling_number]
+    # numbers = [lead.calling_number for lead in leads_list if lead.calling_number]
 
     first_call_map = {}
 
-    if numbers:
-        format_strings = ','.join(['%s'] * len(numbers))
-
-        query = f"""
-            SELECT phone_number, MIN(call_date) as first_call_date
-            FROM vicidial_log
-            WHERE phone_number IN ({format_strings})
-            GROUP BY phone_number
-        """
+    # if numbers:
+    #     format_strings = ','.join(['%s'] * len(numbers))
+    #
+    #     query = f"""
+    #         SELECT phone_number, MIN(call_date) as first_call_date
+    #         FROM vicidial_log
+    #         WHERE phone_number IN ({format_strings})
+    #         GROUP BY phone_number
+    #     """
 
         # STEP 2: Run RAW SQL on ASTERISK DB
-        with connections['asterisk'].cursor() as cursor:
-            cursor.execute(query, numbers)
-            rows = cursor.fetchall()
-
-        first_call_map = {
-            row[0]: row[1] for row in rows
-        }
+        # with connections['asterisk'].cursor() as cursor:
+        #     cursor.execute(query, numbers)
+        #     rows = cursor.fetchall()
+        #
+        # first_call_map = {
+        #     row[0]: row[1] for row in rows
+        # }
 
     # STEP 3: Calculate FRT
-    for lead in leads_list:
-        first_call = first_call_map.get(lead.calling_number)
-
-        if first_call and lead.created_at:
-
-            if timezone.is_naive(first_call):
-                first_call = timezone.make_aware(first_call, timezone.get_current_timezone())
-
-            frt_seconds = (first_call - lead.created_at).total_seconds()
-
-            lead.frt_seconds = int(frt_seconds)
-            lead.frt_minutes = round(frt_seconds / 60, 2)
-        else:
-            lead.frt_seconds = None
-            lead.frt_minutes = None
+    # for lead in leads_list:
+    #     first_call = first_call_map.get(lead.calling_number)
+    #
+    #     if first_call and lead.created_at:
+    #
+    #         if timezone.is_naive(first_call):
+    #             first_call = timezone.make_aware(first_call, timezone.get_current_timezone())
+    #
+    #         frt_seconds = (first_call - lead.created_at).total_seconds()
+    #
+    #         lead.frt_seconds = int(frt_seconds)
+    #         lead.frt_minutes = round(frt_seconds / 60, 2)
+    #     else:
+    #         lead.frt_seconds = None
+    #         lead.frt_minutes = None
 
     # =========================================================
 
@@ -685,7 +685,7 @@ def lead_table(request):
 
     return render(request, 'crmapp/lead.html', {
         'menu_html': menu_html,
-        'leads': leads_list,
+        'leads': page_obj,
         'zones': zones,
         'paginator': paginator,
         'page_obj': page_obj,
