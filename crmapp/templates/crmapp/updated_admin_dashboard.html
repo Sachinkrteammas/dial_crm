@@ -1,0 +1,800 @@
+<!doctype html>
+
+<html
+  lang="en"
+  class="layout-navbar-fixed layout-menu-fixed layout-compact"
+  dir="ltr"
+  data-skin="default"
+  data-assets-path="/assets/"
+  data-template="vertical-menu-template"
+  data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+    <title>Agent Leads</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/Mascallnet.png" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&ampdisplay=swap"
+      rel="stylesheet" />
+
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+
+    <!-- Core CSS -->
+    <!-- build:css assets/vendor/css/theme.css  -->
+
+    <link rel="stylesheet" href="/assets/vendor/libs/node-waves/node-waves.css" />
+
+    <link rel="stylesheet" href="/assets/vendor/libs/pickr/pickr-themes.css" />
+
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+
+    <!-- Vendors CSS -->
+
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+
+    <!-- endbuild -->
+
+    <link rel="stylesheet" href="/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/@form-validation/form-validation.css" />
+
+    <style>
+    .chart-container {
+        position: relative;
+        height: 350px;
+        width: 100%;
+    }
+
+    .daily-chart-container {
+        position: relative;
+        height: 420px;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .kpi-card .card-body {
+        padding: 4px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 350px;
+        width: 100%;
+    }
+    </style>
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+
+    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
+    <script src="/assets/vendor/js/template-customizer.js"></script>
+
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+
+    <script src="/assets/js/config.js"></script>
+  </head>
+
+  <body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Menu -->
+
+        <!-- dynamic menu container -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu">
+        <div class="app-brand demo">
+          <a href="{% url 'dashboard' %}" class="app-brand-link">
+            <!-- Logo SVG and Brand Text -->
+            <span class="app-brand-logo demo">
+              <span class="text-primary">
+                <!-- Your SVG here -->
+               <img src="/assets/img/favicon/Mascallnet.png" alt="Mascallnet Logo" style="width: 32px; height: auto; vertical-align: middle;" />
+
+              </span>
+            </span>
+            <span class="app-brand-text demo menu-text fw-bold ms-3">MasCallNet</span>
+          </a>
+
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
+            <i class="icon-base ti tabler-x d-block d-xl-none"></i>
+          </a>
+        </div>
+
+        <!-- ✅ Inject dynamic menu here -->
+        {{ menu_html|safe }}
+      </aside>
+
+        <!-- dynamic menu container end -->
+
+        <div class="menu-mobile-toggler d-xl-none rounded-1">
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large text-bg-secondary p-2 rounded-1">
+            <i class="ti tabler-menu icon-base"></i>
+            <i class="ti tabler-chevron-right icon-base"></i>
+          </a>
+        </div>
+        <!-- / Menu -->
+
+        <!-- Layout container -->
+        <div class="layout-page">
+          <!-- Navbar -->
+
+          <nav
+            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="icon-base ti tabler-menu-2 icon-md"></i>
+              </a>
+            </div>
+
+            <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+              <!-- Search -->
+<!--              <div class="navbar-nav align-items-center">-->
+<!--                <div class="nav-item navbar-search-wrapper px-md-0 px-2 mb-0">-->
+<!--                  <a class="nav-item nav-link search-toggler d-flex align-items-center px-0" href="javascript:void(0);">-->
+<!--                    <span class="d-inline-block text-body-secondary fw-normal" id="autocomplete"></span>-->
+<!--                  </a>-->
+<!--                </div>-->
+<!--              </div>-->
+
+              <!-- /Search -->
+
+              <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+                <!--/ Language -->
+
+                <!-- Style Switcher -->
+                <li class="nav-item dropdown">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill"
+                    id="nav-theme"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown">
+                    <i class="icon-base ti tabler-sun icon-22px theme-icon-active text-heading"></i>
+                    <span class="d-none ms-2" id="nav-theme-text">Toggle theme</span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-theme-text">
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item align-items-center active"
+                        data-bs-theme-value="light"
+                        aria-pressed="false">
+                        <span><i class="icon-base ti tabler-sun icon-22px me-3" data-icon="sun"></i>Light</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item align-items-center"
+                        data-bs-theme-value="dark"
+                        aria-pressed="true">
+                        <span
+                          ><i class="icon-base ti tabler-moon-stars icon-22px me-3" data-icon="moon-stars"></i
+                          >Dark</span
+                        >
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item align-items-center"
+                        data-bs-theme-value="system"
+                        aria-pressed="false">
+                        <span
+                          ><i
+                            class="icon-base ti tabler-device-desktop-analytics icon-22px me-3"
+                            data-icon="device-desktop-analytics"></i
+                          >System</span
+                        >
+                      </button>
+                    </li>
+                  </ul>
+                </li>
+                <!-- / Style Switcher-->
+
+                <!-- User -->
+                <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow p-0"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" alt class="rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item mt-0" href="pages-account-settings-account.html">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0 me-2">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" alt class="rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            {% if user.is_authenticated %}
+                              <h6 class="mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                              <small class="text-body-secondary">User</small>
+                            {% else %}
+                              <h6 class="mb-0">Guest</h6>
+                              <small class="text-body-secondary">Visitor</small>
+                            {% endif %}
+                          </div>
+
+                        </div>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider my-1 mx-n2"></div>
+                    </li>
+                    <li>
+                      <div class="d-grid px-2 pt-2 pb-1">
+                        <a class="btn btn-sm btn-danger d-flex" href="{% url 'logout' %}" target="_blank">
+                          <small class="align-middle">Logout</small>
+                          <i class="icon-base ti tabler-logout ms-2 icon-14px"></i>
+                        </a>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+                <!--/ User -->
+              </ul>
+            </div>
+          </nav>
+
+          <!-- / Navbar -->
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <!-- Content -->
+
+            <div class="container-fluid mt-4">
+
+            <!-- ================= FILTER ================= -->
+            <form method="get" class="row g-3 mb-4 align-items-end">
+
+              <div class="col-md-2">
+                  <label>Adviser</label>
+
+                  <select name="adviser" class="form-control">
+                      <option value="">All Advisers</option>
+
+                      {% for adv in context_advisers %}
+                          <option value="{{ adv.id }}"
+                              {% if selected_adviser|default:'' == adv.id|stringformat:"s" %}
+                                  selected
+                              {% endif %}
+                          >
+                              {{ adv.get_full_name|default:adv.username }}
+                          </option>
+                      {% endfor %}
+                  </select>
+              </div>
+
+              <div class="col-md-3">
+                <label>Enquiry Source</label>
+
+                <select name="source" class="form-control">
+                    <option value="">All Sources</option>
+
+                    {% for src in context_sources %}
+                        <option value="{{ src }}"
+                            {% if selected_source == src %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ src }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+              <div class="col-md-2">
+                  <label>Start Date</label>
+                  <input type="date" name="start_date" class="form-control"
+                         value="{{ selected_start }}">
+              </div>
+
+              <div class="col-md-2">
+                  <label>End Date</label>
+                  <input type="date" name="end_date" class="form-control"
+                         value="{{ selected_end }}">
+              </div>
+
+              <div class="col-md-2">
+                  <button class="btn btn-primary w-100">Filter</button>
+              </div>
+
+            </form>
+
+
+            <!-- ================= KPI CARDS ================= -->
+            <div class="row g-3">
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Leads Assigned</h6>
+                  <h2 class="text-primary">{{ total_new_leads_assigned }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Hot Leads</h6>
+                  <h2 class="text-danger">{{ hot_leads }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Warm Leads</h6>
+                  <h2 class="text-warning">{{ warm_leads }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Cold Leads</h6>
+                  <h2 class="text-info">{{ cold_leads }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Calls Made</h6>
+                  <h2 class="text-primary">{{ calls_made }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Connected Calls</h6>
+                  <h2 class="text-success">{{ connect_calls }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Not Connected Calls</h6>
+                  <h2 class="text-danger">{{ not_connect_calls }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>No Response</h6>
+                  <h2 class="text-danger">{{ no_response }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Followups</h6>
+                  <h2 class="text-warning">{{ followups }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Closed Orders</h6>
+                  <h2 class="text-success">{{ closed_order }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Closed Dealership</h6>
+                  <h2 class="text-info">{{ closed_dealership }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Dropped Leads</h6>
+                  <h2 class="text-dark">{{ dropped_leads }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Closed Without Order</h6>
+                  <h2 class="text-secondary">{{ closed_without_order }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Closed Without Dealership</h6>
+                  <h2 class="text-muted">{{ closed_without_dealership }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Closed Order Revenue</h6>
+                  <h2 class="text-success">₹ {{ closed_order_revenue|floatformat:0 }}</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="card text-center shadow-sm kpi-card">
+                <div class="card-body">
+                  <h6>Dealership Revenue</h6>
+                  <h2 class="text-info">₹ {{ closed_dealership_revenue|floatformat:0 }}</h2>
+                </div>
+              </div>
+            </div>
+
+            </div>
+
+
+            <!-- ================= CHARTS ================= -->
+            <div class="row mt-5">
+
+            <div class="col-md-6">
+            <div class="card">
+            <div class="card-header">Lead Registration Monthly</div>
+            <div class="card-body">
+            <canvas id="registerChart"></canvas>
+            </div>
+            </div>
+            </div>
+
+            <div class="col-md-6">
+            <div class="card">
+            <div class="card-header">Lead Closure Monthly</div>
+            <div class="card-body">
+            <canvas id="closureChart"></canvas>
+            </div>
+            </div>
+            </div>
+
+            </div>
+
+            <div class="row mt-5">
+
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">Monthly Closure Revenue</div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="monthlyRevenueChart"></canvas>
+              </div>
+            </div>
+            </div>
+            </div>
+
+            </div>
+
+            <div class="row mt-5">
+
+            <div class="col-md-6">
+            <div class="card">
+            <div class="card-header">Brand Revenue</div>
+            <div class="card-body">
+            <div class="chart-container">
+            <canvas id="brandRevenueChart"></canvas>
+            </div>
+            </div>
+            </div>
+            </div>
+
+            <div class="col-md-6">
+            <div class="card">
+            <div class="card-header">Source Revenue</div>
+            <div class="card-body">
+            <div class="chart-container">
+            <canvas id="sourceRevenueChart"></canvas>
+            </div>
+            </div>
+            </div>
+            </div>
+
+            </div>
+
+
+            <!-- ================= BRAND & SOURCE ================= -->
+            <div class="row mt-5 mb-5">
+
+            <div class="col-md-6">
+            <div class="card">
+            <div class="card-header">Brand Closures</div>
+            <div class="card-body">
+            <div class="chart-container">
+                <canvas id="brandChart"></canvas>
+            </div>
+            </div>
+            </div>
+            </div>
+
+            <div class="col-md-6">
+            <div class="card">
+            <div class="card-header">Source Closures</div>
+            <div class="card-body">
+            <div class="chart-container">
+                <canvas id="sourceChart"></canvas>
+            </div>
+            </div>
+            </div>
+            </div>
+
+            </div>
+
+            <div class="row mt-5 mb-5">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            Daily Unique Leads (Source-wise)
+                        </div>
+
+                        <div class="card-body">
+                            <div class="daily-chart-container">
+                                <canvas id="dailySourceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+            <!-- / Content -->
+            <div class="content-backdrop fade"></div>
+          </div>
+          <!-- Content wrapper -->
+        </div>
+        <!-- / Layout page -->
+      </div>
+
+      <!-- Overlay -->
+      <div class="layout-overlay layout-menu-toggle"></div>
+
+      <!-- Drag Target Area To SlideIn Menu On Small Screens -->
+      <div class="drag-target"></div>
+    </div>
+    <!-- / Layout wrapper -->
+
+    <!-- Core JS -->
+    <!-- build:js assets/vendor/js/theme.js -->
+
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/node-waves/node-waves.js"></script>
+
+    <script src="/assets/vendor/libs/@algolia/autocomplete-js.js"></script>
+
+    <script src="/assets/vendor/libs/pickr/pickr.js"></script>
+
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+
+    <script src="/assets/vendor/libs/hammer/hammer.js"></script>
+
+    <script src="/assets/vendor/libs/i18n/i18n.js"></script>
+
+    <script src="/assets/vendor/js/menu.js"></script>
+
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
+    <script src="/assets/vendor/libs/select2/select2.js"></script>
+    <script src="/assets/vendor/libs/@form-validation/popular.js"></script>
+    <script src="/assets/vendor/libs/@form-validation/bootstrap5.js"></script>
+    <script src="/assets/vendor/libs/@form-validation/auto-focus.js"></script>
+
+    <!-- Main JS -->
+
+    <script src="/assets/js/main.js"></script>
+
+    <!-- Page JS -->
+    <script src="/assets/js/app-access-roles.js"></script>
+    <script src="/assets/js/modal-add-role.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+    <script>
+
+      const registerData = {{ lead_register_month|safe }};
+      const closureData = {{ lead_closure_month|safe }};
+      const brandData = {{ brand_closures|safe }};
+      const sourceData = {{ source_closures|safe }};
+
+
+      // Register Chart
+      new Chart(document.getElementById('registerChart'), {
+          type: 'line',
+          data: {
+              labels: registerData.map(d => d.month),
+              datasets: [{
+                  label: 'Leads Registered',
+                  data: registerData.map(d => d.total),
+                  borderWidth: 2
+              }]
+          }
+      });
+
+
+      // Closure Chart
+      new Chart(document.getElementById('closureChart'), {
+          type: 'line',
+          data: {
+              labels: closureData.map(d => d.month),
+              datasets: [{
+                  label: 'Leads Closed',
+                  data: closureData.map(d => d.total),
+                  borderWidth: 2
+              }]
+          }
+      });
+
+
+      // Brand Chart
+      new Chart(document.getElementById('brandChart'), {
+          type: 'bar',
+          data: {
+              labels: brandData.map(d => d.brand),
+              datasets: [{
+                  label: 'Brand Closures',
+                  data: brandData.map(d => d.total)
+              }]
+          }
+      });
+
+
+      // Source Chart
+      new Chart(document.getElementById('sourceChart'), {
+          type: 'pie',
+          data: {
+              labels: sourceData.map(d => d.enquiry_source),
+              datasets: [{
+                  data: sourceData.map(d => d.total)
+              }]
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false
+          }
+      });
+
+    </script>
+
+    <script>
+      const dailyLabels = JSON.parse('{{ daily_source_labels|escapejs }}');
+      const dailyDatasets = JSON.parse('{{ daily_source_datasets|escapejs }}');
+
+      console.log("Daily Labels:", dailyLabels);
+      console.log("Daily Datasets:", dailyDatasets);
+
+      const dailyCtx = document.getElementById('dailySourceChart');
+
+      new Chart(dailyCtx, {
+          type: 'line',
+          data: {
+              labels: dailyLabels,
+              datasets: dailyDatasets.map(ds => ({
+                  label: ds.label,
+                  data: ds.data,
+                  borderWidth: 2,
+                  fill: false,
+                  tension: 0.3
+              }))
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: {
+                  mode: 'index',
+                  intersect: false
+              },
+              plugins: {
+                  legend: {
+                      position: 'top'
+                  }
+              },
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+    </script>
+
+    <script>
+      const monthlyRevenueData = {{ monthly_closure_revenue|safe }};
+      const brandRevenueData = {{ brand_revenue|safe }};
+      const sourceRevenueData = {{ source_revenue|safe }};
+
+      new Chart(document.getElementById('monthlyRevenueChart'), {
+          type: 'bar',
+          data: {
+              labels: monthlyRevenueData.map(d => d.month),
+              datasets: [{
+                  label: 'Revenue (INR)',
+                  data: monthlyRevenueData.map(d => d.revenue),
+                  borderWidth: 2
+              }]
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false
+          }
+      });
+
+      new Chart(document.getElementById('brandRevenueChart'), {
+          type: 'bar',
+          data: {
+              labels: brandRevenueData.map(d => d.lead_table__brand),
+              datasets: [{
+                  label: 'Brand Revenue',
+                  data: brandRevenueData.map(d => d.revenue)
+              }]
+          }
+      });
+
+      new Chart(document.getElementById('sourceRevenueChart'), {
+          type: 'doughnut',
+          data: {
+              labels: sourceRevenueData.map(d => d.lead_table__enquiry_source),
+              datasets: [{
+                  data: sourceRevenueData.map(d => d.revenue)
+              }]
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false
+          }
+      });
+    </script>
+
+  </body>
+</html>

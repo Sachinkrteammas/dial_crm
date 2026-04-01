@@ -1517,3 +1517,330 @@ def admin_dashboard(request):
     #     "brand_revenue": json.loads(context["brand_revenue"]),
     #     "source_revenue": json.loads(context["source_revenue"]),
     # }, safe=False)
+
+
+@login_required
+def updated_admin_dashboard(request):
+
+    is_admin = UserList.objects.filter(
+        user=request.user,
+        user_role__iexact="admin",
+        is_deactivated=False
+    ).exists()
+
+    if not is_admin:
+        return HttpResponseForbidden("Admin access required")
+
+    menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
+
+    menu_tree = {}
+    for item in menu_items:
+        menu_tree.setdefault(item.parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
+
+    leads = LeadTable.objects.all()
+
+    sources_list = LeadTable.objects.exclude(
+        enquiry_source__isnull=True
+    ).exclude(
+        enquiry_source__exact=""
+    ).values_list("enquiry_source", flat=True).distinct().order_by("enquiry_source")
+
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+    selected_adviser = request.GET.get("adviser")
+    selected_source = request.GET.get("source")
+
+    today = timezone.localdate()
+
+    selected_start = start_date or today.strftime("%Y-%m-%d")
+    selected_end = end_date or today.strftime("%Y-%m-%d")
+
+    if start_date and end_date:
+        start_date = parse_date(start_date)
+        end_date = parse_date(end_date)
+
+        leads = leads.filter(
+            updated_at__date__range=(start_date, end_date)
+        )
+    else:
+        leads = leads.filter(
+            updated_at__date=today
+        )
+
+    adviser_users = User.objects.filter(
+        id__in=UserList.objects.filter(
+            user_role__iexact="adviser",
+            is_deactivated=False
+        ).values_list("user_id", flat=True)
+    )
+
+    if selected_adviser:
+        leads = leads.filter(
+            Q(updated_by_id=selected_adviser) |
+            Q(updated_by__isnull=True, created_by_id=selected_adviser)
+        )
+    else:
+        leads = leads.filter(
+            Q(updated_by__in=adviser_users) |
+            Q(updated_by__isnull=True, created_by__in=adviser_users)
+        )
+
+    if selected_adviser:
+        adviser_filter = (
+                Q(lead_table__updated_by_id=selected_adviser) |
+                Q(lead_table__updated_by__isnull=True, lead_table__created_by_id=selected_adviser)
+        )
+    else:
+        adviser_filter = (
+                Q(lead_table__updated_by__in=adviser_users) |
+                Q(lead_table__updated_by__isnull=True, lead_table__created_by__in=adviser_users)
+        )
+
+    if selected_source:
+        leads = leads.filter(enquiry_source=selected_source)
+
+    daily_source_leads = (
+        leads
+        .filter(enquiry_source__isnull=False, calling_number__isnull=False)
+        .exclude(enquiry_source__exact="")
+        .exclude(calling_number__exact="")
+        .annotate(day=F("lead_date"))
+        .values("day", "enquiry_source")
+        .annotate(total=Count("calling_number", distinct=True))
+        .order_by("day")
+    )
+
+    connect_calls = leads.filter(
+        calling_status__iexact="Connect"
+    ).count()
+
+    not_connect_calls = leads.filter(
+        calling_status__iexact="Not Connect"
+    ).count()
+
+    total_new_leads_assigned = leads.count()
+
+    hot_leads = leads.filter(
+        lead_status__iexact="Hot"
+    ).count()
+
+    warm_leads = leads.filter(
+        lead_status__iexact="Warm"
+    ).count()
+
+    cold_leads = leads.filter(
+        lead_status__iexact="Cold"
+    ).count()
+
+    calls_made = leads.exclude(call_date__isnull=True).count()
+
+    no_response = leads.filter(lead_closer_status__iexact="no_response").count()
+
+    followups = leads.filter(
+        lead_closer_status_new__iexact="followup"
+    ).count()
+
+    closed_order = leads.filter(
+        lead_closer_status_new__iexact="closed_with_order"
+    ).count()
+
+    start = parse_date(selected_start)
+    end = parse_date(selected_end)
+
+    closed_order_revenue = SalesInfoTable.objects.filter(
+        adviser_filter,
+        lead_table__lead_closer_status_new__iexact="closed_with_order",
+        lead_table__updated_at__date__range=(start, end)
+    ).aggregate(
+        total=Sum(Cast('sale_inr', FloatField()))
+    )['total'] or 0
+
+    closed_dealership = leads.filter(
+        lead_closer_status_new__iexact="closed_with_dealership"
+    ).count()
+
+    closed_dealership_revenue = SalesInfoTable.objects.filter(
+        adviser_filter,
+        lead_table__lead_closer_status_new__iexact="closed_with_dealership",
+        lead_table__updated_at__date__range=(start, end)
+    ).aggregate(
+        total=Sum(Cast('sale_inr', FloatField()))
+    )['total'] or 0
+
+    dropped_leads = leads.filter(
+        lead_closer_status_new__iexact="dropped"
+    ).count()
+
+    closed_without_order = leads.filter(
+        lead_closer_status_new__iexact="closed_without_order"
+    ).count()
+
+    closed_without_dealership = leads.filter(
+        lead_closer_status_new__iexact="closed_without_dealership"
+    ).count()
+
+
+    lead_register_month = (
+        leads.filter(lead_date__isnull=False)
+        .annotate(month=TruncMonth('lead_date'))
+        .values('month')
+        .annotate(total=Count('id'))
+        .order_by('month')
+    )
+
+    lead_closure_month = (
+        leads.filter(lead_close_date__isnull=False)
+        .annotate(month=TruncMonth('lead_close_date'))
+        .values('month')
+        .annotate(total=Count('id'))
+        .order_by('month')
+    )
+
+    monthly_closure_revenue = (
+        SalesInfoTable.objects
+        .filter(
+            adviser_filter,
+            lead_table__lead_close_date__isnull=False,
+            lead_table__updated_at__date__range=(start, end)
+        )
+        .annotate(month=TruncMonth('lead_table__lead_close_date'))
+        .values('month')
+        .annotate(
+            total_leads=Count('lead_table_id', distinct=True),
+            revenue=Sum(Cast('sale_inr', FloatField()))
+        )
+        .order_by('month')
+    )
+
+    brand_closures = (
+        leads.filter(lead_close_date__isnull=False)
+        .exclude(brand__isnull=True)
+        .exclude(brand__exact="")
+        .values('brand')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+
+    brand_revenue = (
+        SalesInfoTable.objects
+        .filter(
+            adviser_filter,
+            lead_table__updated_at__date__range=(start, end)
+        )
+        .exclude(lead_table__brand__isnull=True)
+        .exclude(lead_table__brand__exact="")
+        .values('lead_table__brand')
+        .annotate(
+            total_leads=Count('lead_table_id', distinct=True),
+            revenue=Sum(Cast('sale_inr', FloatField()))
+        )
+        .order_by('-revenue')
+    )
+
+    source_closures = (
+        leads.filter(lead_close_date__isnull=False)
+        .exclude(enquiry_source__exact="")
+        .exclude(enquiry_source__isnull=True)
+        .values('enquiry_source')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+
+    source_revenue = (
+        SalesInfoTable.objects
+        .filter(
+            adviser_filter,
+            lead_table__updated_at__date__range=(start, end)
+        )
+        .exclude(lead_table__enquiry_source__isnull=True)
+        .exclude(lead_table__enquiry_source__exact="")
+        .values('lead_table__enquiry_source')
+        .annotate(
+            total_leads=Count('lead_table_id', distinct=True),
+            revenue=Sum(Cast('sale_inr', FloatField()))
+        )
+        .order_by('-revenue')
+    )
+
+    daily_source_dict = defaultdict(dict)
+    sources = set()
+
+    for row in daily_source_leads:
+        if not row["day"]:
+            continue
+        day = row["day"].strftime("%d %b")
+        source = row["enquiry_source"]
+        total = row["total"]
+
+        daily_source_dict[day][source] = total
+        sources.add(source)
+
+    labels = sorted(daily_source_dict.keys())
+    sources = sorted(list(sources))
+
+    datasets = []
+
+    for src in sources:
+        datasets.append({
+            "label": src,
+            "data": [
+                daily_source_dict[day].get(src, 0)
+                for day in labels
+            ]
+        })
+
+    context = {
+        "menu_html": menu_html,
+        "selected_start": selected_start,
+        "selected_end": selected_end,
+        "context_advisers": adviser_users,
+        "selected_adviser": selected_adviser,
+        "selected_source": selected_source,
+        "context_sources": sources_list,
+        "total_new_leads_assigned": total_new_leads_assigned,
+        "connect_calls": connect_calls,
+        "not_connect_calls": not_connect_calls,
+        "hot_leads": hot_leads,
+        "warm_leads": warm_leads,
+        "cold_leads": cold_leads,
+        "calls_made": calls_made,
+        "no_response": no_response,
+        "followups": followups,
+        "closed_order": closed_order,
+        "closed_dealership": closed_dealership,
+        "dropped_leads": dropped_leads,
+        "closed_without_order": closed_without_order,
+        "closed_without_dealership": closed_without_dealership,
+        "lead_register_month": json.dumps([
+            {
+                "month": i["month"].strftime("%b %Y") if i["month"] else "",
+                "total": i["total"]
+            } for i in lead_register_month
+        ]),
+        "lead_closure_month": json.dumps([
+            {
+                "month": i["month"].strftime("%b %Y") if i["month"] else "",
+                "total": i["total"]
+            } for i in lead_closure_month
+        ]),
+        "brand_closures": json.dumps(list(brand_closures)),
+        "source_closures": json.dumps(list(source_closures)),
+        "daily_source_labels": json.dumps(labels),
+        "daily_source_datasets": json.dumps(datasets),
+        "closed_order_revenue": closed_order_revenue,
+        "closed_dealership_revenue": closed_dealership_revenue,
+        "monthly_closure_revenue": json.dumps([
+            {
+                "month": i["month"].strftime("%b %Y") if i["month"] else "",
+                "total_leads": i["total_leads"],
+                "revenue": i["revenue"] or 0
+            } for i in monthly_closure_revenue
+        ]),
+
+        "brand_revenue": json.dumps(list(brand_revenue)),
+        "source_revenue": json.dumps(list(source_revenue)),
+    }
+
+    return render(request, "crmapp/updated_admin_dashboard.html", context)

@@ -56,6 +56,7 @@ urlpatterns = [
 
 
     path('main_leads_export/',sales_views.main_leads_export,name="main_leads_export"),
+    path('fr_leads_export/',sales_views.fr_leads_export,name="fr_leads_export"),
     path('updated_leads_export/',sales_views.updated_leads_export,name="updated_leads_export"),
     path('lead_close_status_export/',sales_views.lead_close_status_export,name="lead_close_status_export"),
 
@@ -101,6 +102,7 @@ urlpatterns = [
     path("url_request/", views.url_request, name="url_request"),
 
     path("admin_dashboard/", views.admin_dashboard, name="admin_dashboard"),
+    path("updated_admin_dashboard/", views.updated_admin_dashboard, name="updated_admin_dashboard"),
 
 
 ]

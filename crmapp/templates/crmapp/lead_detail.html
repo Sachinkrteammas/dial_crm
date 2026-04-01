@@ -3165,9 +3165,14 @@ function resetDropdown(dropdownId, placeholder) {
           .then(data => {
               console.log("API Response:", data);
               if (data.status === "success") {
-                  alert("Call initiated successfully!");
+
+                  const apiMsg = data.api_response?.message || "Call initiated";
+                  const rawMsg = data.api_response?.api_response || "";
+
+                  alert(`✅ ${apiMsg}\n\n${rawMsg}`);
+
               } else {
-                  alert("Error: " + data.message);
+                  alert("❌ Error: " + data.message);
               }
           })
           .catch(error => {
@@ -3196,9 +3201,14 @@ function resetDropdown(dropdownId, placeholder) {
           .then(data => {
               console.log("API Response:", data);
               if (data.status === "success") {
-                  alert("Call initiated successfully!");
+
+                  const apiMsg = data.api_response?.message || "Call initiated";
+                  const rawMsg = data.api_response?.api_response || "";
+
+                  alert(`✅ ${apiMsg}\n\n${rawMsg}`);
+
               } else {
-                  alert("Error: " + data.message);
+                  alert("❌ Error: " + data.message);
               }
           })
           .catch(error => {
