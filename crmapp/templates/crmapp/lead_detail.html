@@ -919,6 +919,8 @@
                   <input type="hidden" name="secure_link" id="secure_link" value="{{ secure_url }}">
 <!--                  <input type="hidden" name="lead_date" id="lead_date" value="{{ lead.lead_date|date:'Y-m-d' }}">-->
 
+                  <input type="hidden" id="lead_created_at" value="{{ lead.created_at|date:'Y-m-d' }}">
+
 
                   <div class="row g-3">
 
@@ -1004,11 +1006,11 @@
   <option value="">--Select Status--</option>
   <option value="pending" {% if lead.lead_closer_status == "pending" %}selected{% endif %}>Pending</option>
 
-  <option value="attempted_1" {% if lead.lead_closer_status == "attempted_1" %}selected{% endif %}>Attempted 1</option>
-  <option value="attempted_2" {% if lead.lead_closer_status == "attempted_2" %}selected{% endif %}>Attempted 2</option>
-  <option value="attempted_3" {% if lead.lead_closer_status == "attempted_3" %}selected{% endif %}>Attempted 3</option>
-  <option value="attempted_4" {% if lead.lead_closer_status == "attempted_4" %}selected{% endif %}>Attempted 4</option>
-  <option value="attempted_5" {% if lead.lead_closer_status == "attempted_5" %}selected{% endif %}>Attempted 5</option>
+  <option value="attempted_1" class="attempt-opt" {% if lead.lead_closer_status == "attempted_1" %}selected{% endif %}>Attempted 1</option>
+  <option value="attempted_2" class="attempt-opt" {% if lead.lead_closer_status == "attempted_2" %}selected{% endif %}>Attempted 2</option>
+  <option value="attempted_3" class="attempt-opt" {% if lead.lead_closer_status == "attempted_3" %}selected{% endif %}>Attempted 3</option>
+  <option value="attempted_4" class="attempt-opt" {% if lead.lead_closer_status == "attempted_4" %}selected{% endif %}>Attempted 4</option>
+  <option value="attempted_5" class="attempt-opt" {% if lead.lead_closer_status == "attempted_5" %}selected{% endif %}>Attempted 5</option>
 
   <option value="no_response" {% if lead.lead_closer_status == "no_response" %}selected{% endif %}>No Response</option>
 
@@ -2705,6 +2707,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const o = document.createElement("option");
       o.value = opt.value;
       o.textContent = opt.text;
+
+      if (opt.value.startsWith("attempted_")) {
+        o.classList.add("attempt-opt");
+      }
       if (opt.value === currentValue) o.selected = true;
       leadCloserSelect.appendChild(o);
     });
@@ -2748,6 +2754,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const shouldShow = showNotConnected || showConnectedInvalid;
       leadCloseBlock.style.display = shouldShow ? "block" : "none";
       updateLeadCloserOptions(selectedSub);
+
+      setTimeout(applyAttemptDayLogic, 0);
     }
   }
 
@@ -2769,6 +2777,17 @@ document.addEventListener("DOMContentLoaded", () => {
     populateSubSubTypes();
     if (leadSubSub) subSubCallingStatus.value = leadSubSub;
     toggleConnectedFields();
+  }, 150);
+
+  setTimeout(() => {
+    if (leadSub) subCallingStatus.value = leadSub;
+    populateSubSubTypes();
+    if (leadSubSub) subSubCallingStatus.value = leadSubSub;
+    toggleConnectedFields();
+
+    // ✅ APPLY HERE ALSO
+    applyAttemptDayLogic();
+
   }, 150);
 });
 </script>
@@ -3647,6 +3666,47 @@ function callSalesDiaryApi(lead_id) {
         });
 
       });
+    </script>
+
+    <script>
+    function applyAttemptDayLogic() {
+      const leadCreatedInput = document.getElementById("lead_created_at");
+      const closerSelect = document.getElementById("lead_closer_status");
+
+      if (!leadCreatedInput || !closerSelect) return;
+
+      const createdDate = new Date(leadCreatedInput.value);
+      const today = new Date();
+
+      createdDate.setHours(0,0,0,0);
+      today.setHours(0,0,0,0);
+
+      const diffDays = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+
+      const savedValue = closerSelect.value;
+
+      let allowed = [];
+
+      if (diffDays === 0) {
+        allowed = ["attempted_1", "attempted_2"];
+      } else if (diffDays === 1) {
+        allowed = ["attempted_3", "attempted_4"];
+      } else {
+        allowed = ["attempted_5"];
+      }
+
+      Array.from(closerSelect.options).forEach(option => {
+        if (!option.value) return;
+
+        if (option.classList.contains("attempt-opt")) {
+          option.disabled = !allowed.includes(option.value);
+        }
+      });
+
+      if (savedValue) {
+        closerSelect.value = savedValue;
+      }
+    }
     </script>
 
 
