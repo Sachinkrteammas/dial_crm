@@ -1130,7 +1130,7 @@ def sales_diary_api(request):
         return JsonResponse({"error": "Invalid Method"}, status=400)
 
     body = json.loads(request.body)
-    lead_id = body.get("lead_id")
+    lead_id = str(body.get("lead_id"))
 
     try:
         response = save_lead_status(request, lead_id)
@@ -1161,17 +1161,21 @@ def sales_diary_api(request):
 
     except LeadTable.DoesNotExist:
         return JsonResponse({
-            "results": {
-                "status": 404,
-                "message": "Lead not found"
+            "lead_response": {
+                "results": {
+                    "status": 404,
+                    "message": "Lead not found"
+                }
             }
         })
 
     except Exception as e:
         return JsonResponse({
-            "results": {
-                "status": 500,
-                "message": str(e)
+            "lead_response": {
+                "results": {
+                    "status": 500,
+                    "message": str(e)
+                }
             }
         })
 

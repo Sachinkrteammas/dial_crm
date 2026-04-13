@@ -1387,7 +1387,7 @@
                       {% endif %}
                     <a href="{% url 'lead_table' %}" class="btn btn-secondary">Back</a>
                       {% if lead.seller_email_id %}
-                        <button type="button" class="btn btn-warning" onclick="callSalesDiaryApi({{ lead.id }})">
+                        <button type="button" class="btn btn-warning" onclick="callSalesDiaryApi('{{ lead.id }}')">
                             Sales Diary API
                         </button>
                     {% endif %}
@@ -3539,7 +3539,7 @@ function callSalesDiaryApi(lead_id) {
             "X-CSRFToken": "{{ csrf_token }}",
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ lead_id: lead_id })
+        body: JSON.stringify({ lead_id: String(lead_id) })
     })
     .then(response => response.json())
     .then(data => {
