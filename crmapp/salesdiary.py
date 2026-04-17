@@ -206,7 +206,7 @@ def save_lead_status(request, lead_id=None):
                         "emp_email": lead.seller_email_id or "",
                         "email": lead.email_id or "",
                         "emp_mobile": "",
-                        "mobile": lead.seller_phone_no or "",
+                        "mobile": lead.calling_number or "",
                         "contact_name": lead.name or "",
                         "gst": "",
                         "pan": "",
@@ -293,12 +293,31 @@ def extract_param_value(params, key_name):
     return None
 
 def extract_lead_id(tid):
-    """Extract numeric lead ID from tid like 'CRM0098'."""
+    """Extract safe numeric lead ID from tid like 'CRM0098'."""
     if not tid:
         return None
+
+    tid_str = str(tid)
+
+    # Extract only trailing digits (important fix)
+    import re
+    match = re.search(r'(\d+)$', tid_str)
+
+    if not match:
+        return None
+
     try:
-        return int(''.join(filter(str.isdigit, str(tid))))
-    except ValueError:
+        lead_id = int(match.group(1))
+
+        # 🚨 Safety check for BIGINT (signed)
+        if lead_id > 9223372036854775807:
+            print(f"⚠️ lead_id too large, skipping: {lead_id}")
+            return None
+
+        return lead_id
+
+    except Exception as e:
+        print(f"⚠️ Error extracting lead_id from {tid}: {e}")
         return None
 
 from django.utils import timezone
@@ -367,15 +386,43 @@ def save_sales_info_from_response(response_json, created_by_user=None):
         else:
             has_changed = True  # First time create
 
-        # 🔹 Create or update SalesInfoTable
-        sales_info, created = SalesInfoTable.objects.update_or_create(
-            lead_table=lead_obj,
-            defaults={
+        existing_qs = SalesInfoTable.objects.filter(lead_table=lead_obj)
+
+        if existing_qs.count() > 1:
+            print(f"⚠️ Duplicate SalesInfoTable found for Lead {lead_id}, cleaning up...")
+
+            # Keep the latest one, delete others
+            latest = existing_qs.order_by('-updated_at').first()
+            existing_qs.exclude(id=latest.id).delete()
+            existing = latest
+        else:
+            existing = existing_qs.first()
+
+        if existing:
+            for field, value in {**new_values, "updated_by": created_by_user, "updated_at": timezone.now()}.items():
+                setattr(existing, field, value)
+            existing.save()
+            sales_info = existing
+            created = False
+        else:
+            sales_info = SalesInfoTable.objects.create(
+                lead_table=lead_obj,
                 **new_values,
-                "updated_by": created_by_user,
-                "updated_at": timezone.now(),
-            },
-        )
+                created_by=created_by_user,
+                updated_by=created_by_user,
+                updated_at=timezone.now(),
+            )
+            created = True
+
+        # 🔹 Create or update SalesInfoTable
+        # sales_info, created = SalesInfoTable.objects.update_or_create(
+        #     lead_table=lead_obj,
+        #     defaults={
+        #         **new_values,
+        #         "updated_by": created_by_user,
+        #         "updated_at": timezone.now(),
+        #     },
+        # )
 
         # 🔹 Set created_by only once
         if created and created_by_user:
