@@ -8,11 +8,39 @@ from django.utils import timezone
 import re
 
 
-AUTH_URL = "https://birlanuuat.salesdiary.in:4078/api/res_users/authenticateSystemUser"
-STRUCTURE_URL = "https://birlanuuat.salesdiary.in:4078/api/sd_connects/get_business_structure"
-LEAD_STATUS_URL = "https://birlanuuat.salesdiary.in:4078/api/hil_connects/getLeadStatus"
-LEAD_SAVE_URL = "https://birlanuuat.salesdiary.in:4078/api/hil_connects/save_partner_lead"
-AUTH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbnN0YW5jZSI6ImhpbHVhdCIsInVzZXJuYW1lIjoiYXBhcm5hIiwicGFzc3dvcmQiOiJhcGFybmEiLCJub25zZSI6IjE1NjU1ODg4ODg4ODY2In0.PtAi8fzH437NQ6pgRW8awIXd-WFDNq20ZnMzzbwx97k"
+AUTH_URL = "https://hil.salesdiary.in:4062/api/res_users/authenticateSystemUser"
+STRUCTURE_URL = "https://hil.salesdiary.in:4062/api/sd_connects/get_business_structure"
+LEAD_STATUS_URL = "https://hil.salesdiary.in:4062/api/hil_connects/getLeadStatus"
+LEAD_SAVE_URL = "https://hil.salesdiary.in:4062/api/hil_connects/save_partner_lead"
+AUTH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImNpZCI6OTg0LCJpbnN0YW5jZSI6ImJpcmxhbnV1YXQiLCJjb21wYW55X2lkIjo0LCJ1c2VyX2lkIjoxMjgsInBhcnRuZXJfaWQiOjEzMTk4LCJwcm9maWxlIjoiSVQgQWRtaW4ifSwiaWF0IjoxNzYzNjI1MzM3LCJleHAiOjE3OTUxODI5Mzd9.uG1KXxio4wAcvv0r9tLJW9rzARmHX3tWOaxdO6rZfss"
+
+
+SD_AUTH_URL = "https://sdlogin.salesdiary.in:2001/api/sd_connects/sd_authenticate"
+
+SD_AUTH_PAYLOAD = {
+    "companykey": "hil",
+    "username": "hil.connect",
+    "password": "hil.connect"
+}
+
+def get_sd_access_token():
+    headers = {"Content-Type": "application/json"}
+
+    response = requests.post(
+        SD_AUTH_URL,
+        headers=headers,
+        json=SD_AUTH_PAYLOAD,
+        timeout=15
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    token = data.get("result", {}).get("access_token")
+
+    if not token:
+        raise Exception("Access token not found in SD auth response")
+
+    return token
 
 
 #Get Access Token Function
@@ -20,7 +48,7 @@ AUTH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbnN0YW5jZSI6ImhpbHVhdCIsI
 def get_access_token(request):
     if request.method == 'GET':
         payload = {
-            "instance": "birlanuuat",
+            "instance": "hil",
             "method": "token",
             "token": AUTH_TOKEN
         }
@@ -51,7 +79,7 @@ def get_business_structure(request):
     if request.method == 'GET':
         # Step 1: Get access token first
         auth_payload = {
-            "instance": "birlanuuat",
+            "instance": "hil",
             "method": "token",
             "token": AUTH_TOKEN
         }
@@ -101,29 +129,10 @@ def get_lead_status(request):
     headers = {
         "Content-Type": "application/json",
         "Accept": "*/*",
-        "User-Agent": "PostmanRuntime/7.39.0",
-        "Connection": "keep-alive",
-    }
-
-    # Step 1: Get Access Token
-    auth_payload = {
-        "instance": "birlanuuat",
-        "method": "token",
-        "token": AUTH_TOKEN,
     }
 
     try:
-        auth_response = requests.post(AUTH_URL, headers=headers, data=json.dumps(auth_payload), verify=False, timeout=20)
-        auth_response.raise_for_status()
-        auth_json = auth_response.json()
-
-        access_token = auth_json.get("result", {}).get("access_token")
-        if not access_token:
-            return JsonResponse({
-                "status": "error",
-                "message": "Access token not found in response",
-                "auth_response": auth_json,
-            }, status=400)
+        access_token = get_sd_access_token()
 
         #  Step 2: Build lead status URL (exactly like working Postman one)
         lead_status_url = (
@@ -157,23 +166,7 @@ def save_lead_status(request, lead_id=None):
         headers = {"Content-Type": "application/json"}
 
         try:
-            # Authenticate and get access token
-            auth_payload = {
-                "instance": "birlanuuat",
-                "method": "token",
-                "token": AUTH_TOKEN,
-            }
-            auth_response = requests.post(
-                AUTH_URL, headers=headers, data=json.dumps(auth_payload), timeout=15
-            )
-            auth_response.raise_for_status()
-
-            access_token = auth_response.json().get("result", {}).get("access_token")
-            if not access_token:
-                return JsonResponse(
-                    {"status": "error", "message": "Access token not found"},
-                    status=400,
-                )
+            access_token = get_sd_access_token()
 
             if lead_id:
                 # Build payload dynamically from your database LeadTable
@@ -457,5 +450,3 @@ def save_sales_info_from_response(response_json, created_by_user=None):
 
     print(f"🏁 Finished processing {len(saved)} lead(s).")
     return saved
-
-
