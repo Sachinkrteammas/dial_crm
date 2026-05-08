@@ -1320,7 +1320,7 @@ def admin_dashboard(request):
     closed_order_revenue = SalesInfoTable.objects.filter(
         adviser_filter,
         lead_table__lead_closer_status_new__iexact="closed_with_order",
-        lead_table__created_at__date__range=(start, end)
+        lead_table__lead_close_date__range=(start, end)
     ).aggregate(
         total=Sum(Cast('sale_inr', FloatField()))
     )['total'] or 0
@@ -1332,7 +1332,7 @@ def admin_dashboard(request):
     closed_dealership_revenue = SalesInfoTable.objects.filter(
         adviser_filter,
         lead_table__lead_closer_status_new__iexact="closed_with_dealership",
-        lead_table__created_at__date__range=(start, end)
+        lead_table__lead_close_date__range=(start, end)
     ).aggregate(
         total=Sum(Cast('sale_inr', FloatField()))
     )['total'] or 0
@@ -1371,7 +1371,7 @@ def admin_dashboard(request):
         .filter(
             adviser_filter,
             lead_table__lead_close_date__isnull=False,
-            lead_table__created_at__date__range=(start, end)
+            lead_table__lead_close_date__range=(start, end)
         )
         .annotate(month=TruncMonth('lead_table__lead_close_date'))
         .values('month')
@@ -1395,7 +1395,7 @@ def admin_dashboard(request):
         SalesInfoTable.objects
         .filter(
             adviser_filter,
-            lead_table__created_at__date__range=(start, end)
+            lead_table__lead_close_date__range=(start, end)
         )
         .exclude(lead_table__brand__isnull=True)
         .exclude(lead_table__brand__exact="")
@@ -1420,7 +1420,7 @@ def admin_dashboard(request):
         SalesInfoTable.objects
         .filter(
             adviser_filter,
-            lead_table__created_at__date__range=(start, end)
+            lead_table__lead_close_date__range=(start, end)
         )
         .exclude(lead_table__enquiry_source__isnull=True)
         .exclude(lead_table__enquiry_source__exact="")
@@ -1656,7 +1656,7 @@ def updated_admin_dashboard(request):
     closed_order_revenue = SalesInfoTable.objects.filter(
         adviser_filter,
         lead_table__lead_closer_status_new__iexact="closed_with_order",
-        lead_table__updated_at__date__range=(start, end)
+        lead_table__lead_close_date__range=(start, end)
     ).aggregate(
         total=Sum(Cast('sale_inr', FloatField()))
     )['total'] or 0
@@ -1668,7 +1668,7 @@ def updated_admin_dashboard(request):
     closed_dealership_revenue = SalesInfoTable.objects.filter(
         adviser_filter,
         lead_table__lead_closer_status_new__iexact="closed_with_dealership",
-        lead_table__updated_at__date__range=(start, end)
+        lead_table__lead_close_date__range=(start, end)
     ).aggregate(
         total=Sum(Cast('sale_inr', FloatField()))
     )['total'] or 0
@@ -1707,7 +1707,7 @@ def updated_admin_dashboard(request):
         .filter(
             adviser_filter,
             lead_table__lead_close_date__isnull=False,
-            lead_table__updated_at__date__range=(start, end)
+            lead_table__lead_close_date__range=(start, end)
         )
         .annotate(month=TruncMonth('lead_table__lead_close_date'))
         .values('month')
@@ -1731,7 +1731,7 @@ def updated_admin_dashboard(request):
         SalesInfoTable.objects
         .filter(
             adviser_filter,
-            lead_table__updated_at__date__range=(start, end)
+            lead_table__lead_close_date__range=(start, end)
         )
         .exclude(lead_table__brand__isnull=True)
         .exclude(lead_table__brand__exact="")
@@ -1756,7 +1756,7 @@ def updated_admin_dashboard(request):
         SalesInfoTable.objects
         .filter(
             adviser_filter,
-            lead_table__updated_at__date__range=(start, end)
+            lead_table__lead_close_date__range=(start, end)
         )
         .exclude(lead_table__enquiry_source__isnull=True)
         .exclude(lead_table__enquiry_source__exact="")
