@@ -675,7 +675,7 @@ def follow_up(request):
         for idx, entry in enumerate(followups, start=1):
             ws.append([
                 idx,
-                entry.lead_table.id if entry.lead_table else '',
+                str(entry.lead_table.id) if entry.lead_table else '',
                 entry.status,
                 entry.sub_status,
                 entry.remark,
