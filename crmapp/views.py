@@ -17,12 +17,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.urls import NoReverseMatch
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
-    HistoryLead, SalesInfoTable,SalesDiaryCounter
+    HistoryLead, SalesInfoTable,SalesDiaryCounter, CallyzerCallLog
 
 from django.db.models.functions import TruncMonth, Coalesce, TruncDate
 from django.utils.timezone import now
@@ -1848,3 +1848,91 @@ def updated_admin_dashboard(request):
     }
 
     return render(request, "crmapp/updated_admin_dashboard.html", context)
+
+
+
+
+@csrf_exempt
+def callyzer_webhook(request):
+
+    if request.method != "POST":
+        return JsonResponse({
+            "status": "error",
+            "message": "Only POST allowed"
+        }, status=405)
+
+    try:
+        body = json.loads(request.body)
+
+        saved_count = 0
+        updated_count = 0
+
+        for employee in body:
+
+            emp_name = employee.get("emp_name")
+            emp_code = employee.get("emp_code")
+            emp_number = employee.get("emp_number")
+
+            call_logs = employee.get("call_logs", [])
+
+            for log in call_logs:
+
+                call_id = log.get("id")
+
+                if not call_id:
+                    continue
+
+                obj, created = CallyzerCallLog.objects.update_or_create(
+                    call_id=call_id,
+                    defaults={
+                        "emp_name": emp_name,
+                        "emp_code": emp_code,
+                        "emp_number": emp_number,
+
+                        "client_name": log.get("client_name"),
+                        "client_number": log.get("client_number"),
+
+                        "duration": int(log.get("duration", 0)),
+
+                        "call_type": log.get("call_type"),
+
+                        "call_date": parse_date(log.get("call_date")),
+
+                        "call_time": log.get("call_time"),
+
+                        "note": log.get("note"),
+
+                        "call_recording_url": log.get("call_recording_url"),
+
+                        "crm_status": log.get("crm_status"),
+
+                        "reminder_date": parse_date(log.get("reminder_date")),
+
+                        "reminder_time": log.get("reminder_time"),
+
+                        "synced_at": parse_datetime(
+                            log.get("synced_at")
+                        ),
+
+                        "modified_at": parse_datetime(
+                            log.get("modified_at")
+                        ),
+                    }
+                )
+
+                if created:
+                    saved_count += 1
+                else:
+                    updated_count += 1
+
+        return JsonResponse({
+            "status": "success",
+            "saved": saved_count,
+            "updated": updated_count
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)

@@ -502,3 +502,42 @@ class SalesDiaryCounter(models.Model):
 
     class Meta:
         db_table = "sales_diary_counter"
+
+
+
+class CallyzerCallLog(models.Model):
+    call_id = models.CharField(max_length=255, unique=True)
+
+    emp_name = models.CharField(max_length=255, null=True, blank=True)
+    emp_code = models.CharField(max_length=255, null=True, blank=True)
+    emp_number = models.CharField(max_length=50, null=True, blank=True)
+
+    client_name = models.CharField(max_length=255, null=True, blank=True)
+    client_number = models.CharField(max_length=50, null=True, blank=True)
+
+    duration = models.IntegerField(default=0)
+
+    call_type = models.CharField(max_length=50, null=True, blank=True)
+
+    call_date = models.DateField(null=True, blank=True)
+    call_time = models.TimeField(null=True, blank=True)
+
+    note = models.TextField(null=True, blank=True)
+
+    call_recording_url = models.TextField(null=True, blank=True)
+
+    crm_status = models.CharField(max_length=255, null=True, blank=True)
+
+    reminder_date = models.DateField(null=True, blank=True)
+    reminder_time = models.TimeField(null=True, blank=True)
+
+    synced_at = models.DateTimeField(null=True, blank=True)
+    modified_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.call_id

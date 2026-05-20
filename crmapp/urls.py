@@ -104,5 +104,7 @@ urlpatterns = [
     path("admin_dashboard/", views.admin_dashboard, name="admin_dashboard"),
     path("updated_admin_dashboard/", views.updated_admin_dashboard, name="updated_admin_dashboard"),
 
+    path('api/callyzer-webhook/', views.callyzer_webhook, name='callyzer_webhook'),
+
 
 ]
