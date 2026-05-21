@@ -1875,7 +1875,44 @@ def callyzer_webhook(request):
         # -------------------------------
         raw_body = request.body.decode("utf-8", errors="ignore").strip()
 
-        logger.info("Callyzer Raw Body: %s", raw_body)
+        logger.info("======== CALLYZER REQUEST ========")
+
+        logger.info(
+            "CONTENT_TYPE: %s",
+            request.META.get("CONTENT_TYPE")
+        )
+
+        logger.info(
+            "CONTENT_LENGTH: %s",
+            request.META.get("CONTENT_LENGTH")
+        )
+
+        logger.info(
+            "HTTP_TRANSFER_ENCODING: %s",
+            request.META.get("HTTP_TRANSFER_ENCODING")
+        )
+
+        logger.info(
+            "REQUEST_METHOD: %s",
+            request.method
+        )
+
+        logger.info(
+            "HEADERS: %s",
+            dict(request.headers)
+        )
+
+        logger.info(
+            "RAW BODY BYTES: %s",
+            request.body
+        )
+
+        logger.info(
+            "RAW BODY STRING: %s",
+            raw_body
+        )
+
+        logger.info("=================================")
 
         if not raw_body:
             return JsonResponse(
