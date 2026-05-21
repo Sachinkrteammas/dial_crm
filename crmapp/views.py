@@ -1855,6 +1855,7 @@ logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
+@require_POST
 def callyzer_webhook(request):
 
     # Allow only POST
