@@ -17,7 +17,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.urls import NoReverseMatch
-from django.utils.dateparse import parse_date, parse_datetime
+from django.utils.dateparse import parse_date, parse_datetime, parse_time
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -35,6 +35,7 @@ from django.db.models.functions import Cast
 from django.db.models import FloatField
 from django.db import connections
 from datetime import datetime
+import logging
 
 
 User = get_user_model()
@@ -1850,24 +1851,80 @@ def updated_admin_dashboard(request):
     return render(request, "crmapp/updated_admin_dashboard.html", context)
 
 
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
 def callyzer_webhook(request):
 
+    # Allow only POST
     if request.method != "POST":
-        return JsonResponse({
-            "status": "error",
-            "message": "Only POST allowed"
-        }, status=405)
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Only POST method allowed"
+            },
+            status=405
+        )
 
     try:
-        body = json.loads(request.body)
+
+        # -------------------------------
+        # Safely read raw body
+        # -------------------------------
+        raw_body = request.body.decode("utf-8", errors="ignore").strip()
+
+        logger.info("Callyzer Raw Body: %s", raw_body)
+
+        if not raw_body:
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "Empty request body"
+                },
+                status=400
+            )
+
+        # -------------------------------
+        # Parse JSON safely
+        # -------------------------------
+        try:
+            body = json.loads(raw_body)
+        except json.JSONDecodeError as e:
+            logger.error("Invalid JSON: %s", str(e))
+
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "Invalid JSON payload"
+                },
+                status=400
+            )
+
+        # -------------------------------
+        # Validate payload type
+        # -------------------------------
+        if not isinstance(body, list):
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "Payload must be a list"
+                },
+                status=400
+            )
 
         saved_count = 0
         updated_count = 0
+        skipped_count = 0
 
+        # -------------------------------
+        # Loop Employees
+        # -------------------------------
         for employee in body:
+
+            if not isinstance(employee, dict):
+                skipped_count += 1
+                continue
 
             emp_name = employee.get("emp_name")
             emp_code = employee.get("emp_code")
@@ -1875,64 +1932,130 @@ def callyzer_webhook(request):
 
             call_logs = employee.get("call_logs", [])
 
+            if not isinstance(call_logs, list):
+                continue
+
+            # -------------------------------
+            # Loop Call Logs
+            # -------------------------------
             for log in call_logs:
+
+                if not isinstance(log, dict):
+                    skipped_count += 1
+                    continue
 
                 call_id = log.get("id")
 
+                # Skip if no call_id
                 if not call_id:
+                    skipped_count += 1
                     continue
 
-                obj, created = CallyzerCallLog.objects.update_or_create(
-                    call_id=call_id,
-                    defaults={
-                        "emp_name": emp_name,
-                        "emp_code": emp_code,
-                        "emp_number": emp_number,
+                try:
 
-                        "client_name": log.get("client_name"),
-                        "client_number": log.get("client_number"),
+                    duration = log.get("duration") or 0
 
-                        "duration": int(log.get("duration", 0)),
+                    # Convert safely
+                    try:
+                        duration = int(duration)
+                    except Exception:
+                        duration = 0
 
-                        "call_type": log.get("call_type"),
+                    obj, created = CallyzerCallLog.objects.update_or_create(
+                        call_id=call_id,
+                        defaults={
 
-                        "call_date": parse_date(log.get("call_date")),
+                            # Employee Details
+                            "emp_name": emp_name,
+                            "emp_code": emp_code,
+                            "emp_number": emp_number,
 
-                        "call_time": log.get("call_time"),
+                            # Client Details
+                            "client_name": log.get("client_name"),
+                            "client_number": log.get("client_number"),
 
-                        "note": log.get("note"),
+                            # Call Details
+                            "duration": duration,
+                            "call_type": log.get("call_type"),
 
-                        "call_recording_url": log.get("call_recording_url"),
+                            # Date & Time
+                            "call_date": parse_date(
+                                log.get("call_date")
+                            ) if log.get("call_date") else None,
 
-                        "crm_status": log.get("crm_status"),
+                            "call_time": parse_time(
+                                log.get("call_time")
+                            ) if log.get("call_time") else None,
 
-                        "reminder_date": parse_date(log.get("reminder_date")),
+                            # Notes
+                            "note": log.get("note"),
 
-                        "reminder_time": log.get("reminder_time"),
+                            # Recording
+                            "call_recording_url": log.get(
+                                "call_recording_url"
+                            ),
 
-                        "synced_at": parse_datetime(
-                            log.get("synced_at")
-                        ),
+                            # CRM
+                            "crm_status": log.get("crm_status"),
 
-                        "modified_at": parse_datetime(
-                            log.get("modified_at")
-                        ),
-                    }
-                )
+                            # Reminder
+                            "reminder_date": parse_date(
+                                log.get("reminder_date")
+                            ) if log.get("reminder_date") else None,
 
-                if created:
-                    saved_count += 1
-                else:
-                    updated_count += 1
+                            "reminder_time": parse_time(
+                                log.get("reminder_time")
+                            ) if log.get("reminder_time") else None,
 
-        return JsonResponse({
-            "status": "success",
-            "saved": saved_count,
-            "updated": updated_count
-        })
+                            # Sync Info
+                            "synced_at": parse_datetime(
+                                log.get("synced_at")
+                            ) if log.get("synced_at") else None,
+
+                            "modified_at": parse_datetime(
+                                log.get("modified_at")
+                            ) if log.get("modified_at") else None,
+                        }
+                    )
+
+                    if created:
+                        saved_count += 1
+                    else:
+                        updated_count += 1
+
+                except Exception as log_error:
+
+                    skipped_count += 1
+
+                    logger.exception(
+                        "Failed to process call_id %s: %s",
+                        call_id,
+                        str(log_error)
+                    )
+
+                    continue
+
+        # -------------------------------
+        # Final Success Response
+        # -------------------------------
+        return JsonResponse(
+            {
+                "status": "success",
+                "saved": saved_count,
+                "updated": updated_count,
+                "skipped": skipped_count
+            },
+            status=200
+        )
 
     except Exception as e:
-        return JsonResponse({
-            "status": "error",
-            "message": str(e)
-        }, status=500)
+
+        logger.exception("Callyzer Webhook Fatal Error")
+
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": str(e)
+            },
+            status=500
+        )
