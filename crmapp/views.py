@@ -36,6 +36,8 @@ from django.db.models import FloatField
 from django.db import connections
 from datetime import datetime
 import logging
+from openpyxl import Workbook
+from openpyxl.styles import Font
 
 
 User = get_user_model()
@@ -2097,3 +2099,209 @@ def callyzer_webhook(request):
             },
             status=500
         )
+
+
+
+
+@login_required
+def callyzer_call_logs_view(request):
+
+    is_admin = UserList.objects.filter(
+        user=request.user,
+        user_role__iexact="admin",
+        is_deactivated=False
+    ).exists()
+
+    if not is_admin:
+        return HttpResponseForbidden("Admin access required")
+
+    menu_items = MenuItem.objects.filter(
+        is_active=True
+    ).order_by("order")
+
+    menu_tree = {}
+
+    for item in menu_items:
+        menu_tree.setdefault(item.parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
+
+    logs = CallyzerCallLog.objects.all().order_by("-created_at")
+
+    # -----------------------------
+    # Filters
+    # -----------------------------
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+    call_type = request.GET.get("call_type")
+    search = request.GET.get("search")
+
+    if start_date and end_date:
+        logs = logs.filter(
+            call_date__range=[start_date, end_date]
+        )
+
+    if call_type:
+        logs = logs.filter(
+            call_type__iexact=call_type
+        )
+
+    if search:
+        logs = logs.filter(
+            Q(emp_name__icontains=search) |
+            Q(emp_number__icontains=search) |
+            Q(client_name__icontains=search) |
+            Q(client_number__icontains=search) |
+            Q(call_id__icontains=search)
+        )
+
+    # -----------------------------
+    # Export Excel
+    # -----------------------------
+    if request.GET.get("export") == "excel":
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Callyzer Call Logs"
+
+        headers = [
+            "Call ID",
+            "Employee Name",
+            "Employee Code",
+            "Employee Number",
+            "Client Name",
+            "Client Number",
+            "Duration",
+            "Call Type",
+            "Call Date",
+            "Call Time",
+            "CRM Status",
+            "Reminder Date",
+            "Reminder Time",
+            "Synced At",
+            "Modified At",
+            "Created At",
+        ]
+
+        # Add headers
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.font = Font(bold=True)
+
+        # Add data rows
+        for row_num, log in enumerate(logs, 2):
+
+            ws.cell(row=row_num, column=1, value=log.call_id)
+            ws.cell(row=row_num, column=2, value=log.emp_name)
+            ws.cell(row=row_num, column=4, value=log.emp_number)
+
+            ws.cell(row=row_num, column=5, value=log.client_name)
+            ws.cell(row=row_num, column=6, value=log.client_number)
+
+            ws.cell(row=row_num, column=7, value=log.duration)
+            ws.cell(row=row_num, column=8, value=log.call_type)
+
+            ws.cell(
+                row=row_num,
+                column=9,
+                value=log.call_date.strftime("%Y-%m-%d")
+                if log.call_date else ""
+            )
+
+            ws.cell(
+                row=row_num,
+                column=10,
+                value=log.call_time.strftime("%H:%M:%S")
+                if log.call_time else ""
+            )
+
+            ws.cell(row=row_num, column=11, value=log.crm_status)
+
+            ws.cell(
+                row=row_num,
+                column=12,
+                value=log.reminder_date.strftime("%Y-%m-%d")
+                if log.reminder_date else ""
+            )
+
+            ws.cell(
+                row=row_num,
+                column=13,
+                value=log.reminder_time.strftime("%H:%M:%S")
+                if log.reminder_time else ""
+            )
+
+            ws.cell(
+                row=row_num,
+                column=14,
+                value=log.synced_at.strftime("%Y-%m-%d %H:%M:%S")
+                if log.synced_at else ""
+            )
+
+            ws.cell(
+                row=row_num,
+                column=15,
+                value=log.modified_at.strftime("%Y-%m-%d %H:%M:%S")
+                if log.modified_at else ""
+            )
+
+            ws.cell(
+                row=row_num,
+                column=16,
+                value=log.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if log.created_at else ""
+            )
+
+        # Auto width
+        for column_cells in ws.columns:
+            length = max(
+                len(str(cell.value)) if cell.value else 0
+                for cell in column_cells
+            )
+            ws.column_dimensions[
+                column_cells[0].column_letter
+            ].width = length + 5
+
+        # Response
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        filename = f"callyzer_call_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="{filename}"'
+        )
+
+        wb.save(response)
+
+        return response
+
+    # -----------------------------
+    # Dropdown Filters
+    # -----------------------------
+
+    call_types = (
+        CallyzerCallLog.objects.exclude(call_type__isnull=True)
+        .exclude(call_type__exact="")
+        .values_list("call_type", flat=True)
+        .distinct()
+        .order_by("call_type")
+    )
+
+    context = {
+        "menu_html": menu_html,
+        "logs": logs,
+        "call_types": call_types,
+        "start_date": start_date,
+        "end_date": end_date,
+        "selected_call_type": call_type,
+        "search": search,
+    }
+
+    return render(
+        request,
+        "crmapp/callyzer_call_logs.html",
+        context
+    )
