@@ -227,11 +227,7 @@
 
                         <div class="col-md-6 text-end">
 
-                            <a href="?export=excel
-                            {% if start_date %}&start_date={{ start_date }}{% endif %}
-                            {% if end_date %}&end_date={{ end_date }}{% endif %}
-                            {% if selected_call_type %}&call_type={{ selected_call_type }}{% endif %}
-                            {% if search %}&search={{ search }}{% endif %}"
+                            <a href="?export=excel{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if selected_call_type %}&call_type={{ selected_call_type }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
                                class="btn btn-success">
 
                                 <i class="ti tabler-download me-1"></i>
