@@ -537,10 +537,15 @@
 
     $(document).ready(function () {
 
+        if ($.fn.DataTable.isDataTable('#callLogsTable')) {
+            $('#callLogsTable').DataTable().destroy();
+        }
+
         $('#callLogsTable').DataTable({
             pageLength: 25,
             responsive: true,
-            ordering: true
+            ordering: true,
+            destroy: true
         });
 
     });
