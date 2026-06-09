@@ -1365,7 +1365,7 @@
 
                     <div class="col-md-4">
                       <label>Lead Close Date:</label>
-                      <input type="date" class="form-control" id="final_lead_close_date" name="final_lead_close_date" value="{{ lead.final_lead_close_date|date:'Y-m-d' }}">
+                      <input type="date" class="form-control connect-valid-required" id="final_lead_close_date" name="final_lead_close_date" value="{{ lead.final_lead_close_date|date:'Y-m-d' }}">
                     </div>
 
                     <div class="col-md-6">
@@ -3614,9 +3614,26 @@ function callSalesDiaryApi(lead_id) {
 
             // Not Connect case
             if (isNotConnect) {
-                notConnectFields.forEach(field => {
-                    field.setAttribute("required", "required");
-                    field.classList.add("required-highlight");
+
+                const requiredFields = [
+                    document.querySelector('[name="customer_name"]'),
+                    document.querySelector('[name="customer_type"]'),
+                    document.querySelector('[name="calling_number"]'),
+                    document.querySelector('[name="enquiry_type"]'),
+                    document.querySelector('[name="enquiry_source"]'),
+                    document.querySelector('[name="sub_enquiry_source"]'),
+                    document.querySelector('[name="calling_status"]'),
+                    document.querySelector('[name="sub_calling_status"]'),
+                    document.querySelector('[name="sub_sub_calling_status"]'),
+                    document.querySelector('[name="lead_closer_status"]'),
+                    document.querySelector('[name="remark"]')
+                ];
+
+                requiredFields.forEach(field => {
+                    if (field) {
+                        field.setAttribute("required", "required");
+                        field.classList.add("required-highlight");
+                    }
                 });
             }
         }
@@ -3651,16 +3668,32 @@ function callSalesDiaryApi(lead_id) {
             }
 
             if (isNotConnect) {
-                const fields = document.querySelectorAll(".not-connect-required");
 
-                for (let field of fields) {
-                    if (!field.value.trim()) {
-                        alert("Please fill all mandatory fields for Not Connect lead.");
-                        field.focus();
-                        e.preventDefault();
-                        return false;
-                    }
-                }
+              const requiredFields = [
+                  document.querySelector('[name="customer_name"]'),
+                  document.querySelector('[name="customer_type"]'),
+                  document.querySelector('[name="calling_number"]'),
+                  document.querySelector('[name="enquiry_type"]'),
+                  document.querySelector('[name="enquiry_source"]'),
+                  document.querySelector('[name="sub_enquiry_source"]'),
+                  document.querySelector('[name="calling_status"]'),
+                  document.querySelector('[name="sub_calling_status"]'),
+                  document.querySelector('[name="sub_sub_calling_status"]'),
+                  document.querySelector('[name="lead_closer_status"]'),
+                  document.querySelector('[name="remark"]')
+              ];
+
+              for (let field of requiredFields) {
+
+                  let value = field.value;
+
+                  if (!value || !value.trim()) {
+                      alert("Please fill all mandatory fields for Not Connect lead.");
+                      field.focus();
+                      e.preventDefault();
+                      return false;
+                  }
+              }
             }
 
         });
