@@ -3636,10 +3636,39 @@ function callSalesDiaryApi(lead_id) {
                     }
                 });
             }
+
+            const leadCloser = document.getElementById("lead_closer_status_new");
+            const leadCloseDate = document.getElementById("final_lead_close_date");
+
+            const closeStatuses = [
+                "closed_with_dealership",
+                "closed_with_order",
+                "closed_with_solution",
+                "closed_without_dealership",
+                "closed_without_order",
+                "dropped"
+            ];
+
+            // reset first
+            if (leadCloseDate) {
+                leadCloseDate.removeAttribute("required");
+                leadCloseDate.classList.remove("required-highlight");
+            }
+
+            if (
+                isConnectValid &&
+                leadCloser &&
+                closeStatuses.includes(leadCloser.value)
+            ) {
+                leadCloseDate.setAttribute("required", "required");
+                leadCloseDate.classList.add("required-highlight");
+            }
         }
 
         callingStatus.addEventListener("change", toggleRequiredFields);
         subCallingStatus.addEventListener("change", toggleRequiredFields);
+        document.getElementById("lead_closer_status_new")
+          .addEventListener("change", toggleRequiredFields);
 
         toggleRequiredFields(); // run on load
 
@@ -3664,6 +3693,28 @@ function callSalesDiaryApi(lead_id) {
                         e.preventDefault();
                         return false;
                     }
+                }
+
+                const leadCloser = document.getElementById("lead_closer_status_new");
+                const leadCloseDate = document.getElementById("final_lead_close_date");
+
+                const closeStatuses = [
+                    "closed_with_dealership",
+                    "closed_with_order",
+                    "closed_with_solution",
+                    "closed_without_dealership",
+                    "closed_without_order",
+                    "dropped"
+                ];
+
+                if (
+                    closeStatuses.includes(leadCloser.value) &&
+                    !leadCloseDate.value
+                ) {
+                    alert("Lead Close Date is mandatory for the selected Lead Closer Final status.");
+                    leadCloseDate.focus();
+                    e.preventDefault();
+                    return false;
                 }
             }
 
