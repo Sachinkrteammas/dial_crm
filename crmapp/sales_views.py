@@ -292,7 +292,8 @@ def lead_detail(request, lead_id=None, source_id=None):
         "TradeIndia": ["Direct Leads"],
         "WebScraping": ["Walling Project"],
         "Website": ["Contact", "Pop-up"],
-        "Other": []
+        "Other": [],
+        "Project": ["BX1", "BX2", "L&T SuFin", "Tender247", "Birla Pivot"]
     }
 
     # followup_count = lead.follow_lead_table.count()
