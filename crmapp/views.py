@@ -38,6 +38,9 @@ from datetime import datetime
 import logging
 from openpyxl import Workbook
 from openpyxl.styles import Font
+import requests
+from requests.auth import HTTPBasicAuth
+from datetime import date
 
 
 User = get_user_model()
@@ -2304,4 +2307,117 @@ def callyzer_call_logs_view(request):
         request,
         "crmapp/callyzer_call_logs.html",
         context
+    )
+
+
+
+@login_required
+def download_apr_csv(request):
+
+    is_admin = UserList.objects.filter(
+        user=request.user,
+        user_role__iexact="admin",
+        is_deactivated=False
+    ).exists()
+
+    if not is_admin:
+        return HttpResponseForbidden("Admin access required")
+
+    start_date = request.GET.get(
+        "start_date",
+        datetime.today().strftime("%Y-%m-%d")
+    )
+
+    end_date = request.GET.get(
+        "end_date",
+        datetime.today().strftime("%Y-%m-%d")
+    )
+
+    url = "http://192.168.11.4/vicidial/AST_agent_time_detail.php"
+
+    params = [
+        ("query_date", start_date),
+        ("end_date", end_date),
+        ("query_tms", "00:00:00"),
+        ("query_tme", "23:59:59"),
+
+        # Queue Groups
+        ("group[]", "--ALL--"),
+
+        # User Group
+        ("user_group[]", "BIRLANU"),
+
+        ("shift", "ALL"),
+        ("show_parks", ""),
+        ("time_in_sec", ""),
+        ("search_archived_data", ""),
+        ("report_display_type", "TEXT"),
+        ("DB", ""),
+        ("stage", "NAME"),
+        ("file_download", "1"),
+        ("SUBMIT", "SUBMIT"),
+    ]
+
+    response = requests.get(
+        url,
+        params=params,
+        auth=HTTPBasicAuth("6666", "vicidialnow"),
+        timeout=300,
+    )
+
+    if response.status_code != 200:
+        return HttpResponse(
+            f"Failed to fetch APR report. Status: {response.status_code}",
+            status=500,
+        )
+
+    filename = (
+        f"APR_{start_date}_to_{end_date}_"
+        f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    )
+
+    download_response = HttpResponse(
+        response.content,
+        content_type="text/csv",
+    )
+
+    download_response["Content-Disposition"] = (
+        f'attachment; filename="{filename}"'
+    )
+
+    return download_response
+
+
+
+
+@login_required
+def apr_report_page(request):
+
+    is_admin = UserList.objects.filter(
+        user=request.user,
+        user_role__iexact="admin",
+        is_deactivated=False
+    ).exists()
+
+    if not is_admin:
+        return HttpResponseForbidden("Admin access required")
+
+    menu_items = MenuItem.objects.filter(
+        is_active=True
+    ).order_by("order")
+
+    menu_tree = {}
+
+    for item in menu_items:
+        menu_tree.setdefault(item.parent_id, []).append(item)
+
+    menu_html = render_menu(None, menu_tree)
+
+    return render(
+        request,
+        "crmapp/download_apr_csv.html",
+        {
+            "menu_html": menu_html,
+            "today": date.today().strftime("%Y-%m-%d"),
+        }
     )

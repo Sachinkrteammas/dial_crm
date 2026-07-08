@@ -107,5 +107,7 @@ urlpatterns = [
     path('api/callyzer-webhook/', views.callyzer_webhook, name='callyzer_webhook'),
 
     path("callyzer-call-logs/", views.callyzer_call_logs_view, name="callyzer_call_logs"),
+    path("download-apr-csv/", views.download_apr_csv, name="download_apr_csv"),
+    path("apr-report/", views.apr_report_page, name="apr_report_page"),
 
 ]

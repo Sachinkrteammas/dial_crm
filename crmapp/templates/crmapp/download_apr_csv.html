@@ -1,0 +1,211 @@
+<!doctype html>
+<html
+  lang="en"
+  class="layout-navbar-fixed layout-menu-fixed layout-compact"
+  dir="ltr"
+  data-skin="default"
+  data-assets-path="/assets/"
+  data-template="vertical-menu-template"
+  data-bs-theme="light">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Download APR Report</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/Mascallnet.png">
+
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css">
+    <link rel="stylesheet" href="/assets/vendor/libs/node-waves/node-waves.css">
+    <link rel="stylesheet" href="/assets/vendor/css/core.css">
+    <link rel="stylesheet" href="/assets/css/demo.css">
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css">
+
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/vendor/js/template-customizer.js"></script>
+    <script src="/assets/js/config.js"></script>
+
+</head>
+
+<body>
+
+<div class="layout-wrapper layout-content-navbar">
+
+    <div class="layout-container">
+
+        <!-- Sidebar -->
+        <aside id="layout-menu"
+               class="layout-menu menu-vertical menu">
+
+            <div class="app-brand demo">
+
+                <a href="{% url 'dashboard' %}" class="app-brand-link">
+
+                    <span class="app-brand-logo demo">
+                        <img src="/assets/img/favicon/Mascallnet.png"
+                             style="width:32px;">
+                    </span>
+
+                    <span class="app-brand-text demo menu-text fw-bold ms-3">
+                        MasCallNet
+                    </span>
+
+                </a>
+
+            </div>
+
+            {{ menu_html|safe }}
+
+        </aside>
+
+        <div class="layout-page">
+
+            <!-- Navbar -->
+            <nav class="layout-navbar container-xxl navbar navbar-expand-xl bg-navbar-theme">
+
+                <div class="navbar-nav-right d-flex align-items-center justify-content-end w-100">
+
+                    <ul class="navbar-nav">
+
+                        <li class="nav-item dropdown-user dropdown">
+
+                            <a class="nav-link dropdown-toggle hide-arrow"
+                               data-bs-toggle="dropdown">
+
+                                <div class="avatar avatar-online">
+                                    <img src="/assets/img/avatars/1.png"
+                                         class="rounded-circle">
+                                </div>
+
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                <li class="dropdown-item">
+                                    {{ user.get_full_name|default:user.username }}
+                                </li>
+
+                                <li>
+                                    <div class="dropdown-divider"></div>
+                                </li>
+
+                                <li class="px-2 pb-2">
+
+                                    <a href="{% url 'logout' %}"
+                                       class="btn btn-danger btn-sm w-100">
+
+                                        Logout
+
+                                    </a>
+
+                                </li>
+
+                            </ul>
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+            </nav>
+
+            <div class="content-wrapper">
+
+                <div class="container-fluid mt-4">
+
+                    <div class="row justify-content-center">
+
+                        <div class="col-md-6">
+
+                            <div class="card">
+
+                                <div class="card-header">
+
+                                    <h4 class="mb-0">
+                                        Download APR Report
+                                    </h4>
+
+                                </div>
+
+                                <div class="card-body">
+
+                                    <form method="GET"
+                                          action="{% url 'download_apr_csv' %}"
+                                          onsubmit="copyDate()">
+
+                                        <div class="mb-3">
+
+                                            <label class="form-label">
+                                                Select Date
+                                            </label>
+
+                                            <input
+                                                type="date"
+                                                class="form-control"
+                                                id="report_date"
+                                                name="start_date"
+                                                value="{{ today }}"
+                                                required>
+
+                                            <!-- Hidden End Date -->
+                                            <input
+                                                type="hidden"
+                                                id="end_date"
+                                                name="end_date">
+
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-success w-100">
+
+                                            <i class="ti tabler-download me-2"></i>
+
+                                            Download APR CSV
+
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="content-backdrop fade"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="/assets/vendor/libs/jquery/jquery.js"></script>
+<script src="/assets/vendor/libs/popper/popper.js"></script>
+<script src="/assets/vendor/js/bootstrap.js"></script>
+<script src="/assets/vendor/libs/node-waves/node-waves.js"></script>
+<script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+<script src="/assets/vendor/js/menu.js"></script>
+<script src="/assets/js/main.js"></script>
+
+<script>
+function copyDate() {
+    document.getElementById("end_date").value =
+        document.getElementById("report_date").value;
+}
+</script>
+
+</body>
+</html>
