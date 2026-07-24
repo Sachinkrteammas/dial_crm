@@ -541,3 +541,58 @@ class CallyzerCallLog(models.Model):
 
     def __str__(self):
         return self.call_id
+
+
+
+
+class AgentTimeDetailReport(models.Model):
+    """One row per agent per report run (VICIdial Agent Time Detail / APR)."""
+
+    report_date_start = models.DateField(db_index=True)
+    report_date_end = models.DateField(db_index=True)
+
+    user_id = models.CharField(max_length=32, db_index=True)   # CSV "ID"
+    full_name = models.CharField(max_length=100, blank=True)   # CSV "USER"
+
+    calls = models.IntegerField(default=0)
+
+    time_clock_sec = models.IntegerField(default=0)
+    login_time_sec = models.IntegerField(default=0)   # total logged-in time (CSV "LOGIN TIME")
+
+    wait_sec = models.IntegerField(default=0)
+    wait_pct = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+
+    talk_sec = models.IntegerField(default=0)
+    talk_pct = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+
+    dispo_sec = models.IntegerField(default=0)
+    dispo_pct = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+
+    pause_sec = models.IntegerField(default=0)
+    pause_pct = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+
+    dead_sec = models.IntegerField(default=0)
+    dead_pct = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+
+    customer_sec = models.IntegerField(default=0)
+
+    login_clock_time = models.CharField(max_length=8, blank=True)   # CSV "Login" e.g. "09:01:12"
+    logout_clock_time = models.CharField(max_length=8, blank=True)  # CSV "Logout"
+
+    acht_sec = models.IntegerField(default=0)  # average call handle time
+
+    # sub_status / pause-code breakdown is dynamic (varies by campaign setup),
+    # so it goes in a JSON blob rather than fixed columns.
+    extra_stats = models.JSONField(default=dict, blank=True)
+
+    pulled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "agent_time_detail_report"
+        unique_together = ("report_date_start", "report_date_end", "user_id")
+        indexes = [
+            models.Index(fields=["report_date_start", "report_date_end"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id} ({self.report_date_start} - {self.report_date_end})"

@@ -2421,3 +2421,219 @@ def apr_report_page(request):
             "today": date.today().strftime("%Y-%m-%d"),
         }
     )
+
+
+
+import csv
+import io
+from django.db import transaction
+from .models import  AgentTimeDetailReport
+
+
+VICIDIAL_APR_URL = "http://192.168.11.4/vicidial/AST_agent_time_detail.php"
+
+# Columns that map directly onto model fields; anything else in the CSV
+# header (sub_status / pause-code columns, park columns if enabled) is
+# dynamic and gets stashed in `extra_stats`.
+KNOWN_COLUMNS = {
+    "USER", "ID", "CALLS", "TIME CLOCK", "LOGIN TIME",
+    "WAIT", "WAIT %", "TALK", "TALK TIME %", "DISPO", "DISPOTIME %",
+    "PAUSE", "PAUSETIME %", "DEAD", "DEAD TIME %", "CUSTOMER",
+    "Login", "Logout", "ACHT",
+    # present only if show_parks is enabled:
+    "PARKS", "PARK TIME", "AVG PARK", "PARKS/CALL",
+}
+
+
+def _hms_to_seconds(value: str) -> int:
+    """Convert 'H:MM:SS' (or 'M:SS') into whole seconds. Returns 0 on junk input."""
+    if not value:
+        return 0
+    parts = value.strip().split(":")
+    try:
+        parts = [int(p) for p in parts]
+    except ValueError:
+        return 0
+    if len(parts) == 3:
+        h, m, s = parts
+    elif len(parts) == 2:
+        h, (m, s) = 0, parts
+    else:
+        return 0
+    return h * 3600 + m * 60 + s
+
+
+def _pct_to_decimal(value: str):
+    if not value:
+        return 0
+    try:
+        return float(value.replace("%", "").strip())
+    except ValueError:
+        return 0
+
+
+def _fetch_apr_csv(start_date: str, end_date: str) -> str:
+    params = [
+        ("query_date", start_date),
+        ("end_date", end_date),
+        ("query_tms", "00:00:00"),
+        ("query_tme", "23:59:59"),
+        ("group[]", "--ALL--"),
+        ("user_group[]", "BIRLANU"),
+        ("shift", "ALL"),
+        ("show_parks", ""),
+        ("time_in_sec", ""),
+        ("search_archived_data", ""),
+        ("report_display_type", "TEXT"),
+        ("DB", ""),
+        ("stage", "NAME"),
+        ("file_download", "1"),
+        ("SUBMIT", "SUBMIT"),
+    ]
+    response = requests.get(
+        VICIDIAL_APR_URL,
+        params=params,
+        auth=HTTPBasicAuth("6666", "vicidialnow"),
+        timeout=300,
+    )
+    response.raise_for_status()
+    return response.content.decode("utf-8", errors="replace")
+
+
+def _find_header_index(rows) -> int:
+    """VICIdial prepends a title line and a 'Time range: ...' line (plus a
+    blank line) before the actual CSV header, e.g.:
+
+        Agent Time Detail            2026-07-24 15:10:03
+        Time range: 2026-07-22 00:00:00 to 2026-07-23 23:59:59
+        <blank line>
+        USER,ID,CALLS,TIME CLOCK,LOGIN TIME,...          <- real header
+
+    Find the row that actually looks like the header (contains USER and ID
+    as separate columns) rather than assuming row 0.
+    """
+    for i, row in enumerate(rows):
+        cells = [c.strip() for c in row]
+        if "USER" in cells and "ID" in cells:
+            return i
+    return -1
+
+
+def _parse_apr_csv(csv_text: str):
+    """Yields one dict per agent row, skipping the header and the TOTALS row."""
+    reader = csv.reader(io.StringIO(csv_text))
+    rows = list(reader)
+    if not rows:
+        logger.warning("APR CSV was empty")
+        return
+
+    header_idx = _find_header_index(rows)
+    if header_idx == -1:
+        logger.warning(
+            "Could not locate APR CSV header row — response may be an error "
+            "page rather than a real CSV. First 500 chars: %s",
+            csv_text[:500],
+        )
+        return
+
+    header = [h.strip() for h in rows[header_idx]]
+    data_rows = rows[header_idx + 1:]
+    logger.info("APR CSV header: %s", header)
+    logger.info("APR CSV row count (excluding preamble/header): %d", len(data_rows))
+
+    if not any(h in KNOWN_COLUMNS for h in header):
+        logger.warning(
+            "APR CSV header didn't match expected columns — likely an error page, not real CSV. First 500 chars: %s",
+            csv_text[:500])
+
+    for raw_row in data_rows:
+        if not raw_row:
+            continue
+        record = dict(zip(header, raw_row))
+
+        user_label = (record.get("USER") or "").strip()
+        if not user_label or user_label.upper() == "TOTALS":
+            continue  # skip the summary line at the bottom
+
+        extra_stats = {
+            key: value.strip()
+            for key, value in record.items()
+            if key not in KNOWN_COLUMNS
+        }
+
+        yield {
+            "user_id": (record.get("ID") or "").strip(),
+            "full_name": user_label,
+            "calls": int(record.get("CALLS") or 0),
+            "time_clock_sec": _hms_to_seconds(record.get("TIME CLOCK")),
+            "login_time_sec": _hms_to_seconds(record.get("LOGIN TIME")),
+            "wait_sec": _hms_to_seconds(record.get("WAIT")),
+            "wait_pct": _pct_to_decimal(record.get("WAIT %")),
+            "talk_sec": _hms_to_seconds(record.get("TALK")),
+            "talk_pct": _pct_to_decimal(record.get("TALK TIME %")),
+            "dispo_sec": _hms_to_seconds(record.get("DISPO")),
+            "dispo_pct": _pct_to_decimal(record.get("DISPOTIME %")),
+            "pause_sec": _hms_to_seconds(record.get("PAUSE")),
+            "pause_pct": _pct_to_decimal(record.get("PAUSETIME %")),
+            "dead_sec": _hms_to_seconds(record.get("DEAD")),
+            "dead_pct": _pct_to_decimal(record.get("DEAD TIME %")),
+            "customer_sec": _hms_to_seconds(record.get("CUSTOMER")),
+            "login_clock_time": (record.get("Login") or "").strip(),
+            "logout_clock_time": (record.get("Logout") or "").strip(),
+            "acht_sec": int(float(record.get("ACHT") or 0)),
+            "extra_stats": extra_stats,
+        }
+
+
+def save_apr_to_db(request):
+    start_date = request.GET.get("start_date", datetime.today().strftime("%Y-%m-%d"))
+    end_date = request.GET.get("end_date", datetime.today().strftime("%Y-%m-%d"))
+
+    start_date_obj = parse_date(start_date)
+    end_date_obj = parse_date(end_date)
+    if not start_date_obj or not end_date_obj:
+        return HttpResponse("Invalid start_date or end_date format (expected YYYY-MM-DD)", status=400)
+
+    try:
+        csv_text = _fetch_apr_csv(start_date, end_date)
+    except requests.RequestException as exc:
+        return HttpResponse(f"Failed to fetch APR report: {exc}", status=502)
+
+    records = list(_parse_apr_csv(csv_text))
+
+    saved_count = 0
+    with transaction.atomic(using="default"):
+        # clear any previous pull for this exact date range so re-running is idempotent
+        AgentTimeDetailReport.objects.using("default").filter(
+            report_date_start=start_date_obj,
+            report_date_end=end_date_obj,
+        ).delete()
+
+        objs = [
+            AgentTimeDetailReport(
+                report_date_start=start_date_obj,
+                report_date_end=end_date_obj,
+                **record,
+            )
+            for record in records
+        ]
+        AgentTimeDetailReport.objects.using("default").bulk_create(objs)
+        saved_count = len(objs)
+
+    return JsonResponse(
+        {
+            "status": "ok",
+            "start_date": start_date,
+            "end_date": end_date,
+            "agents_saved": saved_count,
+        }
+    )
+
+
+
+# views.py — temporary debug view, remove once fixed
+def debug_apr_raw(request):
+    start_date = request.GET.get("start_date", datetime.today().strftime("%Y-%m-%d"))
+    end_date = request.GET.get("end_date", datetime.today().strftime("%Y-%m-%d"))
+    csv_text = _fetch_apr_csv(start_date, end_date)
+    return HttpResponse(csv_text, content_type="text/plain")
