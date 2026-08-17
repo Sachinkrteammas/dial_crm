@@ -588,9 +588,12 @@ def sales_export(request):
             datetime.max.time()
         )
 
-        leads = HistorySalesInfo.objects.filter(
-            created_at__range=(from_datetime, to_datetime)
-        ).order_by('id')
+        leads = (
+            HistorySalesInfo.objects
+            .filter(created_at__range=(from_datetime, to_datetime))
+            .select_related('lead_table')
+            .order_by('id')
+        )
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -598,7 +601,7 @@ def sales_export(request):
 
         # Header row
         ws.append([
-            'Lead ID',
+            'Unique Lead ID',
             'Sale MT',
             'Sale INR',
             'Sale Team Remarks',
@@ -616,8 +619,13 @@ def sales_export(request):
 
         # Data rows
         for lead in leads:
+            unique_lead_id = (
+                str(lead.lead_table.lead_table_id)
+                if lead.lead_table else ''
+            )
+
             ws.append([
-                lead.lead_table_id,   # <-- Actual Lead ID
+                unique_lead_id,   # <-- Actual Lead ID
                 lead.sale_mt,
                 lead.sale_inr,
                 lead.sale_team_remarks,
