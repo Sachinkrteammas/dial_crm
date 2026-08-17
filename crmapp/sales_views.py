@@ -558,9 +558,11 @@ def leads_export(request):
 def sales_export(request):
     menu_items = MenuItem.objects.filter(is_active=True).order_by('order')
     menu_tree = {}
+
     for item in menu_items:
         parent_id = item.parent_id
         menu_tree.setdefault(parent_id, []).append(item)
+
     menu_html = render_menu(None, menu_tree)
 
     from_date_str = request.GET.get('from_date')
@@ -575,12 +577,20 @@ def sales_export(request):
                 "menu_html": menu_html,
                 "error": "Invalid date format."
             })
-        from_datetime = datetime.combine(from_date, datetime.min.time())
-        to_datetime = datetime.combine(to_date, datetime.max.time())
+
+        from_datetime = datetime.combine(
+            from_date,
+            datetime.min.time()
+        )
+
+        to_datetime = datetime.combine(
+            to_date,
+            datetime.max.time()
+        )
 
         leads = HistorySalesInfo.objects.filter(
             created_at__range=(from_datetime, to_datetime)
-        )
+        ).order_by('id')
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -588,17 +598,26 @@ def sales_export(request):
 
         # Header row
         ws.append([
-            'ID',
-            'Sale MT', 'Sale INR', 'Sale Team Remarks', 'Lead Status',
-            'CC Final Remarks Reformat', 'Lead Category', 'Product',
-            'Product Value', 'Status', 'Created By', 'Updated By',
-            'Created At', 'Updated At'
+            'Lead ID',
+            'Sale MT',
+            'Sale INR',
+            'Sale Team Remarks',
+            'Lead Status',
+            'CC Final Remarks Reformat',
+            'Lead Category',
+            'Product',
+            'Product Value',
+            'Status',
+            'Created By',
+            'Updated By',
+            'Created At',
+            'Updated At'
         ])
 
         # Data rows
-        for idx, lead in enumerate(leads, start=1):
+        for lead in leads:
             ws.append([
-                idx,
+                lead.lead_table_id,   # <-- Actual Lead ID
                 lead.sale_mt,
                 lead.sale_inr,
                 lead.sale_team_remarks,
@@ -610,8 +629,10 @@ def sales_export(request):
                 lead.sales_person_status,
                 str(lead.created_by) if lead.created_by else '',
                 str(lead.updated_by) if lead.updated_by else '',
-                lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
-                lead.updated_at.strftime('%Y-%m-%d %H:%M:%S') if lead.updated_at else ''
+                lead.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                    if lead.created_at else '',
+                lead.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+                    if lead.updated_at else ''
             ])
 
         file_stream = BytesIO()
@@ -622,10 +643,12 @@ def sales_export(request):
             file_stream,
             as_attachment=True,
             filename='sales_history_leads.xlsx',
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            content_type=(
+                'application/vnd.openxmlformats-officedocument.'
+                'spreadsheetml.sheet'
+            )
         )
 
-    # Show template
     return render(request, 'crmapp/sales_export.html', {
         "menu_html": menu_html
     })
