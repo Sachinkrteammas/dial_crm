@@ -122,7 +122,7 @@
 
                         <div class="col-md-6">
 
-                            <div class="card">
+                            <div class="card mb-4">
 
                                 <div class="card-header">
 
@@ -176,6 +176,59 @@
 
                             </div>
 
+
+                            <div class="card">
+
+                                <div class="card-header">
+                                    <h4 class="mb-0">
+                                        Download CDR Report
+                                    </h4>
+                                </div>
+
+                                <div class="card-body">
+
+                                    <form method="GET"
+                                          action="{% url 'download_cdr_csv' %}"
+                                          onsubmit="copyCdrDate()">
+
+                                        <div class="mb-3">
+
+                                            <label class="form-label">
+                                                Select Date
+                                            </label>
+
+                                            <input
+                                                type="date"
+                                                class="form-control"
+                                                id="report_date_cdr"
+                                                name="start_date"
+                                                value="{{ today }}"
+                                                required>
+
+                                            <!-- End date automatically same as selected date -->
+                                            <input
+                                                type="hidden"
+                                                id="end_date_cdr"
+                                                name="end_date">
+
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-success w-100">
+
+                                            <i class="ti tabler-download me-2"></i>
+
+                                            Download CDR CSV
+
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
                         </div>
 
                     </div>
@@ -204,6 +257,11 @@
 function copyDate() {
     document.getElementById("end_date").value =
         document.getElementById("report_date").value;
+}
+
+    function copyCdrDate() {
+    document.getElementById("end_date_cdr").value =
+        document.getElementById("report_date_cdr").value;
 }
 </script>
 

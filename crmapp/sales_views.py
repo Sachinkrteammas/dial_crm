@@ -293,7 +293,8 @@ def lead_detail(request, lead_id=None, source_id=None):
         "WebScraping": ["Walling Project"],
         "Website": ["Contact", "Pop-up"],
         "Other": [],
-        "Project": ["BX1", "BX2", "L&T SuFin", "Tender247", "Birla Pivot"]
+        "Project": ["BX1", "BX2", "L&T SuFin", "Tender247", "Birla Pivot"],
+        "Website_Google_Ads":["Website"]
     }
 
     # followup_count = lead.follow_lead_table.count()

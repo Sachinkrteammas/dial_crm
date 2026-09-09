@@ -2637,3 +2637,86 @@ def debug_apr_raw(request):
     end_date = request.GET.get("end_date", datetime.today().strftime("%Y-%m-%d"))
     csv_text = _fetch_apr_csv(start_date, end_date)
     return HttpResponse(csv_text, content_type="text/plain")
+
+
+@login_required
+def download_cdr_csv(request):
+    is_admin = UserList.objects.filter(
+        user=request.user,
+        user_role__iexact="admin",
+        is_deactivated=False
+    ).exists()
+
+    if not is_admin:
+        return HttpResponseForbidden("Admin access required")
+
+    start_date = request.GET.get(
+        "start_date",
+        datetime.today().strftime("%Y-%m-%d")
+    )
+
+    end_date = request.GET.get(
+        "end_date",
+        datetime.today().strftime("%Y-%m-%d")
+    )
+
+    url = "http://192.168.11.4/BirlaNU_dashboard/row.php"
+
+    # PHP expects POST parameters
+    data = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "btnExport": "Export",
+    }
+
+    try:
+        response = requests.post(
+            url,
+            data=data,
+            auth=HTTPBasicAuth("6666", "vicidialnow"),
+            timeout=300,
+        )
+
+        print("Status:", response.status_code)
+        print("URL:", response.url)
+        print("Content-Type:", response.headers.get("Content-Type"))
+        print("Content-Length:", len(response.content))
+
+        if response.status_code != 200:
+            return HttpResponse(
+                f"Failed to fetch CDR report. Status: {response.status_code}",
+                status=500,
+            )
+
+        # PHP should now return Excel HTML
+        content_type = response.headers.get("Content-Type", "")
+
+        if "text/html" not in content_type and "excel" not in content_type:
+            print("Unexpected content type:", content_type)
+
+        filename = (
+            f"CdrReport_{start_date}_to_{end_date}_"
+            f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xls"
+        )
+
+        download_response = HttpResponse(
+            response.content,
+            content_type="application/vnd.ms-excel",
+        )
+
+        download_response["Content-Disposition"] = (
+            f'attachment; filename="{filename}"'
+        )
+
+        download_response["Pragma"] = "no-cache"
+        download_response["Expires"] = "0"
+
+        return download_response
+
+    except requests.RequestException as e:
+        print("CDR Download Error:", str(e))
+
+        return HttpResponse(
+            f"Failed to fetch CDR report: {str(e)}",
+            status=500,
+        )

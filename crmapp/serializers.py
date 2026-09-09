@@ -46,6 +46,17 @@ class WebhookLeadSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("No adviser user assigned.")
 
+        enquiry_source = validated_data["Enquiry_Source"].strip().lower()
+
+        if enquiry_source == "website":
+            customer_type = "Website Google Ads"
+        elif enquiry_source == "google ads":
+            customer_type = "Google Ads"
+        elif enquiry_source in ["indiamart"]:
+            customer_type = "IndiaMART"
+        else:
+            customer_type = validated_data["Enquiry_Source"]
+
         return LeadTable.objects.create(
             customer_name=validated_data["Name"],
             calling_number=validated_data["Phone"],
@@ -58,5 +69,6 @@ class WebhookLeadSerializer(serializers.Serializer):
             email_id=validated_data.get("Email"),
             name=validated_data["Name"],
             lead_upload_type="Webhook",
+            customer_type=customer_type,
             created_by=user
         )
