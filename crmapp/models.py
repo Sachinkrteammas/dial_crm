@@ -596,3 +596,37 @@ class AgentTimeDetailReport(models.Model):
 
     def __str__(self):
         return f"{self.user_id} ({self.report_date_start} - {self.report_date_end})"
+
+
+class CDRReport(models.Model):
+    """One row per CDR record pulled from VICIdial."""
+
+    report_date_start = models.DateField(db_index=True)
+    report_date_end = models.DateField(db_index=True)
+
+    uniqueid = models.CharField(max_length=60, blank=True)
+    nuniqueid = models.CharField(max_length=60, blank=True)
+    lead_id = models.CharField(max_length=20, blank=True, default="")
+    agent = models.CharField(max_length=50, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    call_date = models.DateField(null=True, blank=True)
+    call_status = models.CharField(max_length=30, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    length_in_sec = models.IntegerField(default=0)
+    length_in_min = models.CharField(max_length=12, blank=True)
+    campaign_id = models.CharField(max_length=50, blank=True)
+    term_reason = models.CharField(max_length=50, blank=True)
+
+    pulled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "cdr_report"
+        indexes = [
+            models.Index(fields=["report_date_start", "report_date_end"]),
+            models.Index(fields=["call_date"]),
+            models.Index(fields=["agent"]),
+        ]
+
+    def __str__(self):
+        return f"{self.agent} {self.phone_number} ({self.call_date})"

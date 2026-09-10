@@ -2427,7 +2427,7 @@ def apr_report_page(request):
 import csv
 import io
 from django.db import transaction
-from .models import  AgentTimeDetailReport
+from .models import  AgentTimeDetailReport, CDRReport
 
 
 VICIDIAL_APR_URL = "http://192.168.11.4/vicidial/AST_agent_time_detail.php"
@@ -2720,3 +2720,111 @@ def download_cdr_csv(request):
             f"Failed to fetch CDR report: {str(e)}",
             status=500,
         )
+
+
+def _fetch_cdr_html(start_date, end_date):
+    url = "http://192.168.11.4/BirlaNU_dashboard/row.php"
+    data = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "btnExport": "Export",
+    }
+    response = requests.post(
+        url, data=data,
+        auth=HTTPBasicAuth("6666", "vicidialnow"),
+        timeout=300,
+    )
+    response.raise_for_status()
+    return response.content.decode("utf-8", errors="replace")
+
+
+def _parse_cdr_html(html_text):
+    """Parse the HTML table returned by the PHP CDR endpoint, yielding dicts."""
+    import re
+    from django.utils import timezone as tz
+    rows = re.findall(r"<tr>(.*?)</tr>", html_text, re.DOTALL | re.IGNORECASE)
+    for row in rows:
+        cells = re.findall(r"<td[^>]*>(.*?)</td>", row, re.DOTALL | re.IGNORECASE)
+        if len(cells) < 10:
+            continue
+        cells = [re.sub(r"<[^>]+>", "", c).strip() for c in cells]
+        if cells[0] == "Agent":
+            continue
+        if not cells[0] and not cells[2]:
+            continue
+
+        def _to_aware(value):
+            if not value:
+                return None
+            parsed = parse_datetime(value)
+            if parsed is None:
+                parsed = parse_datetime(value + " 00:00:00")
+            if parsed is None:
+                return None
+            if tz.is_aware(parsed):
+                return parsed
+            return tz.make_aware(parsed)
+
+        yield {
+            "agent": cells[0],
+            "phone_number": cells[1],
+            "call_date": parse_date(cells[2]) if cells[2] else None,
+            "call_status": cells[3],
+            "start_time": _to_aware(cells[4]),
+            "end_time": _to_aware(cells[5]),
+            "length_in_sec": int(cells[6]) if cells[6].isdigit() else 0,
+            "length_in_min": cells[7],
+            "campaign_id": cells[8],
+            "term_reason": cells[9],
+        }
+
+
+@login_required
+def save_cdr_to_db(request):
+    is_admin = UserList.objects.filter(
+        user=request.user,
+        user_role__iexact="admin",
+        is_deactivated=False,
+    ).exists()
+    if not is_admin:
+        return HttpResponseForbidden("Admin access required")
+
+    start_date = request.GET.get("start_date", datetime.today().strftime("%Y-%m-%d"))
+    end_date = request.GET.get("end_date", datetime.today().strftime("%Y-%m-%d"))
+
+    start_date_obj = parse_date(start_date)
+    end_date_obj = parse_date(end_date)
+    if not start_date_obj or not end_date_obj:
+        return HttpResponse("Invalid date format (expected YYYY-MM-DD)", status=400)
+
+    try:
+        html_text = _fetch_cdr_html(start_date, end_date)
+    except requests.RequestException as exc:
+        return HttpResponse(f"Failed to fetch CDR report: {exc}", status=502)
+
+    records = list(_parse_cdr_html(html_text))
+
+    saved_count = 0
+    with transaction.atomic(using="default"):
+        CDRReport.objects.using("default").filter(
+            report_date_start=start_date_obj,
+            report_date_end=end_date_obj,
+        ).delete()
+
+        objs = [
+            CDRReport(
+                report_date_start=start_date_obj,
+                report_date_end=end_date_obj,
+                **record,
+            )
+            for record in records
+        ]
+        CDRReport.objects.using("default").bulk_create(objs)
+        saved_count = len(objs)
+
+    return JsonResponse({
+        "status": "ok",
+        "start_date": start_date,
+        "end_date": end_date,
+        "records_saved": saved_count,
+    })

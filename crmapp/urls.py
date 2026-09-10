@@ -112,5 +112,6 @@ urlpatterns = [
     path("reports/apr/save/", views.save_apr_to_db, name="save_apr_to_db"),
     path("reports/apr/debug/", views.debug_apr_raw, name="debug_apr_raw"),
     path("download_cdr_csv/", views.download_cdr_csv, name="download_cdr_csv"),
+    path("reports/cdr/save/", views.save_cdr_to_db, name="save_cdr_to_db"),
 
 ]
