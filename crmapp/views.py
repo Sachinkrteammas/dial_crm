@@ -2732,7 +2732,7 @@ def _fetch_cdr_html(start_date, end_date):
     response = requests.post(
         url, data=data,
         auth=HTTPBasicAuth("6666", "vicidialnow"),
-        timeout=300,
+        timeout=120,
     )
     response.raise_for_status()
     return response.content.decode("utf-8", errors="replace")
