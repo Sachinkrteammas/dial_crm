@@ -109,9 +109,9 @@ from django.utils.dateparse import parse_datetime
 VERIFY_TOKEN = "my_secret_token_123"
 
 # ⚡ Replace this with your Page Access Token (long-lived)
-PAGE_ACCESS_TOKEN = "EAA5ZBgUCFFrMBSuSN16LEKMMKK6B8vEauKy20XpqBcBUu2B79bbf4LWW4mJWKV3SU1pp8qiC0HCEmpPFQZAXzZCK6ekZANDAF2VWPmmaD8Aoqr1GvTpCzOsKtMOXg8Mf266VARRtD6fbujhMms4TScQ3BCpoSn1LfUhU0yeN6S978vXCEMt9oltC1X8bUxfL4AUm5zWyGizppgVfUjpnHAbUVXowwZCMiZCZB9NzOOZBPibrea0ZD"
+PAGE_ACCESS_TOKEN = "EAA5ZBgUCFFrMBShaOfnZB4y5l7APRbh1h6EVtYZAkvchZBZC2wKEGkoPVn5Pt2Jve88tNOvYT6QAZC3bphrYw6A1MZCffdZAZAtcrmjOLJQ5XUCZBHHNSQpECtaOZBhJq4EIhHlQ2cte1WXOI4YYE1mB0gI2P0hapjrH9W5UZCIT35tvtO8ec3PQ1QgGEFwt03nQZBOZAFf6ZAeUsnqgdMC82q8yhTZBuZCJsAtGGS6dTU0eHZCjQW"
 
-GRAPH_API_URL = "https://graph.facebook.com/v23.0"
+GRAPH_API_URL = "https://graph.facebook.com/v26.0"
 
 
 LOG_FILE = "/var/www/html/dial_crm/logs/meta.log"
