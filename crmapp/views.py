@@ -2333,7 +2333,7 @@ def download_apr_csv(request):
         datetime.today().strftime("%Y-%m-%d")
     )
 
-    url = "http://192.168.11.4/vicidial/AST_agent_time_detail.php"
+    url = "http://192.168.11.240/vicidial/AST_agent_time_detail.php"
 
     params = [
         ("query_date", start_date),
@@ -2430,7 +2430,7 @@ from django.db import transaction
 from .models import  AgentTimeDetailReport, CDRReport
 
 
-VICIDIAL_APR_URL = "http://192.168.11.4/vicidial/AST_agent_time_detail.php"
+VICIDIAL_APR_URL = "http://192.168.11.240/vicidial/AST_agent_time_detail.php"
 
 # Columns that map directly onto model fields; anything else in the CSV
 # header (sub_status / pause-code columns, park columns if enabled) is
@@ -2660,7 +2660,7 @@ def download_cdr_csv(request):
         datetime.today().strftime("%Y-%m-%d")
     )
 
-    url = "http://192.168.11.4/BirlaNU_dashboard/row.php"
+    url = "http://192.168.11.240/BirlaNU_dashboard/row.php"
 
     # PHP expects POST parameters
     data = {
@@ -2723,7 +2723,7 @@ def download_cdr_csv(request):
 
 
 def _fetch_cdr_html(start_date, end_date):
-    url = "http://192.168.11.4/BirlaNU_dashboard/row.php"
+    url = "http://192.168.11.240/BirlaNU_dashboard/row.php"
     data = {
         "start_date": start_date,
         "end_date": end_date,
