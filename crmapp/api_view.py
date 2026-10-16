@@ -109,7 +109,7 @@ from django.utils.dateparse import parse_datetime
 VERIFY_TOKEN = "my_secret_token_123"
 
 # ⚡ Replace this with your Page Access Token (long-lived)
-PAGE_ACCESS_TOKEN = "EAA5ZBgUCFFrMBSpfwg6BRpe57Esnwfc4hbA4xSHT8hZAH5GOmIBpA4E9go0LC5NfKxu1OSo3JEngAMGf5WdipEBxXgvrCNWPPagrH60mbX9x1bkBiZBZBmsOtn5CLPrDgJ3jK5i2CIRrIZADMjnghUtwsoViZBpD9ABGaGUgWQjDbBhW4JdZAkuwUnZBRqtg2HZCZCQ8CL"
+PAGE_ACCESS_TOKEN = "EAA5ZBgUCFFrMBSl5qNf6wx4rwFx5MwTNrqVSVsZAMtBRXbYenOSoZATrqpFBPWQP4vYGOdLEZC6bTdQBgH4gUF7H2IS3lmAuEZCHBlNMCpWGnKWuZCuCmR3dygaZADZBeZBidlwadWNyyPURiXmkJY5WdZC1qQtrbZBZC6MZBAqhWIwH3592WCvpluzmXZCmDk3EUFEMYMlLGv"
 
 GRAPH_API_URL = "https://graph.facebook.com/v26.0"
 
