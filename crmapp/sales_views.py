@@ -794,6 +794,10 @@ def main_leads_export(request):
             'Sale Product Value', 'Sale Status'
         ])
 
+        from django.apps import apps
+        profile_model = next((m for m in apps.get_models() if {'full_name', 'user_id'} <= {f.attname for f in m._meta.concrete_fields}), None)
+        profile_names = dict(profile_model.objects.values_list('user_id', 'full_name')) if profile_model else {}
+
         for idx, lead in enumerate(leads, start=1):
             sales = SalesInfoTable.objects.filter(lead_table=lead).first()
 
@@ -834,7 +838,7 @@ def main_leads_export(request):
                 lead.district,
                 lead.zone,
                 lead.pin_code,
-                str(lead.created_by).split('@')[0] if lead.created_by else '',
+                profile_names.get(lead.created_by_id) or (str(lead.created_by).split('@')[0] if lead.created_by else ''),
                 lead.order_qty,
                 lead.order_description,
                 float(lead.order_value) if lead.order_value else '',
