@@ -2622,3 +2622,161 @@ def fr_leads_export(request):
     return render(request, 'crmapp/leads_export.html', {
         "menu_html": menu_html
     })
+
+######################################## Lead Data Api #####################################
+
+
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_GET
+
+from .models import LeadTable
+
+
+@require_GET
+def leads_api(request):
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+    page = request.GET.get("page", "1")
+
+    # Validate required dates
+    if not start_date or not end_date:
+        return JsonResponse({
+            "success": False,
+            "message": "start_date and end_date are required. Format: YYYY-MM-DD"
+        }, status=400)
+
+    start = parse_date(start_date)
+    end = parse_date(end_date)
+
+    if not start or not end:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid date format. Use YYYY-MM-DD."
+        }, status=400)
+
+    if start > end:
+        return JsonResponse({
+            "success": False,
+            "message": "start_date cannot be after end_date."
+        }, status=400)
+
+    try:
+        page_number = int(page)
+        if page_number < 1:
+            raise ValueError
+    except (TypeError, ValueError):
+        return JsonResponse({
+            "success": False,
+            "message": "page must be a positive integer."
+        }, status=400)
+
+    # Filter by lead registration date (inclusive)
+    leads = LeadTable.objects.filter(
+        lead_date__range=(start, end)
+    ).order_by("id")
+
+    paginator = Paginator(leads, 10)
+    page_obj = paginator.get_page(page_number)
+
+    results = []
+
+    for lead in page_obj.object_list:
+        # Fetch the related sales details, if available
+        sale = lead.lead_table.order_by("-id").first()
+
+        results.append({
+            "Unique Id": lead.dialer_lead_id or str(lead.id),
+            "Customer Name": lead.customer_name,
+            "Customer Type": lead.customer_type,
+            "Calling Number": lead.calling_number,
+            "Enquiry Type": lead.enquiry_type,
+            "Enquiry Source": lead.enquiry_source,
+            "Sub Enquiry Source": lead.sub_enquiry_source,
+            "Lead Register Date": (
+                lead.lead_date.isoformat() if lead.lead_date else None
+            ),
+            "Lead Outcalled Date": (
+                lead.call_date.isoformat() if lead.call_date else None
+            ),
+            "Call Type": lead.call_type,
+            "Calling Status": lead.calling_status,
+            "Interested Status": lead.interested_status,
+            "Sub Calling Status": lead.sub_calling_status,
+            "Sub Sub Calling Status": lead.sub_sub_calling_status,
+            "Select Business": lead.select_bus,
+            "Buyer Type": lead.buyer_type,
+            "Lead Status": lead.lead_status,
+            "Construction Level": lead.construction_level,
+            "Alternative Number": lead.alternative_number,
+            "Email ID": lead.email_id,
+            "Address": lead.address,
+            "Landmark": lead.landmark,
+            "Brand": lead.brand,
+            "Product": lead.product,
+            "Sub Product": lead.sub_product,
+            "State": lead.state,
+            "District": lead.district,
+            "Zone": lead.zone,
+            "Pincode": lead.pin_code,
+            "Agent Name": lead.agent_name,
+            "Order Qty": lead.order_qty,
+            "Order Description": lead.order_description,
+            "Order Value": (
+                str(lead.order_value)
+                if lead.order_value is not None else None
+            ),
+            "Customer Type Select": lead.customer_type_select,
+            "Registration Status": lead.registration_status,
+            "Remark": lead.remark,
+            "Secure URL": lead.secure_url,
+            "Seller Email ID": lead.seller_email_id,
+            "Seller Phone No": lead.seller_phone_no,
+            "Seller Email ID L2": lead.seller_email_id_L2,
+            "Seller Phone No L2": lead.seller_phone_no_L2,
+            "Lead Closer Status": lead.lead_closer_status,
+            "Lead Closer Status New": lead.lead_closer_status_new,
+            "Lead Close Date": (
+                lead.lead_close_date.isoformat()
+                if lead.lead_close_date else None
+            ),
+            "Final Lead Close Date": (
+                lead.final_lead_close_date.isoformat()
+                if lead.final_lead_close_date else None
+            ),
+            "Lead Upload Type": lead.lead_upload_type,
+            "Created By": lead.created_by_id,
+            "Updated By": lead.updated_by_id,
+            "Created At": (
+                lead.created_at.isoformat() if lead.created_at else None
+            ),
+            "Updated At": (
+                lead.updated_at.isoformat() if lead.updated_at else None
+            ),
+
+            # SalesInfoTable fields
+            "Sale MT": sale.sale_mt if sale else None,
+            "Sale INR": sale.sale_inr if sale else None,
+            "Sale Team Remarks": sale.sale_team_remarks if sale else None,
+            "Sale Lead Status": sale.lead_status if sale else None,
+            "CC Final Remarks Reformat": (
+                sale.cc_final_remarks_reformat if sale else None
+            ),
+            "Sale Lead Category": sale.lead_category if sale else None,
+            "Sale Product": sale.product if sale else None,
+            "Sale Product Value": sale.product_value if sale else None,
+            "Sale Status": sale.status if sale else None,
+        })
+
+    return JsonResponse({
+        "success": True,
+        "count": len(results),
+        "total_records": paginator.count,
+        "total_pages": paginator.num_pages,
+        "current_page": page_obj.number,
+        "page_size": 10,
+        "start_date": start.isoformat(),
+        "end_date": end.isoformat(),
+        "data": results,
+    }, status=200)
