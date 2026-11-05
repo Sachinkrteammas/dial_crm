@@ -116,4 +116,7 @@ urlpatterns = [
 
     path("api/leads/", sales_views.leads_api, name="leads_api"),
 
+    ## netcore Api ##
+    path("api/leads/push-netcore/",sales_views.push_leads_to_netcore,name="push_leads_to_netcore"),
+
 ]

@@ -2780,3 +2780,182 @@ def leads_api(request):
         "end_date": end.isoformat(),
         "data": results,
     }, status=200)
+
+
+########################################### netcore Api  ###########################
+
+import re
+from datetime import date
+from decimal import Decimal
+
+import requests
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+
+from .models import LeadTable
+
+
+NETCORE_URL = "https://netcoreapi-main-prod-us.netcorein.com/v5/contact/create"
+NETCORE_API_KEY = "4501b15d16f657e08eacbc412e143dc0"
+BATCH_SIZE = 10
+
+
+def netcore_value(value):
+    if value is None:
+        return ""
+
+    if isinstance(value, date):
+        return value.strftime("%Y-%m-%d")
+
+    return str(value)
+
+
+def netcore_int(value):
+    if value is None or value == "":
+        return ""
+
+    try:
+        return str(int(Decimal(str(value))))
+    except (ValueError, TypeError, ArithmeticError):
+        return ""
+
+
+def build_contact(lead):
+    # Indian numbers only: +91 98765 43210, 09876543210 and 9876543210 all match
+    digits = re.sub(r"\D", "", lead.calling_number or "")
+    if len(digits) < 10:
+        return None
+    phone = "91" + digits[-10:]
+
+    attributes = {
+        "CUSTOMER_NAME": netcore_value(lead.customer_name),
+        "CAMPAIGN_TYPE": netcore_value(lead.customer_type),
+        "CALLING_NUMBER": netcore_value(lead.calling_number),
+        "ENQUIRY_TYPE": netcore_value(lead.enquiry_type),
+        "ENQUIRY_SOURCES": netcore_value(lead.enquiry_source),
+        "SUB_ENQUIRY_SOURCE": netcore_value(lead.sub_enquiry_source),
+        "CALLING_STATUS": netcore_value(lead.calling_status),
+        "SUB_CALLING_STATUS": netcore_value(lead.sub_calling_status),
+        "SUB_SUB_CALLING_STATUS": netcore_value(lead.sub_sub_calling_status),
+        "REMARK": netcore_value(lead.remark),
+        "BUYER_TYPE": netcore_value(lead.buyer_type),
+        "SELECT_BUS": netcore_value(lead.select_bus),
+        "BRAND": netcore_value(lead.brand),
+        "LEAD_STATUS": netcore_value(lead.lead_status),
+        "CALL_TYPE": netcore_value(lead.call_type),
+        "NAME": netcore_value(lead.name),
+        "LEAD_DATE": netcore_value(lead.lead_date),
+        "CALL_DATE": netcore_value(lead.call_date),
+        "PINCODE": netcore_value(lead.pin_code),
+        "DISTRICT": netcore_value(lead.district),
+        "STATE": netcore_value(lead.state),
+        "ZONE": netcore_value(lead.zone),
+        "ORDER_QTY": netcore_int(lead.order_qty),
+        "ORDER_VALUE": netcore_int(lead.order_value),
+        "ORDER_DESCRIPTION": netcore_value(lead.order_description),
+        "CONSTRUCTION_TYPE": netcore_value(lead.construction_level),
+        "ALTERNATIVE_NUMBER": netcore_value(lead.alternative_number),
+        "SALES_TEAM_EMAIL_ID_L1": netcore_value(lead.seller_email_id),
+        "SALES_TEAM_PHONE_NO_L1": netcore_value(lead.seller_phone_no),
+        "SALES_TEAM_EMAIL_ID_L2": netcore_value(lead.seller_email_id_L2),
+        "SALES_TEAM_PHONE_NO_L2": netcore_value(lead.seller_phone_no_L2),
+        "LEAD_CLOSER_FINAL": netcore_value(lead.final_lead_close_date),
+        "LEAD_CLOSE_DATE": netcore_value(lead.lead_close_date),
+        "ADDRESS": netcore_value(lead.address),
+        "LANDMARK": netcore_value(lead.landmark),
+    }
+
+    # Include sales information when available
+
+    contact = {
+        "identity": phone,
+        "mobile": phone,
+        # Blank values are left out, so they never overwrite data in Netcore
+        "attributes": {k: v for k, v in attributes.items() if v != ""},
+    }
+
+    email = (lead.email_id or "").strip()
+    if email:
+        try:
+            validate_email(email)
+            contact["email"] = email
+        except ValidationError:
+            pass
+
+    return contact
+
+
+@csrf_exempt
+@require_POST
+def push_leads_to_netcore(request):
+    today = timezone.localdate()
+
+    leads = LeadTable.objects.filter(lead_date=today).order_by("id")
+    paginator = Paginator(leads, BATCH_SIZE)
+
+    headers = {
+        "accept": "application/json",
+        "api-key": NETCORE_API_KEY,
+        "content-type": "application/json",
+    }
+
+    sent_count = 0
+
+    # Send every lead for today, one batch at a time
+    for page_number in paginator.page_range:
+        page = paginator.page(page_number)
+        contacts = [build_contact(lead) for lead in page.object_list]
+        contacts = [contact for contact in contacts if contact]
+
+        if not contacts:
+            continue
+
+        payload = {
+            "data": {
+                "contact_type": "identified",
+                "contacts": contacts,
+            }
+        }
+
+        try:
+            response = requests.post(
+                NETCORE_URL,
+                json=payload,
+                headers=headers,
+                timeout=30,
+            )
+        except requests.RequestException as exc:
+            return JsonResponse({
+                "success": False,
+                "message": "Could not connect to Netcore",
+                "error": str(exc),
+                "date": str(today),
+                "total_leads": paginator.count,
+                "sent_count": sent_count,
+            }, status=502)
+
+        if not response.ok:
+            return JsonResponse({
+                "success": False,
+                "message": "Netcore API request failed",
+                "netcore_status": response.status_code,
+                "netcore_response": response.text[:1000],
+                "date": str(today),
+                "total_leads": paginator.count,
+                "sent_count": sent_count,
+            }, status=502)
+
+        sent_count += len(contacts)
+
+    return JsonResponse({
+        "success": True,
+        "message": "Leads sent to Netcore",
+        "date": str(today),
+        "total_leads": paginator.count,
+        "sent_count": sent_count,
+    })
