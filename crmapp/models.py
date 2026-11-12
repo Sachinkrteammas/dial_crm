@@ -630,3 +630,20 @@ class CDRReport(models.Model):
 
     def __str__(self):
         return f"{self.agent} {self.phone_number} ({self.call_date})"
+
+
+class AlphaCallWebhook(models.Model):
+    uid = models.IntegerField(unique=True)
+    agent = models.CharField(max_length=100, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    call_start_time = models.CharField(max_length=100, blank=True, null=True)
+    call_connect_time = models.CharField(max_length=100, blank=True, null=True)
+    call_end_time = models.CharField(max_length=100, blank=True, null=True)
+    call_type = models.CharField(max_length=50, blank=True, null=True)
+    duration = models.CharField(max_length=50, blank=True, null=True)
+    queue_id = models.CharField(max_length=100, blank=True, null=True)
+    dialer_disposition = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'alpha_call_webhook'

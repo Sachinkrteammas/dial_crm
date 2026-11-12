@@ -118,5 +118,7 @@ urlpatterns = [
 
     ## netcore Api ##
     path("api/leads/push-netcore/",sales_views.push_leads_to_netcore,name="push_leads_to_netcore"),
+    ## Alpha Api ##
+    path('api/alpha-call-webhook/', sales_views.alpha_call_webhook, name='alpha_call_webhook'),
 
 ]

@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from .models import UserList, UserRole, FieldMaster, FieldMasterValue, MenuItem, DynamicFormData, LeadTable, ZoneTable, \
-    SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact, TBLFollowUp, SalesVOC,SalesDiaryCounter
+    SalesInfoTable, HistorySalesInfo, HistoryLead, BrandTable, CallDisposition, SalesContact, TBLFollowUp, SalesVOC,SalesDiaryCounter,AlphaCallWebhook
 from .views import render_menu
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -2959,3 +2959,59 @@ def push_leads_to_netcore(request):
         "total_leads": paginator.count,
         "sent_count": sent_count,
     })
+
+############################### Alpha Api ##############
+
+@csrf_exempt
+@require_POST
+def alpha_call_webhook(request):
+    try:
+        data = json.loads(request.body)
+
+        uid = data.get('uid')
+
+        if not uid:
+            return JsonResponse({
+                "success": False,
+                "message": "UID is required"
+            }, status=400)
+
+        call_data, created = AlphaCallWebhook.objects.update_or_create(
+            uid=int(uid),
+            defaults={
+                'agent': data.get('agent'),
+                'phone_number': data.get('phone_number'),
+                'call_start_time': data.get('call_start_time'),
+                'call_connect_time': data.get('call_connect_time'),
+                'call_end_time': data.get('call_end_time'),
+                'call_type': data.get('call_type'),
+                'duration': str(data.get('duration', '')),
+                'queue_id': data.get('queue_id'),
+                'dialer_disposition': data.get('dialer_disposition'),
+            }
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Call data saved successfully",
+            "uid": call_data.uid,
+            "created": created
+        }, status=201 if created else 200)
+
+    except (ValueError, TypeError):
+        return JsonResponse({
+            "success": False,
+            "message": "UID must be an integer"
+        }, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid JSON"
+        }, status=400)
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        }, status=500)
