@@ -2783,27 +2783,77 @@ def leads_api(request):
 
 
 ########################################### netcore Api  ###########################
-
+import hmac
+import logging
 import re
 from datetime import date
 from decimal import Decimal
 
 import requests
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
 
 from .models import LeadTable
 
+logger = logging.getLogger(__name__)
 
 NETCORE_URL = "https://netcoreapi-main-prod-us.netcorein.com/v5/contact/create"
-NETCORE_API_KEY = "4501b15d16f657e08eacbc412e143dc0"
-BATCH_SIZE = 10
 
+# All of these come from settings.py (which should read them from environment variables)
+NETCORE_API_KEY = "4501b15d16f657e08eacbc412e143dc0"
+DEFAULT_BATCH_SIZE =  10
+MAX_BATCH_SIZE = 100  # check Netcore's documented limit
+PUSH_API_TOKEN = "GgbVh4Vu-NdGPQj-FPN5Dtsy7cwn1f7cKYlDgXW61NA"
+
+
+# ---------------------------------------------------------------- auth
+
+def is_authorized(request):
+    """
+    Caller must send:  Authorization: Bearer <LEAD_PUSH_API_TOKEN>
+    Fails closed: if no token is configured, every request is rejected.
+    """
+    if not PUSH_API_TOKEN:
+        return False
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return False
+
+    supplied = auth_header[len("Bearer "):].strip()
+    # Constant-time comparison so the token can't be guessed by timing responses
+    return hmac.compare_digest(supplied.encode(), PUSH_API_TOKEN.encode())
+
+
+# ---------------------------------------------------------------- batch size
+
+def get_batch_size(request):
+    """
+    Read batch_size from the query string or POST form data, e.g. ?batch_size=50.
+    Falls back to the default and is clamped to 1..MAX_BATCH_SIZE.
+    """
+    raw = request.GET.get("batch_size") or request.POST.get("batch_size")
+    if not raw:
+        return DEFAULT_BATCH_SIZE
+
+    try:
+        size = int(raw)
+    except (TypeError, ValueError):
+        raise ValueError("batch_size must be a whole number")
+
+    if size < 1 or size > MAX_BATCH_SIZE:
+        raise ValueError(f"batch_size must be between 1 and {MAX_BATCH_SIZE}")
+
+    return size
+
+
+# ---------------------------------------------------------------- helpers
 
 def netcore_value(value):
     if value is None:
@@ -2870,8 +2920,6 @@ def build_contact(lead):
         "LANDMARK": netcore_value(lead.landmark),
     }
 
-    # Include sales information when available
-
     contact = {
         "identity": phone,
         "mobile": phone,
@@ -2890,13 +2938,27 @@ def build_contact(lead):
     return contact
 
 
-@csrf_exempt
+# ---------------------------------------------------------------- view
+
+@csrf_exempt  # fine here: this is a token-authenticated machine endpoint, not a browser form
 @require_POST
 def push_leads_to_netcore(request):
+    if not is_authorized(request):
+        return JsonResponse({"success": False, "message": "Unauthorized"}, status=401)
+
+    if not NETCORE_API_KEY:
+        logger.error("NETCORE_API_KEY is not configured")
+        return JsonResponse({"success": False, "message": "Server not configured"}, status=500)
+
+    try:
+        batch_size = get_batch_size(request)
+    except ValueError as exc:
+        return JsonResponse({"success": False, "message": str(exc)}, status=400)
+
     today = timezone.localdate()
 
     leads = LeadTable.objects.filter(lead_date=today).order_by("id")
-    paginator = Paginator(leads, BATCH_SIZE)
+    paginator = Paginator(leads, batch_size)
 
     headers = {
         "accept": "application/json",
@@ -2923,29 +2985,30 @@ def push_leads_to_netcore(request):
         }
 
         try:
-            response = requests.post(
-                NETCORE_URL,
-                json=payload,
-                headers=headers,
-                timeout=30,
-            )
-        except requests.RequestException as exc:
+            response = requests.post(NETCORE_URL, json=payload, headers=headers, timeout=30)
+        except requests.RequestException:
+            # Log details server-side; don't echo internal errors back to the caller
+            logger.exception("Could not connect to Netcore (batch %s)", page_number)
             return JsonResponse({
                 "success": False,
                 "message": "Could not connect to Netcore",
-                "error": str(exc),
                 "date": str(today),
+                "batch_size": batch_size,
                 "total_leads": paginator.count,
                 "sent_count": sent_count,
             }, status=502)
 
         if not response.ok:
+            logger.error(
+                "Netcore returned %s for batch %s: %s",
+                response.status_code, page_number, response.text[:1000],
+            )
             return JsonResponse({
                 "success": False,
                 "message": "Netcore API request failed",
                 "netcore_status": response.status_code,
-                "netcore_response": response.text[:1000],
                 "date": str(today),
+                "batch_size": batch_size,
                 "total_leads": paginator.count,
                 "sent_count": sent_count,
             }, status=502)
@@ -2956,6 +3019,7 @@ def push_leads_to_netcore(request):
         "success": True,
         "message": "Leads sent to Netcore",
         "date": str(today),
+        "batch_size": batch_size,
         "total_leads": paginator.count,
         "sent_count": sent_count,
     })
